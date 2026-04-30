@@ -23,6 +23,20 @@ Neu backend chay cong khac, tao file `.env.local`:
 VITE_API_BASE_URL=http://localhost:5055
 ```
 
+## Deploy Vercel
+
+Ban deploy tren Vercel phai cau hinh bien moi truong:
+
+```text
+VITE_API_BASE_URL=https://ten-backend-public-cua-ban
+```
+
+Luu y:
+
+- Frontend `https://fe-police.vercel.app` khong the goi `http://localhost:5055`.
+- Backend cho ban production can co URL HTTPS cong khai.
+- Backend phai cho phep CORS origin `https://fe-police.vercel.app` va cookie cross-site neu dang nhap bang cookie.
+
 ## Tai khoan demo
 
 | Vai tro | Tai khoan | Mat khau |

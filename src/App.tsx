@@ -2,7 +2,13 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import './App.css'
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:5055').replace(/\/$/, '')
+const configuredApiUrl = import.meta.env.VITE_API_BASE_URL?.trim()
+const API_BASE_URL = (configuredApiUrl || (import.meta.env.DEV ? 'http://localhost:5055' : '')).replace(/\/$/, '')
+const apiConfigProblem = !API_BASE_URL
+  ? 'Ban production chua cau hinh VITE_API_BASE_URL tren Vercel.'
+  : window.location.protocol === 'https:' && API_BASE_URL.startsWith('http://')
+    ? 'Trang HTTPS khong the goi backend HTTP. Hay dung backend HTTPS cong khai.'
+    : ''
 
 type Role = 'Admin' | 'Police' | 'Support' | 'User' | 'Anonymous'
 
@@ -129,6 +135,10 @@ const demoAccounts = [
 ]
 
 async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
+  if (apiConfigProblem) {
+    throw new Error(apiConfigProblem)
+  }
+
   const response = await fetch(`${API_BASE_URL}${path}`, {
     credentials: 'include',
     headers: {
@@ -421,7 +431,7 @@ function App() {
         <div>
           <span className="section-kicker">Nguoi dung hien tai</span>
           <strong>{user ? user.DisplayName : 'Chua dang nhap'}</strong>
-          <small>{user ? `${user.Username} - ${user.Role}` : `API: ${API_BASE_URL}`}</small>
+          <small>{user ? `${user.Username} - ${user.Role}` : `API: ${API_BASE_URL || 'chua cau hinh'}`}</small>
         </div>
         <div>
           <span className="section-kicker">Co so du lieu</span>
@@ -434,6 +444,14 @@ function App() {
           <small>{health?.timestamp ? formatDate(health.timestamp) : 'Chua dong bo'}</small>
         </div>
       </section>
+
+      {apiConfigProblem ? (
+        <section className="config-alert">
+          <strong>Can cau hinh backend cho ban deploy</strong>
+          <span>{apiConfigProblem}</span>
+          <code>VITE_API_BASE_URL=https://ten-backend-cua-ban</code>
+        </section>
+      ) : null}
 
       {!user ? (
         <section className="login-layout">

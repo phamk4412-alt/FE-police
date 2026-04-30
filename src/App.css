@@ -79,6 +79,30 @@
   background: var(--panel);
 }
 
+.config-alert {
+  display: grid;
+  gap: 6px;
+  margin-top: 18px;
+  border: 1px solid #f6c36b;
+  border-radius: 8px;
+  background: #fff8e8;
+  padding: 16px 18px;
+  color: #7a4b00;
+}
+
+.config-alert strong {
+  color: #5f3b00;
+}
+
+.config-alert code {
+  width: fit-content;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  border-radius: 6px;
+  background: rgba(122, 75, 0, 0.08);
+  padding: 6px 8px;
+}
+
 .identity-band strong,
 .account-grid strong,
 .incident-row strong,
