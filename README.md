@@ -4,7 +4,7 @@ Giao dien React + Vite ket noi voi backend `BE-police`.
 
 ## Chay local
 
-Backend mac dinh duoc goi tai:
+Backend local mac dinh duoc goi tai:
 
 ```text
 http://localhost:5055
@@ -25,7 +25,13 @@ VITE_API_BASE_URL=http://localhost:5055
 
 ## Deploy Vercel
 
-Ban deploy tren Vercel phai cau hinh bien moi truong:
+Ban production mac dinh goi backend Render:
+
+```text
+https://be-police-n8zf.onrender.com
+```
+
+Neu muon doi backend production, cau hinh bien moi truong:
 
 ```text
 VITE_API_BASE_URL=https://ten-backend-public-cua-ban

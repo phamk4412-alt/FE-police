@@ -3,7 +3,8 @@ import type { FormEvent } from 'react'
 import './App.css'
 
 const configuredApiUrl = import.meta.env.VITE_API_BASE_URL?.trim()
-const API_BASE_URL = (configuredApiUrl || (import.meta.env.DEV ? 'http://localhost:5055' : '')).replace(/\/$/, '')
+const defaultApiUrl = import.meta.env.DEV ? 'http://localhost:5055' : 'https://be-police-n8zf.onrender.com'
+const API_BASE_URL = (configuredApiUrl || defaultApiUrl).replace(/\/$/, '')
 const apiConfigProblem = !API_BASE_URL
   ? 'Ban production chua cau hinh VITE_API_BASE_URL tren Vercel.'
   : window.location.protocol === 'https:' && API_BASE_URL.startsWith('http://')
