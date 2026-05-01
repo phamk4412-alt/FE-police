@@ -37,39 +37,39 @@ function Login() {
   return (
     <main className="login-page">
       <section className="login-hero">
-        <p className="eyebrow">Police Project</p>
+        <p className="eyebrow">Dự án Cảnh sát</p>
         <h1>{APP_NAME}</h1>
         <p>
-          Frontend starter for account management, incident monitoring,
-          dispatch coordination, and citizen reports.
+          Giao diện khởi đầu cho quản lý tài khoản, theo dõi vụ việc,
+          điều phối lực lượng và tiếp nhận báo cáo từ người dân.
         </p>
       </section>
 
       <section className="login-card">
         <div className="section-heading">
-          <span className="eyebrow">Login</span>
-          <h2>Sign in to dashboard</h2>
+          <span className="eyebrow">Đăng nhập</span>
+          <h2>Vào bảng điều khiển</h2>
         </div>
 
         <form onSubmit={handleSubmit} className="login-form">
           <Input
-            label="Username or email"
+            label="Tên đăng nhập hoặc email"
             name="username"
             onChange={(event) => setUsername(event.target.value)}
             placeholder="admin"
             value={username}
           />
           <Input
-            label="Password"
+            label="Mật khẩu"
             name="password"
             onChange={(event) => setPassword(event.target.value)}
-            placeholder="Enter password"
+            placeholder="Nhập mật khẩu"
             type="password"
             value={password}
           />
 
           <label className="field" htmlFor="role">
-            <span>Mock role</span>
+            <span>Vai trò tạm thời</span>
             <select
               id="role"
               onChange={(event) => setRole(event.target.value as UserRole)}
@@ -83,7 +83,7 @@ function Login() {
             </select>
           </label>
 
-          <Button type="submit">Login</Button>
+          <Button type="submit">Đăng nhập</Button>
         </form>
       </section>
     </main>

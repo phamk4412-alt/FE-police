@@ -20,18 +20,18 @@ function Sidebar({ role }: SidebarProps) {
     <aside className="sidebar">
       <div className="sidebar-brand">
         <span>PSH</span>
-        <strong>Police Smart Hub</strong>
+        <strong>Trung tâm Cảnh sát</strong>
       </div>
 
-      <nav className="sidebar-nav" aria-label="Dashboard navigation">
-        <NavLink to={ROLE_HOME_PATHS[role]}>Dashboard</NavLink>
-        <a href="#incidents">Reports / Incidents</a>
-        {hasMap ? <a href="#map">Map</a> : null}
-        <a href="#account">Account</a>
+      <nav className="sidebar-nav" aria-label="Điều hướng bảng điều khiển">
+        <NavLink to={ROLE_HOME_PATHS[role]}>Bảng điều khiển</NavLink>
+        <a href="#incidents">Báo cáo / Vụ việc</a>
+        {hasMap ? <a href="#map">Bản đồ</a> : null}
+        <a href="#account">Tài khoản</a>
       </nav>
 
       <button className="sidebar-logout" type="button" onClick={handleLogout}>
-        Logout
+        Đăng xuất
       </button>
     </aside>
   );

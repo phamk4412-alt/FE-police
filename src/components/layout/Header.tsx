@@ -9,7 +9,7 @@ function Header({ role }: HeaderProps) {
   return (
     <header className="dashboard-header">
       <div>
-        <p className="eyebrow">Police Project</p>
+        <p className="eyebrow">Dự án Cảnh sát</p>
         <h1>{APP_NAME}</h1>
       </div>
       <div className="role-badge">{ROLE_LABELS[role]}</div>

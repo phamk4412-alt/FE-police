@@ -8,16 +8,16 @@ import type { Incident } from "../types/incident";
 const reportHistory: Incident[] = [
   {
     id: 501,
-    title: "Lost wallet report",
-    status: "Received",
-    location: "District 1",
+    title: "Báo mất ví",
+    status: "Đã tiếp nhận",
+    location: "Quận 1",
     createdAt: "2026-04-30 15:30",
   },
   {
     id: 502,
-    title: "Street light outage",
-    status: "Forwarded",
-    location: "District 7",
+    title: "Đèn đường không hoạt động",
+    status: "Đã chuyển xử lý",
+    location: "Quận 7",
     createdAt: "2026-04-29 18:45",
   },
 ];
@@ -30,30 +30,30 @@ function UserDashboard() {
   return (
     <DashboardLayout role="user">
       <section className="page-title">
-        <p className="eyebrow">User Dashboard</p>
-        <h2>Citizen report center</h2>
-        <span>Submit incidents and follow your report history.</span>
+        <p className="eyebrow">Bảng điều khiển người dân</p>
+        <h2>Trung tâm báo cáo công dân</h2>
+        <span>Gửi báo cáo sự cố và theo dõi lịch sử phản ánh của bạn.</span>
       </section>
 
       <section className="dashboard-grid">
         <form className="panel report-form" onSubmit={handleSubmit}>
           <div className="section-heading">
-            <span className="eyebrow">Report</span>
-            <h2>Submit incident</h2>
+            <span className="eyebrow">Báo cáo</span>
+            <h2>Gửi báo cáo sự cố</h2>
           </div>
-          <Input label="Title" name="title" placeholder="Brief report title" />
-          <Input label="Location" name="location" placeholder="Street, ward, district" />
+          <Input label="Tiêu đề" name="title" placeholder="Tiêu đề ngắn của báo cáo" />
+          <Input label="Vị trí" name="location" placeholder="Đường, phường/xã, quận/huyện" />
           <label className="field" htmlFor="description">
-            <span>Description</span>
-            <textarea id="description" placeholder="Describe what happened" rows={5} />
+            <span>Mô tả</span>
+            <textarea id="description" placeholder="Mô tả sự việc đã xảy ra" rows={5} />
           </label>
-          <Button type="submit">Send report</Button>
+          <Button type="submit">Gửi báo cáo</Button>
         </form>
 
         <section className="panel" id="incidents">
           <div className="section-heading">
-            <span className="eyebrow">History</span>
-            <h2>Recent reports</h2>
+            <span className="eyebrow">Lịch sử</span>
+            <h2>Báo cáo gần đây</h2>
           </div>
           <div className="incident-list">
             {reportHistory.map((report) => (
@@ -72,7 +72,7 @@ function UserDashboard() {
         </section>
       </section>
 
-      <MapView title="Incident location map" />
+      <MapView title="Bản đồ vị trí sự cố" />
     </DashboardLayout>
   );
 }

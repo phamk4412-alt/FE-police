@@ -4,31 +4,31 @@ import type { DashboardStat } from "../types/common";
 import type { Incident } from "../types/incident";
 
 const stats: DashboardStat[] = [
-  { label: "Vu viec moi", value: 14, note: "Need first response" },
-  { label: "Vu viec dang xu ly", value: 9, note: "Assigned to patrols" },
-  { label: "Khu vuc nong", value: 4, note: "High density zones" },
+  { label: "Vụ việc mới", value: 14, note: "Cần phản hồi ban đầu" },
+  { label: "Vụ việc đang xử lý", value: 9, note: "Đã phân công tuần tra" },
+  { label: "Khu vực nóng", value: 4, note: "Mật độ cảnh báo cao" },
 ];
 
 const incidents: Incident[] = [
   {
     id: 1001,
-    title: "Noise complaint near central park",
-    status: "New",
-    location: "District 1",
+    title: "Phản ánh tiếng ồn gần công viên trung tâm",
+    status: "Mới tiếp nhận",
+    location: "Quận 1",
     createdAt: "2026-05-01 08:20",
   },
   {
     id: 1002,
-    title: "Traffic collision on Nguyen Trai",
-    status: "Processing",
-    location: "District 5",
+    title: "Va chạm giao thông trên đường Nguyễn Trãi",
+    status: "Đang xử lý",
+    location: "Quận 5",
     createdAt: "2026-05-01 09:05",
   },
   {
     id: 1003,
-    title: "Suspicious activity report",
-    status: "Assigned",
-    location: "District 3",
+    title: "Báo cáo hoạt động đáng ngờ",
+    status: "Đã phân công",
+    location: "Quận 3",
     createdAt: "2026-05-01 10:12",
   },
 ];
@@ -37,9 +37,9 @@ function PoliceDashboard() {
   return (
     <DashboardLayout role="police">
       <section className="page-title">
-        <p className="eyebrow">Police Dashboard</p>
-        <h2>Incident operations</h2>
-        <span>Track new incidents, active cases, and priority map areas.</span>
+        <p className="eyebrow">Bảng điều khiển cảnh sát</p>
+        <h2>Điều hành vụ việc</h2>
+        <span>Theo dõi vụ việc mới, hồ sơ đang xử lý và khu vực ưu tiên trên bản đồ.</span>
       </section>
 
       <section className="stats-grid">
@@ -52,12 +52,12 @@ function PoliceDashboard() {
         ))}
       </section>
 
-      <MapView title="Police response map" />
+      <MapView title="Bản đồ phản ứng của cảnh sát" />
 
       <section className="panel" id="incidents">
         <div className="section-heading">
-          <span className="eyebrow">Incidents</span>
-          <h2>Assigned incident list</h2>
+          <span className="eyebrow">Vụ việc</span>
+          <h2>Danh sách vụ việc được phân công</h2>
         </div>
         <div className="incident-list">
           {incidents.map((incident) => (

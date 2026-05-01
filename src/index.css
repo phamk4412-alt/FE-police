@@ -457,6 +457,37 @@ th {
   background: var(--success);
 }
 
+.mapbox-container,
+.map-token-warning {
+  min-height: 440px;
+  overflow: hidden;
+  border: 1px solid #c7d7df;
+  border-radius: 8px;
+}
+
+.mapbox-container {
+  width: 100%;
+}
+
+.map-token-warning {
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  color: var(--primary-dark);
+  text-align: center;
+  background: #e8f1ed;
+}
+
+.map-token-warning strong {
+  display: block;
+  color: var(--ink);
+  font-size: 1.2rem;
+}
+
+.map-token-warning span {
+  color: var(--muted);
+}
+
 @media (max-width: 980px) {
   .login-page,
   .dashboard-shell,
@@ -499,6 +530,11 @@ th {
   }
 
   .map-placeholder {
+    min-height: 360px;
+  }
+
+  .mapbox-container,
+  .map-token-warning {
     min-height: 360px;
   }
 }

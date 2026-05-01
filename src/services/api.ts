@@ -14,10 +14,25 @@ export async function apiFetch<T>(
   });
 
   if (!res.ok) {
-    throw new Error(`API error: ${res.status}`);
+    let message = `API error: ${res.status}`;
+
+    try {
+      const errorBody = (await res.json()) as { message?: string; Message?: string };
+      message = errorBody.message || errorBody.Message || message;
+    } catch {
+      message = res.statusText ? `API error: ${res.status} ${res.statusText}` : message;
+    }
+
+    throw new Error(message);
   }
 
   if (res.status === 204) {
+    return undefined as T;
+  }
+
+  const contentType = res.headers.get("content-type") || "";
+
+  if (!contentType.includes("application/json")) {
     return undefined as T;
   }
 

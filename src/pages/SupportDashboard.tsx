@@ -2,31 +2,31 @@ import DashboardLayout from "../components/layout/DashboardLayout";
 import MapView from "../components/map/MapView";
 
 const supportRequests = [
-  { id: "REQ-2101", title: "Need ambulance coordination", priority: "High", status: "Open" },
-  { id: "REQ-2102", title: "Citizen follow-up call", priority: "Medium", status: "Waiting" },
-  { id: "REQ-2103", title: "Verify report attachment", priority: "Low", status: "In review" },
+  { id: "YC-2101", title: "Cần điều phối xe cứu thương", priority: "Cao", status: "Đang mở" },
+  { id: "YC-2102", title: "Gọi lại xác minh với người dân", priority: "Trung bình", status: "Đang chờ" },
+  { id: "YC-2103", title: "Kiểm tra tệp đính kèm báo cáo", priority: "Thấp", status: "Đang xem xét" },
 ];
 
 const dispatchRows = [
-  { unit: "Support A", area: "District 1", assignment: "Emergency handoff", eta: "8 min" },
-  { unit: "Support B", area: "District 3", assignment: "Call verification", eta: "14 min" },
-  { unit: "Support C", area: "District 7", assignment: "Report triage", eta: "22 min" },
+  { unit: "Tổ hỗ trợ A", area: "Quận 1", assignment: "Chuyển tiếp khẩn cấp", eta: "8 phút" },
+  { unit: "Tổ hỗ trợ B", area: "Quận 3", assignment: "Xác minh cuộc gọi", eta: "14 phút" },
+  { unit: "Tổ hỗ trợ C", area: "Quận 7", assignment: "Phân loại báo cáo", eta: "22 phút" },
 ];
 
 function SupportDashboard() {
   return (
     <DashboardLayout role="support">
       <section className="page-title">
-        <p className="eyebrow">Support Dashboard</p>
-        <h2>Support coordination</h2>
-        <span>Monitor support requests, map context, and dispatch readiness.</span>
+        <p className="eyebrow">Bảng điều khiển hỗ trợ</p>
+        <h2>Điều phối hỗ trợ</h2>
+        <span>Theo dõi yêu cầu hỗ trợ, bối cảnh bản đồ và khả năng điều phối.</span>
       </section>
 
       <section className="dashboard-grid">
         <section className="panel" id="incidents">
           <div className="section-heading">
-            <span className="eyebrow">Requests</span>
-            <h2>Support queue</h2>
+            <span className="eyebrow">Yêu cầu</span>
+            <h2>Hàng đợi hỗ trợ</h2>
           </div>
           <div className="incident-list">
             {supportRequests.map((request) => (
@@ -46,17 +46,17 @@ function SupportDashboard() {
 
         <section className="panel">
           <div className="section-heading">
-            <span className="eyebrow">Dispatch</span>
-            <h2>Mock coordination board</h2>
+            <span className="eyebrow">Điều phối</span>
+            <h2>Bảng điều phối mẫu</h2>
           </div>
           <div className="table-wrap">
             <table>
               <thead>
                 <tr>
-                  <th>Unit</th>
-                  <th>Area</th>
-                  <th>Assignment</th>
-                  <th>ETA</th>
+                  <th>Đơn vị</th>
+                  <th>Khu vực</th>
+                  <th>Nhiệm vụ</th>
+                  <th>Dự kiến đến</th>
                 </tr>
               </thead>
               <tbody>
@@ -74,7 +74,7 @@ function SupportDashboard() {
         </section>
       </section>
 
-      <MapView title="Support dispatch map" />
+      <MapView title="Bản đồ điều phối hỗ trợ" />
     </DashboardLayout>
   );
 }
