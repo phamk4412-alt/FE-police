@@ -469,6 +469,60 @@ th {
   width: 100%;
 }
 
+.facility-marker {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 4px solid #ffffff;
+  border-radius: 50%;
+  padding: 4px;
+  box-shadow: 0 12px 24px rgba(23, 32, 42, 0.24);
+  transform: translateY(-2px);
+  transition:
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.facility-marker::after {
+  position: absolute;
+  bottom: -11px;
+  left: 50%;
+  width: 14px;
+  height: 14px;
+  border-right: 4px solid #ffffff;
+  border-bottom: 4px solid #ffffff;
+  content: "";
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.facility-marker img {
+  position: relative;
+  z-index: 1;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #ffffff;
+}
+
+.facility-marker:hover,
+.facility-marker:focus-visible {
+  box-shadow: 0 16px 30px rgba(23, 32, 42, 0.32);
+  transform: translateY(-6px);
+}
+
+.facility-marker-police,
+.facility-marker-police::after {
+  background: #16a34a;
+}
+
+.facility-marker-hospital,
+.facility-marker-hospital::after {
+  background: #dc2626;
+}
+
 .map-token-warning {
   display: grid;
   place-items: center;

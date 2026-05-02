@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="title">
+  <title id="title">Police station</title>
+  <defs>
+    <linearGradient id="shield" x1="20" x2="76" y1="10" y2="88" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#156fc0"/>
+      <stop offset="1" stop-color="#06346f"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#shield)" d="M48 6c12 10 25 15 39 16v26c0 20-13 36-39 44C22 84 9 68 9 48V22c14-1 27-6 39-16Z"/>
+  <path fill="#fff" d="M48 15c10 8 20 12 31 13v20c0 16-10 28-31 35-21-7-31-19-31-35V28c11-1 21-5 31-13Z" opacity=".95"/>
+  <path fill="url(#shield)" d="M48 21c8 6 17 10 25 11v16c0 13-8 23-25 29-17-6-25-16-25-29V32c8-1 17-5 25-11Z"/>
+  <path fill="#fff" d="M28 60h40v7H28z"/>
+  <path fill="#fff" d="M35 39h26v23H35z"/>
+  <path fill="#dce8f2" d="M32 35h32v7H32zM31 62h34v5H31z"/>
+  <path fill="#06346f" d="M39 45h6v9h-6zM51 45h6v9h-6z"/>
+  <path fill="#fff" d="m48 25 4 8 9 1-6 6 1 9-8-4-8 4 1-9-6-6 9-1 4-8Z"/>
+</svg>
