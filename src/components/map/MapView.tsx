@@ -53,6 +53,12 @@ type BoundaryGeoJson = {
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN as string | undefined;
 const HCM_WIKIDATA_ID = "Q1854";
+const HCM_MAINLAND_BOUNDS = {
+  east: 106.89,
+  north: 11.16,
+  south: 10.5,
+  west: 106.35,
+};
 
 const fallbackFacilityMarkers: FacilityMarker[] = [
   {
@@ -113,6 +119,79 @@ const fallbackFacilityMarkers: FacilityMarker[] = [
   },
 ];
 
+const majorHospitalMarkers: FacilityMarker[] = [
+  {
+    address: "201B Nguyen Chi Thanh, Phuong 12, Quan 5, TP.HCM",
+    coordinates: [106.681637, 10.755106],
+    logo: hospitalLogo,
+    name: "Benh vien Cho Ray",
+    type: "hospital",
+  },
+  {
+    address: "215 Hong Bang, Phuong 11, Quan 5, TP.HCM",
+    coordinates: [106.6675, 10.7547],
+    logo: hospitalLogo,
+    name: "Benh vien Dai hoc Y Duoc TP.HCM",
+    type: "hospital",
+  },
+  {
+    address: "764 Vo Van Kiet, Phuong 1, Quan 5, TP.HCM",
+    coordinates: [106.6687, 10.7521],
+    logo: hospitalLogo,
+    name: "Benh vien Nhi Dong 1",
+    type: "hospital",
+  },
+  {
+    address: "14 Ly Tu Trong, phuong Ben Nghe, Quan 1, TP.HCM",
+    coordinates: [106.700622, 10.777204],
+    logo: hospitalLogo,
+    name: "Benh vien Nhi Dong 2",
+    type: "hospital",
+  },
+  {
+    address: "2 Nguyen Thong, Phuong 6, Quan 3, TP.HCM",
+    coordinates: [106.6866, 10.7828],
+    logo: hospitalLogo,
+    name: "Benh vien Mat TP.HCM",
+    type: "hospital",
+  },
+  {
+    address: "527 Su Van Hanh, Phuong 12, Quan 10, TP.HCM",
+    coordinates: [106.6676, 10.7707],
+    logo: hospitalLogo,
+    name: "Benh vien Nhan dan 115",
+    type: "hospital",
+  },
+  {
+    address: "1 No Trang Long, Phuong 7, Quan Binh Thanh, TP.HCM",
+    coordinates: [106.6943, 10.8103],
+    logo: hospitalLogo,
+    name: "Benh vien Nhan dan Gia Dinh",
+    type: "hospital",
+  },
+  {
+    address: "120 Hong Bang, Phuong 12, Quan 5, TP.HCM",
+    coordinates: [106.6694, 10.7557],
+    logo: hospitalLogo,
+    name: "Benh vien Hung Vuong",
+    type: "hospital",
+  },
+  {
+    address: "280 An Duong Vuong, Phuong 4, Quan 5, TP.HCM",
+    coordinates: [106.6831, 10.7568],
+    logo: hospitalLogo,
+    name: "Benh vien Nguyen Tri Phuong",
+    type: "hospital",
+  },
+  {
+    address: "125 Le Loi, Phuong Ben Thanh, Quan 1, TP.HCM",
+    coordinates: [106.6966, 10.7737],
+    logo: hospitalLogo,
+    name: "Benh vien Da khoa Sai Gon",
+    type: "hospital",
+  },
+];
+
 const overpassQuery = `
   [out:json][timeout:25];
   area["wikidata"="${HCM_WIKIDATA_ID}"]["boundary"="administrative"]->.hcm;
@@ -136,7 +215,7 @@ const boundaryQuery = `
   out geom;
 `;
 
-function takeHalfByType(facilities: FacilityMarker[]) {
+function limitFacilitiesForDisplay(facilities: FacilityMarker[]) {
   const hospitalMarkers = facilities.filter((facility) => facility.type === "hospital");
   const policeMarkers = facilities.filter((facility) => facility.type === "police");
 
@@ -145,7 +224,7 @@ function takeHalfByType(facilities: FacilityMarker[]) {
     return markers.filter((_, index) => index % 2 === 0).slice(0, limit);
   }
 
-  return [...takeHalf(policeMarkers), ...takeHalf(hospitalMarkers)];
+  return [...takeHalf(policeMarkers), ...hospitalMarkers];
 }
 
 function getElementCoordinates(element: OverpassElement): [number, number] | null {
@@ -194,19 +273,63 @@ function normalizeFacilityMarkers(elements: OverpassElement[]) {
   }, []);
 }
 
+function withMajorHospitals(facilities: FacilityMarker[]) {
+  const policeMarkers = facilities.filter((facility) => facility.type === "police");
+  return [...policeMarkers, ...majorHospitalMarkers];
+}
+
+function isMainlandPoint([lon, lat]: [number, number]) {
+  return (
+    lon >= HCM_MAINLAND_BOUNDS.west &&
+    lon <= HCM_MAINLAND_BOUNDS.east &&
+    lat >= HCM_MAINLAND_BOUNDS.south &&
+    lat <= HCM_MAINLAND_BOUNDS.north
+  );
+}
+
+function splitMainlandSegments(coordinates: Array<[number, number]>) {
+  const segments: Array<Array<[number, number]>> = [];
+  let currentSegment: Array<[number, number]> = [];
+
+  coordinates.forEach((coordinate) => {
+    if (isMainlandPoint(coordinate)) {
+      currentSegment.push(coordinate);
+      return;
+    }
+
+    if (currentSegment.length > 1) {
+      segments.push(currentSegment);
+    }
+
+    currentSegment = [];
+  });
+
+  if (currentSegment.length > 1) {
+    segments.push(currentSegment);
+  }
+
+  return segments;
+}
+
 function normalizeBoundary(elements: OverpassBoundaryElement[]): BoundaryGeoJson {
   return {
     features: elements.flatMap((element) =>
       (element.members || [])
         .filter((member) => member.geometry && member.geometry.length > 1)
-        .map((member) => ({
-          geometry: {
-            coordinates: member.geometry!.map((point) => [point.lon, point.lat] as [number, number]),
-            type: "LineString" as const,
-          },
-          properties: {},
-          type: "Feature" as const,
-        })),
+        .flatMap((member) => {
+          const coordinates = member.geometry!.map(
+            (point) => [point.lon, point.lat] as [number, number],
+          );
+
+          return splitMainlandSegments(coordinates).map((segment) => ({
+            geometry: {
+              coordinates: segment,
+              type: "LineString" as const,
+            },
+            properties: {},
+            type: "Feature" as const,
+          }));
+        }),
     ),
     type: "FeatureCollection",
   };
@@ -227,7 +350,7 @@ async function fetchOverpass<T>(query: string) {
 
 async function fetchHoChiMinhFacilities() {
   const data = await fetchOverpass<OverpassElement>(overpassQuery);
-  return normalizeFacilityMarkers(data.elements || []);
+  return withMajorHospitals(normalizeFacilityMarkers(data.elements || []));
 }
 
 async function fetchHoChiMinhBoundary() {
@@ -317,7 +440,7 @@ function MapView({
 
     function renderFacilityMarkers(facilities: FacilityMarker[]) {
       facilityMapMarkers.forEach((marker) => marker.remove());
-      facilityMapMarkers = takeHalfByType(facilities).map((facility) =>
+      facilityMapMarkers = limitFacilitiesForDisplay(facilities).map((facility) =>
         new mapboxgl.Marker({
           anchor: "bottom",
           element: createFacilityMarker(facility),
@@ -340,7 +463,7 @@ function MapView({
         .catch(() => undefined);
     });
 
-    renderFacilityMarkers(fallbackFacilityMarkers);
+    renderFacilityMarkers(withMajorHospitals(fallbackFacilityMarkers));
 
     fetchHoChiMinhFacilities()
       .then((facilities) => {
@@ -350,7 +473,7 @@ function MapView({
       })
       .catch(() => {
         if (isMounted) {
-          renderFacilityMarkers(fallbackFacilityMarkers);
+          renderFacilityMarkers(withMajorHospitals(fallbackFacilityMarkers));
         }
       });
 
