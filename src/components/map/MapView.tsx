@@ -3,6 +3,7 @@ import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import hospitalLogo from "../../assets/hospital-logo.svg";
 import policeStationLogo from "../../assets/police-station-logo.svg";
+import { API_URL } from "../../services/api";
 
 interface MapViewProps {
   center?: [number, number];
@@ -30,54 +31,10 @@ interface OverpassElement {
   tags?: Record<string, string>;
 }
 
-type BoundaryGeoJson = {
-  features: Array<{
-    geometry: {
-      coordinates: Array<[number, number]>;
-      type: "LineString";
-    };
-    properties: Record<string, never>;
-    type: "Feature";
-  }>;
-  type: "FeatureCollection";
-};
+type BoundaryGeoJson = GeoJSON.FeatureCollection<GeoJSON.Geometry, Record<string, unknown>>;
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN as string | undefined;
 const HCM_WIKIDATA_ID = "Q1854";
-
-const hcmMainlandBoundary: BoundaryGeoJson = {
-  features: [
-    {
-      geometry: {
-        coordinates: [
-          [106.34, 11.49],
-          [106.52, 11.55],
-          [106.74, 11.48],
-          [106.97, 11.39],
-          [107.13, 11.18],
-          [107.25, 10.94],
-          [107.48, 10.79],
-          [107.55, 10.61],
-          [107.41, 10.44],
-          [107.18, 10.31],
-          [106.98, 10.31],
-          [106.83, 10.39],
-          [106.72, 10.48],
-          [106.63, 10.59],
-          [106.47, 10.58],
-          [106.35, 10.71],
-          [106.31, 10.93],
-          [106.33, 11.16],
-          [106.34, 11.49],
-        ],
-        type: "LineString",
-      },
-      properties: {},
-      type: "Feature",
-    },
-  ],
-  type: "FeatureCollection",
-};
 
 const fallbackFacilityMarkers: FacilityMarker[] = [
   {
@@ -309,6 +266,16 @@ async function fetchHoChiMinhFacilities() {
   return withMajorHospitals(normalizeFacilityMarkers(data.elements || []));
 }
 
+async function fetchHoChiMinhBoundary() {
+  const response = await fetch(`${API_URL}/api/maps/hcm-boundary`);
+
+  if (!response.ok) {
+    throw new Error(`Boundary API error: ${response.status}`);
+  }
+
+  return response.json() as Promise<BoundaryGeoJson>;
+}
+
 function createFacilityMarker({ logo, name, type }: FacilityMarker) {
   const markerElement = document.createElement("button");
   markerElement.type = "button";
@@ -353,10 +320,21 @@ function addBoundaryLayer(map: mapboxgl.Map, boundary: BoundaryGeoJson) {
   });
 
   map.addLayer({
+    id: "hcm-boundary-fill",
+    paint: {
+      "fill-color": "#ef4444",
+      "fill-opacity": 0.08,
+    },
+    source: "hcm-boundary",
+    type: "fill",
+  });
+
+  map.addLayer({
     id: "hcm-boundary-line",
     paint: {
-      "line-color": "#0369a1",
-      "line-width": 3,
+      "line-color": "#ef4444",
+      "line-dasharray": [1.2, 1.2],
+      "line-width": 2,
     },
     source: "hcm-boundary",
     type: "line",
@@ -405,7 +383,13 @@ function MapView({
     }
 
     map.on("load", () => {
-      addBoundaryLayer(map, hcmMainlandBoundary);
+      fetchHoChiMinhBoundary()
+        .then((boundary) => {
+          if (isMounted) {
+            addBoundaryLayer(map, boundary);
+          }
+        })
+        .catch(() => undefined);
     });
 
     renderFacilityMarkers(withMajorHospitals(fallbackFacilityMarkers));
