@@ -322,19 +322,38 @@ function addBoundaryLayer(map: mapboxgl.Map, boundary: BoundaryGeoJson) {
   map.addLayer({
     id: "hcm-boundary-fill",
     paint: {
-      "fill-color": "#ef4444",
-      "fill-opacity": 0.08,
+      "fill-color": "#f97316",
+      "fill-opacity": 0.14,
     },
     source: "hcm-boundary",
     type: "fill",
   });
 
   map.addLayer({
-    id: "hcm-boundary-line",
+    id: "hcm-boundary-halo",
+    layout: {
+      "line-join": "round",
+      "line-cap": "round",
+    },
     paint: {
-      "line-color": "#ef4444",
-      "line-dasharray": [1.2, 1.2],
-      "line-width": 2,
+      "line-color": "#ffffff",
+      "line-opacity": 0.95,
+      "line-width": 8,
+    },
+    source: "hcm-boundary",
+    type: "line",
+  });
+
+  map.addLayer({
+    id: "hcm-boundary-line",
+    layout: {
+      "line-join": "round",
+      "line-cap": "round",
+    },
+    paint: {
+      "line-color": "#dc2626",
+      "line-opacity": 1,
+      "line-width": 4,
     },
     source: "hcm-boundary",
     type: "line",
