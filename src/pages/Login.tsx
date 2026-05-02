@@ -34,8 +34,6 @@ function Login() {
         </div>
 
         <SignIn
-          routing="path"
-          path="/login"
           fallbackRedirectUrl="/"
           signUpFallbackRedirectUrl="/"
         />
