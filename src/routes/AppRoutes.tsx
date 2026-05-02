@@ -12,7 +12,7 @@ function AppRoutes() {
   return (
     <Routes>
         <Route path="/" element={<EntryRedirect />} />
-        <Route path="/login" element={<Login />} />
+        <Route path="/login/*" element={<Login />} />
         <Route path="/select-role" element={<SelectRole />} />
         <Route
           path="/admin"
