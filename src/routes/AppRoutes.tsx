@@ -3,15 +3,18 @@ import ProtectedRoute from "../components/common/ProtectedRoute";
 import AdminDashboard from "../pages/AdminDashboard";
 import Login from "../pages/Login";
 import PoliceDashboard from "../pages/PoliceDashboard";
+import SelectRole from "../pages/SelectRole";
 import SupportDashboard from "../pages/SupportDashboard";
 import UserDashboard from "../pages/UserDashboard";
+import EntryRedirect from "./EntryRedirect";
 
 function AppRoutes() {
   return (
     <HashRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/" element={<EntryRedirect />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/select-role" element={<SelectRole />} />
         <Route
           path="/admin"
           element={
@@ -44,7 +47,7 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </HashRouter>
   );

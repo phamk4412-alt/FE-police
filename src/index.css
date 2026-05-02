@@ -124,6 +124,46 @@ a {
   box-shadow: var(--shadow);
 }
 
+.clerk-login-card {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.clerk-login-card > div:not(.section-heading):not(.auth-secondary-action) {
+  align-self: center;
+  width: 100%;
+}
+
+.auth-secondary-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.auth-secondary-action button {
+  border: 0;
+  background: transparent;
+  color: var(--primary);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  padding: 0;
+}
+
+.auth-loading {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  background: var(--background);
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
 .login-form,
 .report-form {
   display: grid;
@@ -225,6 +265,12 @@ a {
   margin: 0;
   color: var(--ink);
   font-size: 1.35rem;
+}
+
+.dashboard-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .dashboard-content {
@@ -716,6 +762,11 @@ tbody tr:hover {
   .incident-item {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .dashboard-header-actions {
+    justify-content: space-between;
+    width: 100%;
   }
 
   .dashboard-content {

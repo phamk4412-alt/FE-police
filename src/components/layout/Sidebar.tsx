@@ -1,7 +1,7 @@
+import { useClerk } from "@clerk/react";
 import { NavLink, useNavigate } from "react-router-dom";
 import type { UserRole } from "../../types/user";
 import { ROLE_HOME_PATHS, ROLES_WITH_MAP } from "../../utils/constants";
-import { clearCurrentUser } from "../../utils/storage";
 
 interface SidebarProps {
   role: UserRole;
@@ -9,11 +9,11 @@ interface SidebarProps {
 
 function Sidebar({ role }: SidebarProps) {
   const navigate = useNavigate();
+  const { signOut } = useClerk();
   const hasMap = ROLES_WITH_MAP.includes(role);
 
   function handleLogout() {
-    clearCurrentUser();
-    navigate("/login", { replace: true });
+    void signOut(() => navigate("/login", { replace: true }));
   }
 
   return (

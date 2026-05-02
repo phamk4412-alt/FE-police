@@ -1,66 +1,52 @@
 # FE Police
 
-Giao dien React + Vite ket noi voi backend `BE-police`.
+React + Vite frontend for the police dashboard.
 
-## Chay local
+## Authentication
 
-Backend local mac dinh duoc goi tai:
+The app uses Clerk React:
+
+- `@clerk/react`
+- `ClerkProvider` in `src/main.tsx`
+- Clerk sign-in UI in `src/pages/Login.tsx`
+- Role-based redirects through Clerk user metadata
+
+After sign-in, users are routed by role:
+
+| Role | Route |
+| --- | --- |
+| `admin` | `/#/admin` |
+| `police` | `/#/police` |
+| `support` | `/#/support` |
+| `user` | `/#/user` |
+
+If a new Clerk user has no role yet, the app sends them to `/#/select-role` once.
+
+## Environment
+
+For local development, create `.env.local`:
 
 ```text
-http://localhost:5055
+VITE_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key_here
+VITE_API_URL=http://localhost:5055
+VITE_MAPBOX_TOKEN=your_mapbox_public_token_here
 ```
 
-Chay frontend:
+For Vercel, `vercel.json` sets the Clerk publishable key used by this project.
+
+## Commands
 
 ```powershell
 npm ci
 npm run dev
+npm run build
 ```
 
-Neu backend chay cong khac, tao file `.env.local`:
+## Deploy
 
-```text
-VITE_API_BASE_URL=http://localhost:5055
-```
+This repo is ready for Vercel:
 
-## Deploy Vercel
-
-Ban production mac dinh goi backend Render:
-
-```text
-https://be-police-n8zf.onrender.com
-```
-
-Neu muon doi backend production, cau hinh bien moi truong:
-
-```text
-VITE_API_BASE_URL=https://ten-backend-public-cua-ban
-```
-
-Luu y:
-
-- Frontend `https://fe-police.vercel.app` khong the goi `http://localhost:5055`.
-- Backend cho ban production can co URL HTTPS cong khai.
-- Backend phai cho phep CORS origin `https://fe-police.vercel.app` va cookie cross-site neu dang nhap bang cookie.
-
-## Tai khoan demo
-
-| Vai tro | Tai khoan | Mat khau |
-| --- | --- | --- |
-| Admin | `admin` | `admin123` |
-| Police | `police` | `police123` |
-| Support | `support` | `support123` |
-| User | `user` | `user123` |
-
-## API dang dung
-
-- `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`
-- `GET /api/health`
-- `POST /api/incidents/analyze`
-- `POST /api/incidents`
-- `GET /api/incidents`
-- `PATCH /api/incidents/{id}/status`
-- `GET /api/police/hotspots`
-- `GET /api/police/patrol-vehicles`
-- `GET /api/support/dispatch-board`
-- `GET /api/admin/statistics`
+- Framework: Vite
+- Install command: `npm ci`
+- Build command: `npm run build`
+- Output directory: `dist`

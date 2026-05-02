@@ -1,3 +1,4 @@
+import { Show, UserButton } from "@clerk/react";
 import type { UserRole } from "../../types/user";
 import { APP_NAME, ROLE_LABELS } from "../../utils/constants";
 
@@ -12,7 +13,12 @@ function Header({ role }: HeaderProps) {
         <p className="eyebrow">Dự án Cảnh sát</p>
         <h1>{APP_NAME}</h1>
       </div>
-      <div className="role-badge">{ROLE_LABELS[role]}</div>
+      <div className="dashboard-header-actions">
+        <div className="role-badge">{ROLE_LABELS[role]}</div>
+        <Show when="signed-in">
+          <UserButton />
+        </Show>
+      </div>
     </header>
   );
 }

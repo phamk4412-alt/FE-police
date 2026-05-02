@@ -1,0 +1,9 @@
+{
+  "buildCommand": "npm run build",
+  "installCommand": "npm ci",
+  "outputDirectory": "dist",
+  "framework": "vite",
+  "env": {
+    "VITE_CLERK_PUBLISHABLE_KEY": "pk_test_bGl2ZS1qYXZlbGluLTYxLmNsZXJrLmFjY291bnRzLmRldiQ"
+  }
+}
