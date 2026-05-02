@@ -34,9 +34,10 @@ function Login() {
         </div>
 
         <SignIn
-          fallbackRedirectUrl="/#/login"
-          routing="hash"
-          signUpFallbackRedirectUrl="/#/login"
+          routing="path"
+          path="/login"
+          fallbackRedirectUrl="/"
+          signUpFallbackRedirectUrl="/"
         />
 
         <div className="auth-secondary-action">

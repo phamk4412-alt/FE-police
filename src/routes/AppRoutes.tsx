@@ -1,4 +1,4 @@
-import { HashRouter, Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import ProtectedRoute from "../components/common/ProtectedRoute";
 import AdminDashboard from "../pages/AdminDashboard";
 import Login from "../pages/Login";
@@ -10,8 +10,7 @@ import EntryRedirect from "./EntryRedirect";
 
 function AppRoutes() {
   return (
-    <HashRouter>
-      <Routes>
+    <Routes>
         <Route path="/" element={<EntryRedirect />} />
         <Route path="/login" element={<Login />} />
         <Route path="/select-role" element={<SelectRole />} />
@@ -48,8 +47,7 @@ function AppRoutes() {
           }
         />
         <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </HashRouter>
+    </Routes>
   );
 }
 
