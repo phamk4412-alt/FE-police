@@ -35,6 +35,7 @@ type BoundaryGeoJson = GeoJSON.FeatureCollection<GeoJSON.Geometry, Record<string
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN as string | undefined;
 const HCM_WIKIDATA_ID = "Q1854";
+const HCM_BOUNDARY_URLS = ["/maps/hcm-boundary.geojson", `${API_URL}/api/maps/hcm-boundary`];
 
 const fallbackFacilityMarkers: FacilityMarker[] = [
   {
@@ -267,13 +268,19 @@ async function fetchHoChiMinhFacilities() {
 }
 
 async function fetchHoChiMinhBoundary() {
-  const response = await fetch(`${API_URL}/api/maps/hcm-boundary`);
+  for (const url of HCM_BOUNDARY_URLS) {
+    try {
+      const response = await fetch(url);
 
-  if (!response.ok) {
-    throw new Error(`Boundary API error: ${response.status}`);
+      if (response.ok) {
+        return response.json() as Promise<BoundaryGeoJson>;
+      }
+    } catch {
+      continue;
+    }
   }
 
-  return response.json() as Promise<BoundaryGeoJson>;
+  throw new Error("Unable to load Ho Chi Minh boundary data");
 }
 
 function createFacilityMarker({ logo, name, type }: FacilityMarker) {
