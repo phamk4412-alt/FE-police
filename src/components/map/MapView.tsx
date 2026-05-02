@@ -30,7 +30,29 @@ interface OverpassElement {
   tags?: Record<string, string>;
 }
 
+interface OverpassBoundaryElement {
+  members?: Array<{
+    geometry?: Array<{
+      lat: number;
+      lon: number;
+    }>;
+  }>;
+}
+
+type BoundaryGeoJson = {
+  features: Array<{
+    geometry: {
+      coordinates: Array<[number, number]>;
+      type: "LineString";
+    };
+    properties: Record<string, never>;
+    type: "Feature";
+  }>;
+  type: "FeatureCollection";
+};
+
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN as string | undefined;
+const HCM_WIKIDATA_ID = "Q1854";
 
 const fallbackFacilityMarkers: FacilityMarker[] = [
   {
@@ -93,7 +115,7 @@ const fallbackFacilityMarkers: FacilityMarker[] = [
 
 const overpassQuery = `
   [out:json][timeout:25];
-  area["name"="Thành phố Hồ Chí Minh"]["boundary"="administrative"]->.hcm;
+  area["wikidata"="${HCM_WIKIDATA_ID}"]["boundary"="administrative"]->.hcm;
   (
     node["amenity"="hospital"](area.hcm);
     way["amenity"="hospital"](area.hcm);
@@ -107,6 +129,24 @@ const overpassQuery = `
   );
   out center tags;
 `;
+
+const boundaryQuery = `
+  [out:json][timeout:25];
+  relation["wikidata"="${HCM_WIKIDATA_ID}"]["boundary"="administrative"];
+  out geom;
+`;
+
+function takeHalfByType(facilities: FacilityMarker[]) {
+  const hospitalMarkers = facilities.filter((facility) => facility.type === "hospital");
+  const policeMarkers = facilities.filter((facility) => facility.type === "police");
+
+  function takeHalf(markers: FacilityMarker[]) {
+    const limit = Math.max(1, Math.ceil(markers.length / 2));
+    return markers.filter((_, index) => index % 2 === 0).slice(0, limit);
+  }
+
+  return [...takeHalf(policeMarkers), ...takeHalf(hospitalMarkers)];
+}
 
 function getElementCoordinates(element: OverpassElement): [number, number] | null {
   const lat = element.lat ?? element.center?.lat;
@@ -135,9 +175,8 @@ function normalizeFacilityMarkers(elements: OverpassElement[]) {
   return elements.reduce<FacilityMarker[]>((markers, element) => {
     const coordinates = getElementCoordinates(element);
     const tags = element.tags || {};
-    const type = tags.amenity === "hospital" || tags.healthcare === "hospital"
-      ? "hospital"
-      : "police";
+    const type =
+      tags.amenity === "hospital" || tags.healthcare === "hospital" ? "hospital" : "police";
 
     if (!coordinates) {
       return markers;
@@ -155,9 +194,27 @@ function normalizeFacilityMarkers(elements: OverpassElement[]) {
   }, []);
 }
 
-async function fetchHoChiMinhFacilities() {
+function normalizeBoundary(elements: OverpassBoundaryElement[]): BoundaryGeoJson {
+  return {
+    features: elements.flatMap((element) =>
+      (element.members || [])
+        .filter((member) => member.geometry && member.geometry.length > 1)
+        .map((member) => ({
+          geometry: {
+            coordinates: member.geometry!.map((point) => [point.lon, point.lat] as [number, number]),
+            type: "LineString" as const,
+          },
+          properties: {},
+          type: "Feature" as const,
+        })),
+    ),
+    type: "FeatureCollection",
+  };
+}
+
+async function fetchOverpass<T>(query: string) {
   const response = await fetch("https://overpass-api.de/api/interpreter", {
-    body: new URLSearchParams({ data: overpassQuery }),
+    body: new URLSearchParams({ data: query }),
     method: "POST",
   });
 
@@ -165,8 +222,17 @@ async function fetchHoChiMinhFacilities() {
     throw new Error(`Overpass API error: ${response.status}`);
   }
 
-  const data = (await response.json()) as { elements?: OverpassElement[] };
+  return response.json() as Promise<{ elements?: T[] }>;
+}
+
+async function fetchHoChiMinhFacilities() {
+  const data = await fetchOverpass<OverpassElement>(overpassQuery);
   return normalizeFacilityMarkers(data.elements || []);
+}
+
+async function fetchHoChiMinhBoundary() {
+  const data = await fetchOverpass<OverpassBoundaryElement>(boundaryQuery);
+  return normalizeBoundary(data.elements || []);
 }
 
 function createFacilityMarker({ logo, name, type }: FacilityMarker) {
@@ -202,6 +268,27 @@ function createFacilityPopup({ address, name, type }: FacilityMarker) {
   return popupContent;
 }
 
+function addBoundaryLayer(map: mapboxgl.Map, boundary: BoundaryGeoJson) {
+  if (!boundary.features.length || map.getSource("hcm-boundary")) {
+    return;
+  }
+
+  map.addSource("hcm-boundary", {
+    data: boundary,
+    type: "geojson",
+  });
+
+  map.addLayer({
+    id: "hcm-boundary-line",
+    paint: {
+      "line-color": "#0369a1",
+      "line-width": 3,
+    },
+    source: "hcm-boundary",
+    type: "line",
+  });
+}
+
 function MapView({
   center = [106.660172, 10.762622],
   title = "Ban do tac nghiep",
@@ -230,7 +317,7 @@ function MapView({
 
     function renderFacilityMarkers(facilities: FacilityMarker[]) {
       facilityMapMarkers.forEach((marker) => marker.remove());
-      facilityMapMarkers = facilities.map((facility) =>
+      facilityMapMarkers = takeHalfByType(facilities).map((facility) =>
         new mapboxgl.Marker({
           anchor: "bottom",
           element: createFacilityMarker(facility),
@@ -242,6 +329,16 @@ function MapView({
           .addTo(map),
       );
     }
+
+    map.on("load", () => {
+      fetchHoChiMinhBoundary()
+        .then((boundary) => {
+          if (isMounted) {
+            addBoundaryLayer(map, boundary);
+          }
+        })
+        .catch(() => undefined);
+    });
 
     renderFacilityMarkers(fallbackFacilityMarkers);
 
