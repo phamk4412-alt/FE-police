@@ -54,140 +54,140 @@ type BoundaryGeoJson = {
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN as string | undefined;
 const HCM_WIKIDATA_ID = "Q1854";
 const HCM_MAINLAND_BOUNDS = {
-  east: 106.89,
+  east: 107.08,
   north: 11.16,
-  south: 10.5,
+  south: 10.32,
   west: 106.35,
 };
 
 const fallbackFacilityMarkers: FacilityMarker[] = [
   {
-    address: "73 Yersin, phuong Cau Ong Lanh, Quan 1, TP.HCM",
+    address: "73 Yersin, phường Cầu Ông Lãnh, Quận 1, TP.HCM",
     coordinates: [106.700981, 10.776889],
     logo: policeStationLogo,
-    name: "Tru so Cong an Quan 1",
+    name: "Trụ sở Công an Quận 1",
     type: "police",
   },
   {
-    address: "359 Tran Hung Dao, Phuong 10, Quan 5, TP.HCM",
+    address: "359 Trần Hưng Đạo, Phường 10, Quận 5, TP.HCM",
     coordinates: [106.6728, 10.7536],
     logo: policeStationLogo,
-    name: "Tru so Cong an Quan 5",
+    name: "Trụ sở Công an Quận 5",
     type: "police",
   },
   {
-    address: "47 Thanh Thai, Phuong 14, Quan 10, TP.HCM",
+    address: "47 Thành Thái, Phường 14, Quận 10, TP.HCM",
     coordinates: [106.667, 10.7728],
     logo: policeStationLogo,
-    name: "Tru so Cong an Quan 10",
+    name: "Trụ sở Công an Quận 10",
     type: "police",
   },
   {
-    address: "371 Doan Ket, phuong Binh Tho, TP. Thu Duc, TP.HCM",
+    address: "371 Đoàn Kết, phường Bình Thọ, TP. Thủ Đức, TP.HCM",
     coordinates: [106.7658, 10.8498],
     logo: policeStationLogo,
-    name: "Tru so Cong an TP. Thu Duc",
+    name: "Trụ sở Công an TP. Thủ Đức",
     type: "police",
   },
   {
-    address: "201B Nguyen Chi Thanh, Phuong 12, Quan 5, TP.HCM",
+    address: "201B Nguyễn Chí Thanh, Phường 12, Quận 5, TP.HCM",
     coordinates: [106.681637, 10.755106],
     logo: hospitalLogo,
-    name: "Benh vien Cho Ray",
+    name: "Bệnh viện Chợ Rẫy",
     type: "hospital",
   },
   {
-    address: "14 Ly Tu Trong, phuong Ben Nghe, Quan 1, TP.HCM",
+    address: "14 Lý Tự Trọng, phường Bến Nghé, Quận 1, TP.HCM",
     coordinates: [106.700622, 10.777204],
     logo: hospitalLogo,
-    name: "Benh vien Nhi Dong 2",
+    name: "Bệnh viện Nhi Đồng 2",
     type: "hospital",
   },
   {
-    address: "764 Vo Van Kiet, Phuong 1, Quan 5, TP.HCM",
+    address: "764 Võ Văn Kiệt, Phường 1, Quận 5, TP.HCM",
     coordinates: [106.6687, 10.7521],
     logo: hospitalLogo,
-    name: "Benh vien Nhi Dong 1",
+    name: "Bệnh viện Nhi Đồng 1",
     type: "hospital",
   },
   {
-    address: "215 Hong Bang, Phuong 11, Quan 5, TP.HCM",
+    address: "215 Hồng Bàng, Phường 11, Quận 5, TP.HCM",
     coordinates: [106.6675, 10.7547],
     logo: hospitalLogo,
-    name: "Benh vien Dai hoc Y Duoc TP.HCM",
+    name: "Bệnh viện Đại học Y Dược TP.HCM",
     type: "hospital",
   },
 ];
 
 const majorHospitalMarkers: FacilityMarker[] = [
   {
-    address: "201B Nguyen Chi Thanh, Phuong 12, Quan 5, TP.HCM",
+    address: "201B Nguyễn Chí Thanh, Phường 12, Quận 5, TP.HCM",
     coordinates: [106.681637, 10.755106],
     logo: hospitalLogo,
-    name: "Benh vien Cho Ray",
+    name: "Bệnh viện Chợ Rẫy",
     type: "hospital",
   },
   {
-    address: "215 Hong Bang, Phuong 11, Quan 5, TP.HCM",
+    address: "215 Hồng Bàng, Phường 11, Quận 5, TP.HCM",
     coordinates: [106.6675, 10.7547],
     logo: hospitalLogo,
-    name: "Benh vien Dai hoc Y Duoc TP.HCM",
+    name: "Bệnh viện Đại học Y Dược TP.HCM",
     type: "hospital",
   },
   {
-    address: "764 Vo Van Kiet, Phuong 1, Quan 5, TP.HCM",
+    address: "764 Võ Văn Kiệt, Phường 1, Quận 5, TP.HCM",
     coordinates: [106.6687, 10.7521],
     logo: hospitalLogo,
-    name: "Benh vien Nhi Dong 1",
+    name: "Bệnh viện Nhi Đồng 1",
     type: "hospital",
   },
   {
-    address: "14 Ly Tu Trong, phuong Ben Nghe, Quan 1, TP.HCM",
+    address: "14 Lý Tự Trọng, phường Bến Nghé, Quận 1, TP.HCM",
     coordinates: [106.700622, 10.777204],
     logo: hospitalLogo,
-    name: "Benh vien Nhi Dong 2",
+    name: "Bệnh viện Nhi Đồng 2",
     type: "hospital",
   },
   {
-    address: "2 Nguyen Thong, Phuong 6, Quan 3, TP.HCM",
+    address: "2 Nguyễn Thông, Phường 6, Quận 3, TP.HCM",
     coordinates: [106.6866, 10.7828],
     logo: hospitalLogo,
-    name: "Benh vien Mat TP.HCM",
+    name: "Bệnh viện Mắt TP.HCM",
     type: "hospital",
   },
   {
-    address: "527 Su Van Hanh, Phuong 12, Quan 10, TP.HCM",
+    address: "527 Sư Vạn Hạnh, Phường 12, Quận 10, TP.HCM",
     coordinates: [106.6676, 10.7707],
     logo: hospitalLogo,
-    name: "Benh vien Nhan dan 115",
+    name: "Bệnh viện Nhân dân 115",
     type: "hospital",
   },
   {
-    address: "1 No Trang Long, Phuong 7, Quan Binh Thanh, TP.HCM",
+    address: "1 Nơ Trang Long, Phường 7, Quận Bình Thạnh, TP.HCM",
     coordinates: [106.6943, 10.8103],
     logo: hospitalLogo,
-    name: "Benh vien Nhan dan Gia Dinh",
+    name: "Bệnh viện Nhân dân Gia Định",
     type: "hospital",
   },
   {
-    address: "120 Hong Bang, Phuong 12, Quan 5, TP.HCM",
+    address: "120 Hồng Bàng, Phường 12, Quận 5, TP.HCM",
     coordinates: [106.6694, 10.7557],
     logo: hospitalLogo,
-    name: "Benh vien Hung Vuong",
+    name: "Bệnh viện Hùng Vương",
     type: "hospital",
   },
   {
-    address: "280 An Duong Vuong, Phuong 4, Quan 5, TP.HCM",
+    address: "280 An Dương Vương, Phường 4, Quận 5, TP.HCM",
     coordinates: [106.6831, 10.7568],
     logo: hospitalLogo,
-    name: "Benh vien Nguyen Tri Phuong",
+    name: "Bệnh viện Nguyễn Tri Phương",
     type: "hospital",
   },
   {
-    address: "125 Le Loi, Phuong Ben Thanh, Quan 1, TP.HCM",
+    address: "125 Lê Lợi, Phường Bến Thành, Quận 1, TP.HCM",
     coordinates: [106.6966, 10.7737],
     logo: hospitalLogo,
-    name: "Benh vien Da khoa Sai Gon",
+    name: "Bệnh viện Đa khoa Sài Gòn",
     type: "hospital",
   },
 ];
@@ -247,7 +247,7 @@ function getElementAddress(tags: Record<string, string> = {}) {
     tags["addr:city"] || "TP.HCM",
   ].filter(Boolean);
 
-  return addressParts.length ? addressParts.join(", ") : "Thanh pho Ho Chi Minh";
+  return addressParts.length ? addressParts.join(", ") : "Thành phố Hồ Chí Minh";
 }
 
 function normalizeFacilityMarkers(elements: OverpassElement[]) {
@@ -265,7 +265,7 @@ function normalizeFacilityMarkers(elements: OverpassElement[]) {
       address: getElementAddress(tags),
       coordinates,
       logo: type === "hospital" ? hospitalLogo : policeStationLogo,
-      name: tags.name || (type === "hospital" ? "Benh vien" : "Tru so canh sat"),
+      name: tags.name || (type === "hospital" ? "Bệnh viện" : "Trụ sở cảnh sát"),
       type,
     });
 
@@ -381,7 +381,7 @@ function createFacilityPopup({ address, name, type }: FacilityMarker) {
   titleElement.textContent = name;
 
   const typeElement = document.createElement("span");
-  typeElement.textContent = type === "hospital" ? "Benh vien" : "Tru so canh sat";
+  typeElement.textContent = type === "hospital" ? "Bệnh viện" : "Trụ sở cảnh sát";
 
   const addressElement = document.createElement("small");
   addressElement.textContent = address;
@@ -414,7 +414,7 @@ function addBoundaryLayer(map: mapboxgl.Map, boundary: BoundaryGeoJson) {
 
 function MapView({
   center = [106.660172, 10.762622],
-  title = "Ban do tac nghiep",
+  title = "Bản đồ tác nghiệp",
   zoom = 11,
 }: MapViewProps) {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
@@ -487,7 +487,7 @@ function MapView({
   return (
     <section className="map-card" id="map">
       <div className="section-heading">
-        <span className="eyebrow">Ban do</span>
+        <span className="eyebrow">Bản đồ</span>
         <h2>{title}</h2>
       </div>
 
@@ -500,8 +500,8 @@ function MapView({
         />
       ) : (
         <div className="map-token-warning">
-          <strong>Thieu Mapbox token</strong>
-          <span>Them VITE_MAPBOX_TOKEN vao file .env de tai ban do.</span>
+          <strong>Thiếu Mapbox token</strong>
+          <span>Thêm VITE_MAPBOX_TOKEN vào file .env để tải bản đồ.</span>
         </div>
       )}
     </section>
