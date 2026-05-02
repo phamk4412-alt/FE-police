@@ -1,4 +1,4 @@
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { HashRouter, Navigate, Route, Routes } from "react-router-dom";
 import ProtectedRoute from "../components/common/ProtectedRoute";
 import AdminDashboard from "../pages/AdminDashboard";
 import Login from "../pages/Login";
@@ -8,7 +8,7 @@ import UserDashboard from "../pages/UserDashboard";
 
 function AppRoutes() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Routes>
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<Login />} />
@@ -46,7 +46,7 @@ function AppRoutes() {
         />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 
