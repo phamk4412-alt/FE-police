@@ -30,15 +30,6 @@ interface OverpassElement {
   tags?: Record<string, string>;
 }
 
-interface OverpassBoundaryElement {
-  members?: Array<{
-    geometry?: Array<{
-      lat: number;
-      lon: number;
-    }>;
-  }>;
-}
-
 type BoundaryGeoJson = {
   features: Array<{
     geometry: {
@@ -53,11 +44,41 @@ type BoundaryGeoJson = {
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN as string | undefined;
 const HCM_WIKIDATA_ID = "Q1854";
-const HCM_MAINLAND_BOUNDS = {
-  east: 107.08,
-  north: 11.16,
-  south: 10.32,
-  west: 106.35,
+
+const hcmMainlandBoundary: BoundaryGeoJson = {
+  features: [
+    {
+      geometry: {
+        coordinates: [
+          [106.37, 11.16],
+          [106.48, 11.15],
+          [106.58, 11.09],
+          [106.68, 11.11],
+          [106.78, 11.05],
+          [106.9, 10.98],
+          [107.03, 10.88],
+          [106.97, 10.75],
+          [106.92, 10.67],
+          [107.04, 10.55],
+          [107.0, 10.43],
+          [106.91, 10.35],
+          [106.78, 10.36],
+          [106.71, 10.45],
+          [106.69, 10.55],
+          [106.6, 10.6],
+          [106.5, 10.62],
+          [106.41, 10.72],
+          [106.35, 10.84],
+          [106.35, 10.98],
+          [106.37, 11.16],
+        ],
+        type: "LineString",
+      },
+      properties: {},
+      type: "Feature",
+    },
+  ],
+  type: "FeatureCollection",
 };
 
 const fallbackFacilityMarkers: FacilityMarker[] = [
@@ -209,22 +230,16 @@ const overpassQuery = `
   out center tags;
 `;
 
-const boundaryQuery = `
-  [out:json][timeout:25];
-  relation["wikidata"="${HCM_WIKIDATA_ID}"]["boundary"="administrative"];
-  out geom;
-`;
-
 function limitFacilitiesForDisplay(facilities: FacilityMarker[]) {
   const hospitalMarkers = facilities.filter((facility) => facility.type === "hospital");
   const policeMarkers = facilities.filter((facility) => facility.type === "police");
 
-  function takeHalf(markers: FacilityMarker[]) {
-    const limit = Math.max(1, Math.ceil(markers.length / 2));
-    return markers.filter((_, index) => index % 2 === 0).slice(0, limit);
+  function takeThirtyPercent(markers: FacilityMarker[]) {
+    const limit = Math.max(1, Math.ceil(markers.length * 0.3));
+    return markers.filter((_, index) => index % 3 === 0).slice(0, limit);
   }
 
-  return [...takeHalf(policeMarkers), ...hospitalMarkers];
+  return [...takeThirtyPercent(policeMarkers), ...takeThirtyPercent(hospitalMarkers)];
 }
 
 function getElementCoordinates(element: OverpassElement): [number, number] | null {
@@ -278,63 +293,6 @@ function withMajorHospitals(facilities: FacilityMarker[]) {
   return [...policeMarkers, ...majorHospitalMarkers];
 }
 
-function isMainlandPoint([lon, lat]: [number, number]) {
-  return (
-    lon >= HCM_MAINLAND_BOUNDS.west &&
-    lon <= HCM_MAINLAND_BOUNDS.east &&
-    lat >= HCM_MAINLAND_BOUNDS.south &&
-    lat <= HCM_MAINLAND_BOUNDS.north
-  );
-}
-
-function splitMainlandSegments(coordinates: Array<[number, number]>) {
-  const segments: Array<Array<[number, number]>> = [];
-  let currentSegment: Array<[number, number]> = [];
-
-  coordinates.forEach((coordinate) => {
-    if (isMainlandPoint(coordinate)) {
-      currentSegment.push(coordinate);
-      return;
-    }
-
-    if (currentSegment.length > 1) {
-      segments.push(currentSegment);
-    }
-
-    currentSegment = [];
-  });
-
-  if (currentSegment.length > 1) {
-    segments.push(currentSegment);
-  }
-
-  return segments;
-}
-
-function normalizeBoundary(elements: OverpassBoundaryElement[]): BoundaryGeoJson {
-  return {
-    features: elements.flatMap((element) =>
-      (element.members || [])
-        .filter((member) => member.geometry && member.geometry.length > 1)
-        .flatMap((member) => {
-          const coordinates = member.geometry!.map(
-            (point) => [point.lon, point.lat] as [number, number],
-          );
-
-          return splitMainlandSegments(coordinates).map((segment) => ({
-            geometry: {
-              coordinates: segment,
-              type: "LineString" as const,
-            },
-            properties: {},
-            type: "Feature" as const,
-          }));
-        }),
-    ),
-    type: "FeatureCollection",
-  };
-}
-
 async function fetchOverpass<T>(query: string) {
   const response = await fetch("https://overpass-api.de/api/interpreter", {
     body: new URLSearchParams({ data: query }),
@@ -351,11 +309,6 @@ async function fetchOverpass<T>(query: string) {
 async function fetchHoChiMinhFacilities() {
   const data = await fetchOverpass<OverpassElement>(overpassQuery);
   return withMajorHospitals(normalizeFacilityMarkers(data.elements || []));
-}
-
-async function fetchHoChiMinhBoundary() {
-  const data = await fetchOverpass<OverpassBoundaryElement>(boundaryQuery);
-  return normalizeBoundary(data.elements || []);
 }
 
 function createFacilityMarker({ logo, name, type }: FacilityMarker) {
@@ -454,13 +407,7 @@ function MapView({
     }
 
     map.on("load", () => {
-      fetchHoChiMinhBoundary()
-        .then((boundary) => {
-          if (isMounted) {
-            addBoundaryLayer(map, boundary);
-          }
-        })
-        .catch(() => undefined);
+      addBoundaryLayer(map, hcmMainlandBoundary);
     });
 
     renderFacilityMarkers(withMajorHospitals(fallbackFacilityMarkers));
