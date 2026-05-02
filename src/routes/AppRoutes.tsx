@@ -3,6 +3,7 @@ import ProtectedRoute from "../components/common/ProtectedRoute";
 import AdminDashboard from "../pages/AdminDashboard";
 import Login from "../pages/Login";
 import PoliceDashboard from "../pages/PoliceDashboard";
+import Register from "../pages/Register";
 import SelectRole from "../pages/SelectRole";
 import SupportDashboard from "../pages/SupportDashboard";
 import UserDashboard from "../pages/UserDashboard";
@@ -13,6 +14,7 @@ function AppRoutes() {
     <Routes>
         <Route path="/" element={<EntryRedirect />} />
         <Route path="/login/*" element={<Login />} />
+        <Route path="/sign-up/*" element={<Register />} />
         <Route path="/select-role" element={<SelectRole />} />
         <Route
           path="/admin"

@@ -1,9 +1,9 @@
-import { SignIn, useUser } from "@clerk/react";
+import { SignUp, useUser } from "@clerk/react";
 import { Navigate } from "react-router-dom";
 import { APP_NAME, ROLE_HOME_PATHS } from "../utils/constants";
 import { getClerkUserRole } from "../utils/clerkRole";
 
-function Login() {
+function Register() {
   const { isLoaded, isSignedIn, user } = useUser();
 
   if (!isLoaded) {
@@ -12,7 +12,6 @@ function Login() {
 
   if (isSignedIn) {
     const role = getClerkUserRole(user);
-
     return <Navigate to={role ? ROLE_HOME_PATHS[role] : "/select-role"} replace />;
   }
 
@@ -22,25 +21,23 @@ function Login() {
         <p className="eyebrow">Dự án Cảnh sát</p>
         <h1>{APP_NAME}</h1>
         <p>
-          Đăng nhập bằng Clerk để mở đúng bảng điều khiển theo vai trò tài
-          khoản.
+          Tạo tài khoản để truy cập hệ thống theo vai trò được phân quyền.
         </p>
       </section>
 
       <section className="login-card clerk-login-card">
         <div className="section-heading">
           <span className="eyebrow">Clerk</span>
-          <h2>Đăng nhập</h2>
+          <h2>Tạo tài khoản</h2>
         </div>
 
-        <SignIn
+        <SignUp
           fallbackRedirectUrl="/"
-          signUpFallbackRedirectUrl="/"
+          signInFallbackRedirectUrl="/"
         />
-
       </section>
     </main>
   );
 }
 
-export default Login;
+export default Register;

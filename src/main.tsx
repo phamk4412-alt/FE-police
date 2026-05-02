@@ -19,7 +19,7 @@ function ClerkProviderWithRouter({ children }: { children: React.ReactNode }) {
       routerPush={(to) => navigate(to)}
       routerReplace={(to) => navigate(to, { replace: true })}
       signInUrl="/login"
-      signUpUrl="/login"
+      signUpUrl="/sign-up"
     >
       {children}
     </ClerkProvider>
