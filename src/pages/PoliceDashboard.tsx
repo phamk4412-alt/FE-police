@@ -52,7 +52,7 @@ function PoliceDashboard() {
         ))}
       </section>
 
-      <MapView title="Bản đồ phản ứng của cảnh sát" />
+      <MapView title="Bản đồ bệnh viện và trụ sở cảnh sát TP.HCM" />
 
       <section className="panel" id="incidents">
         <div className="section-heading">

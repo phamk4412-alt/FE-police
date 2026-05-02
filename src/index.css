@@ -523,6 +523,31 @@ th {
   background: #dc2626;
 }
 
+.facility-popup {
+  display: grid;
+  gap: 3px;
+  max-width: 240px;
+  color: var(--text);
+}
+
+.facility-popup strong {
+  color: var(--ink);
+  font-size: 0.92rem;
+}
+
+.facility-popup span {
+  color: var(--primary);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.facility-popup small {
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
 .map-token-warning {
   display: grid;
   place-items: center;
