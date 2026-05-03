@@ -4,11 +4,20 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import hospitalLogo from "../../assets/hospital-logo.svg";
 import policeStationLogo from "../../assets/police-station-logo.svg";
 import { API_URL } from "../../services/api";
+import type { Incident } from "../../types/incident";
+import {
+  getIncidentCoordinates,
+  getIncidentCreatedAt,
+  getIncidentLocation,
+  getIncidentStatus,
+  getIncidentTitle,
+} from "../../types/incident";
 
 interface MapViewProps {
   center?: [number, number];
   defaultToCurrentLocation?: boolean;
   currentLocationLabel?: string;
+  incidents?: Incident[];
   title?: string;
   zoom?: number;
 }
@@ -397,6 +406,37 @@ function createCurrentLocationMarker(label: string) {
   return markerElement;
 }
 
+function createIncidentMarker(incident: Incident) {
+  const markerElement = document.createElement("button");
+  markerElement.type = "button";
+  markerElement.className = "incident-map-marker";
+  markerElement.setAttribute("aria-label", getIncidentTitle(incident));
+
+  return markerElement;
+}
+
+function createIncidentPopup(incident: Incident) {
+  const popupContent = document.createElement("div");
+  popupContent.className = "incident-map-popup";
+
+  const titleElement = document.createElement("strong");
+  titleElement.textContent = getIncidentTitle(incident);
+
+  const statusElement = document.createElement("span");
+  statusElement.textContent = getIncidentStatus(incident);
+
+  const metaElement = document.createElement("small");
+  const location = getIncidentLocation(incident);
+  const createdAt = getIncidentCreatedAt(incident);
+  metaElement.textContent = [location, createdAt ? new Date(createdAt).toLocaleString("vi-VN") : ""]
+    .filter(Boolean)
+    .join(" - ");
+
+  popupContent.append(titleElement, statusElement, metaElement);
+
+  return popupContent;
+}
+
 function addBoundaryLayer(map: mapboxgl.Map, boundary: BoundaryGeoJson) {
   if (!boundary.features.length || map.getSource("hcm-boundary")) {
     return;
@@ -452,6 +492,7 @@ function MapView({
   center = [106.88, 10.9],
   defaultToCurrentLocation = false,
   currentLocationLabel = "Vị trí hiện tại",
+  incidents = [],
   title = "Bản đồ tác nghiệp",
   zoom = 8.8,
 }: MapViewProps) {
@@ -498,6 +539,7 @@ function MapView({
     let isMounted = true;
     let currentLocationMarker: mapboxgl.Marker | null = null;
     let facilityMapMarkers: mapboxgl.Marker[] = [];
+    let incidentMapMarkers: mapboxgl.Marker[] = [];
 
     if (currentLocation) {
       currentLocationMarker = new mapboxgl.Marker({
@@ -529,6 +571,25 @@ function MapView({
       );
     }
 
+    function renderIncidentMarkers() {
+      incidentMapMarkers.forEach((marker) => marker.remove());
+      incidentMapMarkers = incidents.flatMap((incident) => {
+        const coordinates = getIncidentCoordinates(incident);
+
+        if (!coordinates) {
+          return [];
+        }
+
+        return new mapboxgl.Marker({
+          anchor: "bottom",
+          element: createIncidentMarker(incident),
+        })
+          .setLngLat(coordinates)
+          .setPopup(new mapboxgl.Popup({ offset: 24 }).setDOMContent(createIncidentPopup(incident)))
+          .addTo(map);
+      });
+    }
+
     map.on("load", () => {
       fetchHoChiMinhBoundary()
         .then((boundary) => {
@@ -540,6 +601,7 @@ function MapView({
     });
 
     renderFacilityMarkers(withMajorHospitals(fallbackFacilityMarkers));
+    renderIncidentMarkers();
 
     fetchHoChiMinhFacilities()
       .then((facilities) => {
@@ -557,9 +619,10 @@ function MapView({
       isMounted = false;
       currentLocationMarker?.remove();
       facilityMapMarkers.forEach((marker) => marker.remove());
+      incidentMapMarkers.forEach((marker) => marker.remove());
       map.remove();
     };
-  }, [center, currentLocation, currentLocationLabel, showFacilityMarkers, zoom]);
+  }, [center, currentLocation, currentLocationLabel, incidents, showFacilityMarkers, zoom]);
 
   return (
     <section className="map-card" id="map">

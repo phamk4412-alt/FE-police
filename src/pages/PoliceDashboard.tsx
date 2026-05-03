@@ -1,7 +1,16 @@
+import { useEffect, useState } from "react";
 import DashboardLayout from "../components/layout/DashboardLayout";
 import MapView from "../components/map/MapView";
+import { getPoliceIncidents } from "../services/policeService";
 import type { DashboardStat } from "../types/common";
 import type { Incident } from "../types/incident";
+import {
+  getIncidentCreatedAt,
+  getIncidentId,
+  getIncidentLocation,
+  getIncidentStatus,
+  getIncidentTitle,
+} from "../types/incident";
 
 const stats: DashboardStat[] = [
   { label: "Vụ việc mới", value: 14, note: "Cần phản hồi ban đầu" },
@@ -9,31 +18,31 @@ const stats: DashboardStat[] = [
   { label: "Khu vực nóng", value: 4, note: "Mật độ cảnh báo cao" },
 ];
 
-const incidents: Incident[] = [
-  {
-    id: 1001,
-    title: "Phản ánh tiếng ồn gần công viên trung tâm",
-    status: "Mới tiếp nhận",
-    location: "Quận 1",
-    createdAt: "2026-05-01 08:20",
-  },
-  {
-    id: 1002,
-    title: "Va chạm giao thông trên đường Nguyễn Trãi",
-    status: "Đang xử lý",
-    location: "Quận 5",
-    createdAt: "2026-05-01 09:05",
-  },
-  {
-    id: 1003,
-    title: "Báo cáo hoạt động đáng ngờ",
-    status: "Đã phân công",
-    location: "Quận 3",
-    createdAt: "2026-05-01 10:12",
-  },
-];
-
 function PoliceDashboard() {
+  const [incidents, setIncidents] = useState<Incident[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    function loadIncidents() {
+      getPoliceIncidents()
+        .then((items) => {
+          if (isMounted) {
+            setIncidents(items);
+          }
+        })
+        .catch(() => undefined);
+    }
+
+    loadIncidents();
+    const intervalId = window.setInterval(loadIncidents, 10000);
+
+    return () => {
+      isMounted = false;
+      window.clearInterval(intervalId);
+    };
+  }, []);
+
   return (
     <DashboardLayout role="police">
       <section className="page-title">
@@ -55,6 +64,7 @@ function PoliceDashboard() {
       <MapView
         currentLocationLabel="Vị trí hiện tại của cảnh sát"
         defaultToCurrentLocation
+        incidents={incidents}
         title="Bản đồ bệnh viện và trụ sở cảnh sát TP.HCM"
       />
 
@@ -65,14 +75,14 @@ function PoliceDashboard() {
         </div>
         <div className="incident-list">
           {incidents.map((incident) => (
-            <article className="incident-item" key={incident.id}>
+            <article className="incident-item" key={getIncidentId(incident)}>
               <div>
-                <strong>{incident.title}</strong>
-                <span>{incident.location}</span>
+                <strong>{getIncidentTitle(incident)}</strong>
+                <span>{getIncidentLocation(incident)}</span>
               </div>
               <div>
-                <span className="status-pill">{incident.status}</span>
-                <small>{incident.createdAt}</small>
+                <span className="status-pill">{getIncidentStatus(incident)}</span>
+                <small>{getIncidentCreatedAt(incident)}</small>
               </div>
             </article>
           ))}
