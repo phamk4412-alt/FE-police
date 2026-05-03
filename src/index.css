@@ -639,32 +639,125 @@ tbody tr:hover {
 }
 
 .map-toggle {
+  position: relative;
   flex: 0 0 auto;
-  min-height: 38px;
-  border: 1px solid rgba(255, 70, 85, 0.28);
-  border-radius: 8px;
+  width: 116px;
+  height: 54px;
+  min-height: 54px;
+  border: 3px solid rgba(255, 255, 255, 0.82);
+  border-radius: 999px;
   padding: 8px 14px;
-  color: var(--muted);
-  background: rgba(8, 17, 26, 0.72);
-  font-size: 0.9rem;
-  font-weight: 800;
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, rgba(255, 253, 245, 0.98) 0 50%, #142236 50% 100%);
+  box-shadow:
+    inset 0 0 0 2px rgba(8, 17, 26, 0.08),
+    0 10px 22px rgba(0, 0, 0, 0.28);
   transition:
     border-color 160ms ease,
-    background 160ms ease,
-    color 160ms ease,
+    box-shadow 160ms ease,
     transform 160ms ease;
 }
 
 .map-toggle:hover,
-.map-toggle:focus-visible,
-.map-toggle.is-active {
-  border-color: rgba(255, 70, 85, 0.48);
-  color: var(--text);
-  background: rgba(255, 70, 85, 0.14);
+.map-toggle:focus-visible {
+  border-color: #ffffff;
+  box-shadow:
+    inset 0 0 0 2px rgba(8, 17, 26, 0.1),
+    0 14px 26px rgba(0, 0, 0, 0.34);
 }
 
 .map-toggle:hover {
   transform: translateY(-1px);
+}
+
+.map-toggle-thumb {
+  position: absolute;
+  top: 5px;
+  left: 55px;
+  z-index: 2;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #ffffff, #e9edf3);
+  box-shadow:
+    0 8px 16px rgba(0, 0, 0, 0.28),
+    inset -5px -5px 10px rgba(187, 196, 210, 0.5),
+    inset 5px 5px 12px rgba(255, 255, 255, 0.95);
+  transition: left 180ms ease;
+}
+
+.map-toggle:not(.is-active) .map-toggle-thumb {
+  left: 17px;
+}
+
+.map-toggle-sun {
+  position: absolute;
+  top: 17px;
+  left: 26px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ffc21f;
+  box-shadow: 0 0 12px rgba(255, 194, 31, 0.42);
+}
+
+.map-toggle-sun::before {
+  position: absolute;
+  inset: -9px;
+  content: "";
+  background:
+    linear-gradient(#ffc21f, #ffc21f) center top / 4px 8px no-repeat,
+    linear-gradient(#ffc21f, #ffc21f) center bottom / 4px 8px no-repeat,
+    linear-gradient(90deg, #ffc21f, #ffc21f) left center / 8px 4px no-repeat,
+    linear-gradient(90deg, #ffc21f, #ffc21f) right center / 8px 4px no-repeat;
+}
+
+.map-toggle-sun::after {
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  content: "";
+  background:
+    linear-gradient(45deg, transparent 42%, #ffc21f 42% 58%, transparent 58%) 1px 1px / 10px 10px no-repeat,
+    linear-gradient(-45deg, transparent 42%, #ffc21f 42% 58%, transparent 58%) right 1px top 1px / 10px 10px no-repeat,
+    linear-gradient(-45deg, transparent 42%, #ffc21f 42% 58%, transparent 58%) 1px bottom 1px / 10px 10px no-repeat,
+    linear-gradient(45deg, transparent 42%, #ffc21f 42% 58%, transparent 58%) right 1px bottom 1px / 10px 10px no-repeat;
+}
+
+.map-toggle-moon {
+  position: absolute;
+  top: 14px;
+  right: 27px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 4px 2px 0 #142236;
+}
+
+.map-toggle-moon > span {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #e8eef8;
+  box-shadow: 0 0 4px rgba(232, 238, 248, 0.5);
+}
+
+.map-toggle-moon > span:nth-child(1) {
+  top: -7px;
+  left: -13px;
+}
+
+.map-toggle-moon > span:nth-child(2) {
+  top: 3px;
+  right: -14px;
+}
+
+.map-toggle-moon > span:nth-child(3) {
+  right: 26px;
+  bottom: -9px;
 }
 
 .facility-marker {
@@ -836,6 +929,6 @@ tbody tr:hover {
   }
 
   .map-toggle {
-    width: 100%;
+    width: 116px;
   }
 }

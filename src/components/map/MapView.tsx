@@ -524,12 +524,19 @@ function MapView({
           <h2>{title}</h2>
         </div>
         <button
+          aria-label={showFacilityMarkers ? "Ẩn điểm trên bản đồ" : "Hiện điểm trên bản đồ"}
           aria-pressed={showFacilityMarkers}
           className={`map-toggle ${showFacilityMarkers ? "is-active" : ""}`}
           type="button"
           onClick={() => setShowFacilityMarkers((isVisible) => !isVisible)}
         >
-          {showFacilityMarkers ? "Ẩn điểm" : "Hiện điểm"}
+          <span className="map-toggle-sun" aria-hidden="true" />
+          <span className="map-toggle-moon" aria-hidden="true">
+            <span />
+            <span />
+            <span />
+          </span>
+          <span className="map-toggle-thumb" aria-hidden="true" />
         </button>
       </div>
 
