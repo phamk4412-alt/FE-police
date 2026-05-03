@@ -641,30 +641,37 @@ tbody tr:hover {
 .map-toggle {
   position: relative;
   flex: 0 0 auto;
-  width: 116px;
-  height: 54px;
-  min-height: 54px;
-  border: 3px solid rgba(255, 255, 255, 0.82);
+  width: 76px;
+  height: 34px;
+  min-height: 34px;
+  border: 2px solid rgba(255, 255, 255, 0.84);
   border-radius: 999px;
-  padding: 8px 14px;
+  padding: 0;
   overflow: hidden;
-  background:
-    linear-gradient(90deg, rgba(255, 253, 245, 0.98) 0 50%, #142236 50% 100%);
+  color: #ffffff;
+  background: var(--primary);
   box-shadow:
-    inset 0 0 0 2px rgba(8, 17, 26, 0.08),
-    0 10px 22px rgba(0, 0, 0, 0.28);
+    inset 0 0 0 1px rgba(8, 17, 26, 0.12),
+    0 8px 18px rgba(0, 0, 0, 0.24);
   transition:
+    background 160ms ease,
     border-color 160ms ease,
     box-shadow 160ms ease,
+    color 160ms ease,
     transform 160ms ease;
+}
+
+.map-toggle.is-active {
+  color: var(--bg-dark);
+  background: #ffffff;
 }
 
 .map-toggle:hover,
 .map-toggle:focus-visible {
   border-color: #ffffff;
   box-shadow:
-    inset 0 0 0 2px rgba(8, 17, 26, 0.1),
-    0 14px 26px rgba(0, 0, 0, 0.34);
+    inset 0 0 0 1px rgba(8, 17, 26, 0.14),
+    0 11px 22px rgba(0, 0, 0, 0.3);
 }
 
 .map-toggle:hover {
@@ -673,91 +680,40 @@ tbody tr:hover {
 
 .map-toggle-thumb {
   position: absolute;
-  top: 5px;
-  left: 55px;
+  top: 4px;
+  left: 4px;
   z-index: 2;
-  width: 38px;
-  height: 38px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
-  background: linear-gradient(145deg, #ffffff, #e9edf3);
+  background: #ffffff;
   box-shadow:
-    0 8px 16px rgba(0, 0, 0, 0.28),
-    inset -5px -5px 10px rgba(187, 196, 210, 0.5),
-    inset 5px 5px 12px rgba(255, 255, 255, 0.95);
+    0 4px 9px rgba(0, 0, 0, 0.26),
+    inset -3px -3px 6px rgba(187, 196, 210, 0.42),
+    inset 3px 3px 7px rgba(255, 255, 255, 0.9);
   transition: left 180ms ease;
 }
 
-.map-toggle:not(.is-active) .map-toggle-thumb {
-  left: 17px;
+.map-toggle.is-active .map-toggle-thumb {
+  left: 46px;
+  background: var(--primary);
 }
 
-.map-toggle-sun {
+.map-toggle-label {
   position: absolute;
-  top: 17px;
-  left: 26px;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: #ffc21f;
-  box-shadow: 0 0 12px rgba(255, 194, 31, 0.42);
+  top: 50%;
+  right: 11px;
+  z-index: 1;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  line-height: 1;
+  transform: translateY(-50%);
 }
 
-.map-toggle-sun::before {
-  position: absolute;
-  inset: -9px;
-  content: "";
-  background:
-    linear-gradient(#ffc21f, #ffc21f) center top / 4px 8px no-repeat,
-    linear-gradient(#ffc21f, #ffc21f) center bottom / 4px 8px no-repeat,
-    linear-gradient(90deg, #ffc21f, #ffc21f) left center / 8px 4px no-repeat,
-    linear-gradient(90deg, #ffc21f, #ffc21f) right center / 8px 4px no-repeat;
-}
-
-.map-toggle-sun::after {
-  position: absolute;
-  inset: -8px;
-  border-radius: 50%;
-  content: "";
-  background:
-    linear-gradient(45deg, transparent 42%, #ffc21f 42% 58%, transparent 58%) 1px 1px / 10px 10px no-repeat,
-    linear-gradient(-45deg, transparent 42%, #ffc21f 42% 58%, transparent 58%) right 1px top 1px / 10px 10px no-repeat,
-    linear-gradient(-45deg, transparent 42%, #ffc21f 42% 58%, transparent 58%) 1px bottom 1px / 10px 10px no-repeat,
-    linear-gradient(45deg, transparent 42%, #ffc21f 42% 58%, transparent 58%) right 1px bottom 1px / 10px 10px no-repeat;
-}
-
-.map-toggle-moon {
-  position: absolute;
-  top: 14px;
-  right: 27px;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: #ffffff;
-  box-shadow: 4px 2px 0 #142236;
-}
-
-.map-toggle-moon > span {
-  position: absolute;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: #e8eef8;
-  box-shadow: 0 0 4px rgba(232, 238, 248, 0.5);
-}
-
-.map-toggle-moon > span:nth-child(1) {
-  top: -7px;
-  left: -13px;
-}
-
-.map-toggle-moon > span:nth-child(2) {
-  top: 3px;
-  right: -14px;
-}
-
-.map-toggle-moon > span:nth-child(3) {
-  right: 26px;
-  bottom: -9px;
+.map-toggle.is-active .map-toggle-label {
+  right: auto;
+  left: 11px;
 }
 
 .facility-marker {
@@ -949,6 +905,6 @@ tbody tr:hover {
   }
 
   .map-toggle {
-    width: 116px;
+    width: 76px;
   }
 }

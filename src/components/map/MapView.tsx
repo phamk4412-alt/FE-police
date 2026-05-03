@@ -575,11 +575,8 @@ function MapView({
           type="button"
           onClick={() => setShowFacilityMarkers((isVisible) => !isVisible)}
         >
-          <span className="map-toggle-sun" aria-hidden="true" />
-          <span className="map-toggle-moon" aria-hidden="true">
-            <span />
-            <span />
-            <span />
+          <span className="map-toggle-label" aria-hidden="true">
+            {showFacilityMarkers ? "ON" : "OFF"}
           </span>
           <span className="map-toggle-thumb" aria-hidden="true" />
         </button>
