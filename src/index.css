@@ -65,7 +65,7 @@ a {
 
 .login-page {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 420px;
+  grid-template-columns: minmax(0, 1fr) minmax(460px, 540px);
   min-height: 100vh;
 }
 
@@ -128,10 +128,19 @@ a {
   display: flex;
   flex-direction: column;
   gap: 24px;
+  overflow: visible;
 }
 
 .clerk-login-card > div:not(.section-heading):not(.auth-secondary-action) {
   align-self: center;
+  max-width: 100%;
+  width: 100%;
+}
+
+.clerk-login-card .cl-rootBox,
+.clerk-login-card .cl-cardBox,
+.clerk-login-card .cl-card {
+  max-width: 100%;
   width: 100%;
 }
 
@@ -622,6 +631,42 @@ tbody tr:hover {
   width: 100%;
 }
 
+.map-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.map-toggle {
+  flex: 0 0 auto;
+  min-height: 38px;
+  border: 1px solid rgba(255, 70, 85, 0.28);
+  border-radius: 8px;
+  padding: 8px 14px;
+  color: var(--muted);
+  background: rgba(8, 17, 26, 0.72);
+  font-size: 0.9rem;
+  font-weight: 800;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.map-toggle:hover,
+.map-toggle:focus-visible,
+.map-toggle.is-active {
+  border-color: rgba(255, 70, 85, 0.48);
+  color: var(--text);
+  background: rgba(255, 70, 85, 0.14);
+}
+
+.map-toggle:hover {
+  transform: translateY(-1px);
+}
+
 .facility-marker {
   position: relative;
   display: grid;
@@ -784,5 +829,13 @@ tbody tr:hover {
   .mapbox-container,
   .map-token-warning {
     min-height: 360px;
+  }
+
+  .map-heading {
+    flex-direction: column;
+  }
+
+  .map-toggle {
+    width: 100%;
   }
 }

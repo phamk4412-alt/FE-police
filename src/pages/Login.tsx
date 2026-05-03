@@ -21,10 +21,6 @@ function Login() {
       <section className="login-hero">
         <p className="eyebrow">Dự án Cảnh sát</p>
         <h1>{APP_NAME}</h1>
-        <p>
-          Đăng nhập bằng Clerk để mở đúng bảng điều khiển theo vai trò tài
-          khoản.
-        </p>
       </section>
 
       <section className="login-card clerk-login-card">

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import hospitalLogo from "../../assets/hospital-logo.svg";
@@ -190,12 +190,12 @@ function limitFacilitiesForDisplay(facilities: FacilityMarker[]) {
   const hospitalMarkers = facilities.filter((facility) => facility.type === "hospital");
   const policeMarkers = facilities.filter((facility) => facility.type === "police");
 
-  function takeThirtyPercent(markers: FacilityMarker[]) {
-    const limit = Math.max(1, Math.ceil(markers.length * 0.3));
+  function takePercent(markers: FacilityMarker[], percent: number) {
+    const limit = Math.max(1, Math.ceil(markers.length * percent));
     return markers.filter((_, index) => index % 3 === 0).slice(0, limit);
   }
 
-  return [...takeThirtyPercent(policeMarkers), ...takeThirtyPercent(hospitalMarkers)];
+  return [...takePercent(policeMarkers, 0.3), ...takePercent(hospitalMarkers, 0.5)];
 }
 
 function getElementCoordinates(element: OverpassElement): [number, number] | null {
@@ -373,6 +373,7 @@ function MapView({
   zoom = 8.8,
 }: MapViewProps) {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const [showFacilityMarkers, setShowFacilityMarkers] = useState(true);
 
   useEffect(() => {
     if (!mapContainerRef.current || !MAPBOX_TOKEN) {
@@ -395,6 +396,12 @@ function MapView({
 
     function renderFacilityMarkers(facilities: FacilityMarker[]) {
       facilityMapMarkers.forEach((marker) => marker.remove());
+
+      if (!showFacilityMarkers) {
+        facilityMapMarkers = [];
+        return;
+      }
+
       facilityMapMarkers = limitFacilitiesForDisplay(facilities).map((facility) =>
         new mapboxgl.Marker({
           anchor: "bottom",
@@ -437,13 +444,23 @@ function MapView({
       facilityMapMarkers.forEach((marker) => marker.remove());
       map.remove();
     };
-  }, [center, zoom]);
+  }, [center, showFacilityMarkers, zoom]);
 
   return (
     <section className="map-card" id="map">
-      <div className="section-heading">
-        <span className="eyebrow">Bản đồ</span>
-        <h2>{title}</h2>
+      <div className="section-heading map-heading">
+        <div>
+          <span className="eyebrow">Bản đồ</span>
+          <h2>{title}</h2>
+        </div>
+        <button
+          aria-pressed={showFacilityMarkers}
+          className={`map-toggle ${showFacilityMarkers ? "is-active" : ""}`}
+          type="button"
+          onClick={() => setShowFacilityMarkers((isVisible) => !isVisible)}
+        >
+          {showFacilityMarkers ? "Ẩn điểm" : "Hiện điểm"}
+        </button>
       </div>
 
       {MAPBOX_TOKEN ? (
