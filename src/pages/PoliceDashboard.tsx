@@ -52,7 +52,11 @@ function PoliceDashboard() {
         ))}
       </section>
 
-      <MapView title="Bản đồ bệnh viện và trụ sở cảnh sát TP.HCM" />
+      <MapView
+        currentLocationLabel="Vị trí hiện tại của cảnh sát"
+        defaultToCurrentLocation
+        title="Bản đồ bệnh viện và trụ sở cảnh sát TP.HCM"
+      />
 
       <section className="panel" id="incidents">
         <div className="section-heading">

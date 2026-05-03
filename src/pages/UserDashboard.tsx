@@ -72,7 +72,11 @@ function UserDashboard() {
         </section>
       </section>
 
-      <MapView title="Bản đồ vị trí sự cố" />
+      <MapView
+        currentLocationLabel="Vị trí hiện tại của người dân"
+        defaultToCurrentLocation
+        title="Bản đồ vị trí sự cố"
+      />
     </DashboardLayout>
   );
 }

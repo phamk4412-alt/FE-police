@@ -7,6 +7,8 @@ import { API_URL } from "../../services/api";
 
 interface MapViewProps {
   center?: [number, number];
+  defaultToCurrentLocation?: boolean;
+  currentLocationLabel?: string;
   title?: string;
   zoom?: number;
 }
@@ -386,6 +388,15 @@ function createFacilityPopup({ address, name, type }: FacilityMarker) {
   return popupContent;
 }
 
+function createCurrentLocationMarker(label: string) {
+  const markerElement = document.createElement("div");
+  markerElement.className = "current-location-marker";
+  markerElement.setAttribute("aria-label", label);
+  markerElement.setAttribute("role", "img");
+
+  return markerElement;
+}
+
 function addBoundaryLayer(map: mapboxgl.Map, boundary: BoundaryGeoJson) {
   if (!boundary.features.length || map.getSource("hcm-boundary")) {
     return;
@@ -439,30 +450,63 @@ function addBoundaryLayer(map: mapboxgl.Map, boundary: BoundaryGeoJson) {
 
 function MapView({
   center = [106.88, 10.9],
+  defaultToCurrentLocation = false,
+  currentLocationLabel = "Vị trí hiện tại",
   title = "Bản đồ tác nghiệp",
   zoom = 8.8,
 }: MapViewProps) {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const [currentLocation, setCurrentLocation] = useState<[number, number] | null>(null);
   const [showFacilityMarkers, setShowFacilityMarkers] = useState(true);
+
+  useEffect(() => {
+    if (!defaultToCurrentLocation || !navigator.geolocation) {
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setCurrentLocation([position.coords.longitude, position.coords.latitude]);
+      },
+      () => undefined,
+      {
+        enableHighAccuracy: true,
+        maximumAge: 60000,
+        timeout: 10000,
+      },
+    );
+  }, [defaultToCurrentLocation]);
 
   useEffect(() => {
     if (!mapContainerRef.current || !MAPBOX_TOKEN) {
       return;
     }
 
+    const mapCenter = currentLocation ?? center;
+
     mapboxgl.accessToken = MAPBOX_TOKEN;
 
     const map = new mapboxgl.Map({
-      center,
+      center: mapCenter,
       container: mapContainerRef.current,
       style: "mapbox://styles/mapbox/streets-v12",
-      zoom,
+      zoom: currentLocation ? Math.max(zoom, 13) : zoom,
     });
 
     map.addControl(new mapboxgl.NavigationControl({ showCompass: true }), "top-right");
 
     let isMounted = true;
+    let currentLocationMarker: mapboxgl.Marker | null = null;
     let facilityMapMarkers: mapboxgl.Marker[] = [];
+
+    if (currentLocation) {
+      currentLocationMarker = new mapboxgl.Marker({
+        element: createCurrentLocationMarker(currentLocationLabel),
+      })
+        .setLngLat(currentLocation)
+        .setPopup(new mapboxgl.Popup({ offset: 18 }).setText(currentLocationLabel))
+        .addTo(map);
+    }
 
     function renderFacilityMarkers(facilities: FacilityMarker[]) {
       facilityMapMarkers.forEach((marker) => marker.remove());
@@ -511,10 +555,11 @@ function MapView({
 
     return () => {
       isMounted = false;
+      currentLocationMarker?.remove();
       facilityMapMarkers.forEach((marker) => marker.remove());
       map.remove();
     };
-  }, [center, showFacilityMarkers, zoom]);
+  }, [center, currentLocation, currentLocationLabel, showFacilityMarkers, zoom]);
 
   return (
     <section className="map-card" id="map">
