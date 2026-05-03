@@ -4,6 +4,7 @@
   "outputDirectory": "dist",
   "framework": "vite",
   "env": {
+    "VITE_API_URL": "https://be-police-n8zf.onrender.com",
     "VITE_CLERK_PUBLISHABLE_KEY": "pk_test_bGl2ZS1qYXZlbGluLTYxLmNsZXJrLmFjY291bnRzLmRldiQ"
   },
   "rewrites": [
