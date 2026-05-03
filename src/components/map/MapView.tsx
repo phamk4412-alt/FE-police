@@ -167,6 +167,76 @@ const majorHospitalMarkers: FacilityMarker[] = [
     name: "Bệnh viện Đa khoa Sài Gòn",
     type: "hospital",
   },
+  {
+    address: "284 Cống Quỳnh, Phường Phạm Ngũ Lão, Quận 1, TP.HCM",
+    coordinates: [106.6864, 10.7688],
+    logo: hospitalLogo,
+    name: "Bệnh viện Từ Dũ",
+    type: "hospital",
+  },
+  {
+    address: "201 Nguyễn Chí Thanh, Phường 12, Quận 5, TP.HCM",
+    coordinates: [106.6812, 10.7557],
+    logo: hospitalLogo,
+    name: "Bệnh viện Chấn thương Chỉnh hình",
+    type: "hospital",
+  },
+  {
+    address: "88 Thành Thái, Phường 12, Quận 10, TP.HCM",
+    coordinates: [106.6654, 10.7727],
+    logo: hospitalLogo,
+    name: "Bệnh viện Da Liễu TP.HCM",
+    type: "hospital",
+  },
+  {
+    address: "1 Lý Thường Kiệt, Phường 7, Quận Tân Bình, TP.HCM",
+    coordinates: [106.6532, 10.7928],
+    logo: hospitalLogo,
+    name: "Bệnh viện Thống Nhất",
+    type: "hospital",
+  },
+  {
+    address: "786 Nguyễn Kiệm, Phường 3, Quận Gò Vấp, TP.HCM",
+    coordinates: [106.6783, 10.8158],
+    logo: hospitalLogo,
+    name: "Bệnh viện Quân y 175",
+    type: "hospital",
+  },
+  {
+    address: "3 Đường 17A, Bình Trị Đông B, Quận Bình Tân, TP.HCM",
+    coordinates: [106.5924, 10.7409],
+    logo: hospitalLogo,
+    name: "Bệnh viện Quốc tế City",
+    type: "hospital",
+  },
+  {
+    address: "532A Kinh Dương Vương, Phường Bình Trị Đông B, Quận Bình Tân, TP.HCM",
+    coordinates: [106.5838, 10.7338],
+    logo: hospitalLogo,
+    name: "Bệnh viện Triều An",
+    type: "hospital",
+  },
+  {
+    address: "15A Nguyễn Lương Bằng, Phường Tân Phú, Quận 7, TP.HCM",
+    coordinates: [106.7281, 10.7312],
+    logo: hospitalLogo,
+    name: "Bệnh viện FV",
+    type: "hospital",
+  },
+  {
+    address: "2B Phổ Quang, Phường 2, Quận Tân Bình, TP.HCM",
+    coordinates: [106.6695, 10.8039],
+    logo: hospitalLogo,
+    name: "Bệnh viện Hoàn Mỹ Sài Gòn",
+    type: "hospital",
+  },
+  {
+    address: "6 Nguyễn Lương Bằng, Phường Tân Phú, Quận 7, TP.HCM",
+    coordinates: [106.7299, 10.7305],
+    logo: hospitalLogo,
+    name: "Bệnh viện Tim Tâm Đức",
+    type: "hospital",
+  },
 ];
 
 const overpassQuery = `
@@ -192,7 +262,7 @@ function limitFacilitiesForDisplay(facilities: FacilityMarker[]) {
 
   function takePercent(markers: FacilityMarker[], percent: number) {
     const limit = Math.max(1, Math.ceil(markers.length * percent));
-    return markers.filter((_, index) => index % 3 === 0).slice(0, limit);
+    return markers.slice(0, limit);
   }
 
   return [...takePercent(policeMarkers, 0.3), ...takePercent(hospitalMarkers, 0.5)];
