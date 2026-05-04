@@ -596,7 +596,6 @@ function MapView({
   const [currentLocation, setCurrentLocation] = useState<[number, number] | null>(null);
   const [facilities, setFacilities] = useState<FacilityMarker[]>(fallbackFacilityMarkers);
   const [crimeDataIncidents, setCrimeDataIncidents] = useState<Incident[]>([]);
-  const [supportIncidents, setSupportIncidents] = useState<Incident[]>([]);
   const [policeLocations, setPoliceLocations] = useState<PoliceLocation[]>([]);
   const [mode, setMode] = useState<MapMode>(initialMode);
   const [crimePeriod, setCrimePeriod] = useState<CrimePeriod>("month");
@@ -605,7 +604,7 @@ function MapView({
 
   const isSupportMap = role === "support";
   const crimeIncidents = isSupportMap ? [] : incidents.length ? incidents : crimeDataIncidents;
-  const markerIncidents = isSupportMap ? supportIncidents : role === "police" ? incidents : [];
+  const markerIncidents = isSupportMap ? incidents : [];
 
   const crimeTypes = useMemo(
     () => Array.from(new Set(crimeIncidents.map(getIncidentType).filter(Boolean))),
@@ -636,7 +635,6 @@ function MapView({
 
   useEffect(() => {
     if (!isSupportMap) {
-      setSupportIncidents([]);
       onIncidentsLoad?.([]);
       return;
     }
@@ -650,7 +648,6 @@ function MapView({
             return;
           }
 
-          setSupportIncidents(items);
           onIncidentsLoad?.(items);
         })
         .catch(() => undefined);
@@ -988,7 +985,7 @@ function MapView({
 
     incidentMapMarkersRef.current.forEach((marker) => marker.remove());
 
-    if (!isSupportMap && role !== "police") {
+    if (!isSupportMap) {
       incidentMapMarkersRef.current = [];
       return;
     }
@@ -1015,7 +1012,7 @@ function MapView({
 
       return [marker];
     });
-  }, [isSupportMap, markerIncidents, onIncidentSelect, role, selectedIncident]);
+  }, [isSupportMap, markerIncidents, onIncidentSelect, selectedIncident]);
 
   useEffect(() => {
     const map = mapRef.current;

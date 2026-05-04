@@ -84,9 +84,25 @@ function SupportDashboard() {
       return;
     }
 
+    const incidentId = getIncidentId(selectedIncident);
+
+    if (action === "Hoàn thành") {
+      setIncidents((current) => {
+        const next = current.filter((incident) => getIncidentId(incident) !== incidentId);
+        setSelectedIncidentId(next[0] ? getIncidentId(next[0]) : "");
+        return next;
+      });
+      setStatusByIncident((current) => {
+        const next = { ...current };
+        delete next[incidentId];
+        return next;
+      });
+      return;
+    }
+
     setStatusByIncident((current) => ({
       ...current,
-      [getIncidentId(selectedIncident)]: action,
+      [incidentId]: action,
     }));
   }
 
@@ -101,6 +117,7 @@ function SupportDashboard() {
       <section className="support-workspace">
         <MapView
           className="support-map"
+          incidents={incidents}
           onIncidentsLoad={handleIncidentsLoad}
           onIncidentSelect={handleSelectIncident}
           role="support"
