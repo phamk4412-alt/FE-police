@@ -362,6 +362,23 @@ function setLayerVisibility(map: mapboxgl.Map, layerId: string, visible: boolean
   }
 }
 
+function updateCrimeView(map: mapboxgl.Map, mode: MapMode, view: CrimeView, isSupportMap: boolean) {
+  setLayerVisibility(map, CRIME_HEAT_LAYER_ID, false);
+  setLayerVisibility(map, CRIME_POINT_LAYER_ID, false);
+
+  if (isSupportMap || mode !== "crime") {
+    return;
+  }
+
+  if (view === "heatmap") {
+    setLayerVisibility(map, CRIME_HEAT_LAYER_ID, true);
+  }
+
+  if (view === "point") {
+    setLayerVisibility(map, CRIME_POINT_LAYER_ID, true);
+  }
+}
+
 function isIncidentInPeriod(incident: Incident, period: CrimePeriod) {
   const createdAt = getIncidentCreatedAt(incident);
 
@@ -755,8 +772,7 @@ function MapView({
     addCrimeLayers(map, buildCrimeGeoJson(filteredIncidents));
     const source = map.getSource(CRIME_SOURCE_ID) as mapboxgl.GeoJSONSource | undefined;
     source?.setData(buildCrimeGeoJson(filteredIncidents));
-    setLayerVisibility(map, CRIME_HEAT_LAYER_ID, mode === "crime" && (crimeView === "heatmap" || crimeView === "point"));
-    setLayerVisibility(map, CRIME_POINT_LAYER_ID, mode === "crime");
+    updateCrimeView(map, mode, crimeView, isSupportMap);
   }, [crimeView, filteredIncidents, isSupportMap, mode]);
 
   useEffect(() => {
@@ -766,11 +782,7 @@ function MapView({
       return;
     }
 
-    const showHeatmap = !isSupportMap && mode === "crime" && (crimeView === "heatmap" || crimeView === "point");
-    const showPoint = !isSupportMap && mode === "crime";
-
-    setLayerVisibility(map, CRIME_HEAT_LAYER_ID, showHeatmap);
-    setLayerVisibility(map, CRIME_POINT_LAYER_ID, showPoint);
+    updateCrimeView(map, mode, crimeView, isSupportMap);
   }, [crimeView, isSupportMap, mode]);
 
   useEffect(() => {
