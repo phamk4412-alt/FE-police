@@ -47,6 +47,8 @@ type BoundaryGeoJson = GeoJSON.FeatureCollection<GeoJSON.Geometry, Record<string
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN as string | undefined;
 const HCM_WIKIDATA_ID = "Q1854";
 const HCM_BOUNDARY_URLS = ["/maps/hcm-boundary.geojson", `${API_URL}/api/maps/hcm-boundary`];
+const DEFAULT_MAP_CENTER: [number, number] = [106.88, 10.9];
+const DEFAULT_MAP_ZOOM = 8.8;
 
 const fallbackFacilityMarkers: FacilityMarker[] = [
   {
@@ -489,15 +491,22 @@ function addBoundaryLayer(map: mapboxgl.Map, boundary: BoundaryGeoJson) {
 }
 
 function MapView({
-  center = [106.88, 10.9],
+  center = DEFAULT_MAP_CENTER,
   defaultToCurrentLocation = false,
   currentLocationLabel = "Vị trí hiện tại",
   incidents = [],
   title = "Bản đồ tác nghiệp",
-  zoom = 8.8,
+  zoom = DEFAULT_MAP_ZOOM,
 }: MapViewProps) {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<mapboxgl.Map | null>(null);
+  const currentLocationMarkerRef = useRef<mapboxgl.Marker | null>(null);
+  const facilityMapMarkersRef = useRef<mapboxgl.Marker[]>([]);
+  const incidentMapMarkersRef = useRef<mapboxgl.Marker[]>([]);
   const [currentLocation, setCurrentLocation] = useState<[number, number] | null>(null);
+  const [facilities, setFacilities] = useState<FacilityMarker[]>(() =>
+    withMajorHospitals(fallbackFacilityMarkers),
+  );
   const [showFacilityMarkers, setShowFacilityMarkers] = useState(true);
 
   useEffect(() => {
@@ -519,76 +528,23 @@ function MapView({
   }, [defaultToCurrentLocation]);
 
   useEffect(() => {
-    if (!mapContainerRef.current || !MAPBOX_TOKEN) {
+    if (!mapContainerRef.current || !MAPBOX_TOKEN || mapRef.current) {
       return;
     }
-
-    const mapCenter = currentLocation ?? center;
 
     mapboxgl.accessToken = MAPBOX_TOKEN;
 
     const map = new mapboxgl.Map({
-      center: mapCenter,
+      center,
       container: mapContainerRef.current,
       style: "mapbox://styles/mapbox/streets-v12",
-      zoom: currentLocation ? Math.max(zoom, 13) : zoom,
+      zoom,
     });
 
+    mapRef.current = map;
     map.addControl(new mapboxgl.NavigationControl({ showCompass: true }), "top-right");
 
     let isMounted = true;
-    let currentLocationMarker: mapboxgl.Marker | null = null;
-    let facilityMapMarkers: mapboxgl.Marker[] = [];
-    let incidentMapMarkers: mapboxgl.Marker[] = [];
-
-    if (currentLocation) {
-      currentLocationMarker = new mapboxgl.Marker({
-        element: createCurrentLocationMarker(currentLocationLabel),
-      })
-        .setLngLat(currentLocation)
-        .setPopup(new mapboxgl.Popup({ offset: 18 }).setText(currentLocationLabel))
-        .addTo(map);
-    }
-
-    function renderFacilityMarkers(facilities: FacilityMarker[]) {
-      facilityMapMarkers.forEach((marker) => marker.remove());
-
-      if (!showFacilityMarkers) {
-        facilityMapMarkers = [];
-        return;
-      }
-
-      facilityMapMarkers = limitFacilitiesForDisplay(facilities).map((facility) =>
-        new mapboxgl.Marker({
-          anchor: "bottom",
-          element: createFacilityMarker(facility),
-        })
-          .setLngLat(facility.coordinates)
-          .setPopup(
-            new mapboxgl.Popup({ offset: 28 }).setDOMContent(createFacilityPopup(facility)),
-          )
-          .addTo(map),
-      );
-    }
-
-    function renderIncidentMarkers() {
-      incidentMapMarkers.forEach((marker) => marker.remove());
-      incidentMapMarkers = incidents.flatMap((incident) => {
-        const coordinates = getIncidentCoordinates(incident);
-
-        if (!coordinates) {
-          return [];
-        }
-
-        return new mapboxgl.Marker({
-          anchor: "bottom",
-          element: createIncidentMarker(incident),
-        })
-          .setLngLat(coordinates)
-          .setPopup(new mapboxgl.Popup({ offset: 24 }).setDOMContent(createIncidentPopup(incident)))
-          .addTo(map);
-      });
-    }
 
     map.on("load", () => {
       fetchHoChiMinhBoundary()
@@ -600,29 +556,104 @@ function MapView({
         .catch(() => undefined);
     });
 
-    renderFacilityMarkers(withMajorHospitals(fallbackFacilityMarkers));
-    renderIncidentMarkers();
-
     fetchHoChiMinhFacilities()
       .then((facilities) => {
         if (isMounted && facilities.length) {
-          renderFacilityMarkers(facilities);
+          setFacilities(facilities);
         }
       })
       .catch(() => {
         if (isMounted) {
-          renderFacilityMarkers(withMajorHospitals(fallbackFacilityMarkers));
+          setFacilities(withMajorHospitals(fallbackFacilityMarkers));
         }
       });
 
     return () => {
       isMounted = false;
-      currentLocationMarker?.remove();
-      facilityMapMarkers.forEach((marker) => marker.remove());
-      incidentMapMarkers.forEach((marker) => marker.remove());
+      currentLocationMarkerRef.current?.remove();
+      facilityMapMarkersRef.current.forEach((marker) => marker.remove());
+      incidentMapMarkersRef.current.forEach((marker) => marker.remove());
       map.remove();
+      mapRef.current = null;
+      currentLocationMarkerRef.current = null;
+      facilityMapMarkersRef.current = [];
+      incidentMapMarkersRef.current = [];
     };
-  }, [center, currentLocation, currentLocationLabel, incidents, showFacilityMarkers, zoom]);
+  }, [center, zoom]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+
+    if (!map) {
+      return;
+    }
+
+    facilityMapMarkersRef.current.forEach((marker) => marker.remove());
+
+    if (!showFacilityMarkers) {
+      facilityMapMarkersRef.current = [];
+      return;
+    }
+
+    facilityMapMarkersRef.current = limitFacilitiesForDisplay(facilities).map((facility) =>
+      new mapboxgl.Marker({
+        anchor: "bottom",
+        element: createFacilityMarker(facility),
+      })
+        .setLngLat(facility.coordinates)
+        .setPopup(new mapboxgl.Popup({ offset: 28 }).setDOMContent(createFacilityPopup(facility)))
+        .addTo(map),
+    );
+  }, [facilities, showFacilityMarkers]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+
+    if (!map || !currentLocation) {
+      return;
+    }
+
+    currentLocationMarkerRef.current?.remove();
+    currentLocationMarkerRef.current = new mapboxgl.Marker({
+      element: createCurrentLocationMarker(currentLocationLabel),
+    })
+      .setLngLat(currentLocation)
+      .setPopup(new mapboxgl.Popup({ offset: 18 }).setText(currentLocationLabel))
+      .addTo(map);
+
+    if (defaultToCurrentLocation) {
+      map.easeTo({
+        center: currentLocation,
+        duration: 500,
+        zoom: Math.max(zoom, 13),
+      });
+    }
+  }, [currentLocation, currentLocationLabel, defaultToCurrentLocation, zoom]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+
+    if (!map) {
+      return;
+    }
+
+    incidentMapMarkersRef.current.forEach((marker) => marker.remove());
+    incidentMapMarkersRef.current = incidents.flatMap((incident) => {
+      const coordinates = getIncidentCoordinates(incident);
+
+      if (!coordinates) {
+        return [];
+      }
+
+      return new mapboxgl.Marker({
+        anchor: "bottom",
+        element: createIncidentMarker(incident),
+      })
+        .setLngLat(coordinates)
+        .setPopup(new mapboxgl.Popup({ offset: 24 }).setDOMContent(createIncidentPopup(incident)))
+        .addTo(map);
+    });
+  }, [incidents]);
 
   return (
     <section className="map-card" id="map">
