@@ -301,8 +301,9 @@ a {
 }
 
 .sidebar-nav a:hover,
-.sidebar-nav a.active,
-.sidebar-logout:hover {
+.sidebar-nav a:focus-visible,
+.sidebar-logout:hover,
+.sidebar-logout:focus-visible {
   border-color: rgba(255, 70, 85, 0.24);
   color: var(--text);
   background: rgba(255, 70, 85, 0.12);
@@ -330,8 +331,9 @@ a {
 }
 
 .sidebar-nav a:hover .sidebar-nav-icon,
-.sidebar-nav a.active .sidebar-nav-icon,
-.sidebar-logout:hover .sidebar-nav-icon {
+.sidebar-nav a:focus-visible .sidebar-nav-icon,
+.sidebar-logout:hover .sidebar-nav-icon,
+.sidebar-logout:focus-visible .sidebar-nav-icon {
   border-color: rgba(255, 70, 85, 0.34);
   color: #ffffff;
   background: rgba(255, 70, 85, 0.18);
