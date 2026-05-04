@@ -565,6 +565,7 @@ function MapView({
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
   const currentLocationMarkerRef = useRef<mapboxgl.Marker | null>(null);
+  const hasCenteredOnCurrentLocationRef = useRef(false);
   const facilityMapMarkersRef = useRef<mapboxgl.Marker[]>([]);
   const incidentMapMarkersRef = useRef<mapboxgl.Marker[]>([]);
   const policeLocationMarkersRef = useRef<Map<string, mapboxgl.Marker>>(new Map());
@@ -732,6 +733,7 @@ function MapView({
       map.remove();
       mapRef.current = null;
       currentLocationMarkerRef.current = null;
+      hasCenteredOnCurrentLocationRef.current = false;
       facilityMapMarkersRef.current = [];
       incidentMapMarkersRef.current = [];
       policeLocationMarkersRef.current.clear();
@@ -900,7 +902,8 @@ function MapView({
       .setPopup(new mapboxgl.Popup({ offset: 18 }).setText(currentLocationLabel))
       .addTo(map);
 
-    if (defaultToCurrentLocation) {
+    if (defaultToCurrentLocation && !hasCenteredOnCurrentLocationRef.current) {
+      hasCenteredOnCurrentLocationRef.current = true;
       map.easeTo({
         bearing: -30,
         center: currentLocation,
