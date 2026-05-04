@@ -65,6 +65,7 @@ function PoliceDashboard() {
         currentLocationLabel="Vị trí hiện tại của cảnh sát"
         defaultToCurrentLocation
         incidents={incidents}
+        role="police"
         title="Bản đồ bệnh viện và trụ sở cảnh sát TP.HCM"
       />
 

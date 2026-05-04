@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useUser } from "@clerk/react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import hospitalLogo from "../../assets/hospital-logo.svg";
@@ -39,6 +40,25 @@ interface MapViewProps {
   title?: string;
   variant?: "compact" | "full";
   zoom?: number;
+}
+
+interface PoliceLocation {
+  Username?: string;
+  username?: string;
+  DisplayName?: string;
+  displayName?: string;
+  Latitude?: number;
+  latitude?: number;
+  Longitude?: number;
+  longitude?: number;
+  District?: string;
+  district?: string;
+  ShiftId?: string | null;
+  shiftId?: string | null;
+  Status?: string;
+  status?: string;
+  UpdatedAt?: string;
+  updatedAt?: string;
 }
 
 interface FacilityMarker {
@@ -228,6 +248,45 @@ function createCurrentLocationMarker(label: string) {
   markerElement.setAttribute("aria-label", label);
   markerElement.setAttribute("role", "img");
   return markerElement;
+}
+function normalizePoliceLocation(location: PoliceLocation) {
+  const username = location.Username || location.username || "";
+  const displayName = location.DisplayName || location.displayName || username || "Canh sat";
+  const latitude = Number(location.Latitude ?? location.latitude);
+  const longitude = Number(location.Longitude ?? location.longitude);
+
+  if (!username || !Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+    return null;
+  }
+
+  return {
+    username,
+    displayName,
+    latitude,
+    longitude,
+    district: location.District || location.district || "TP.HCM",
+    shiftId: location.ShiftId || location.shiftId || "Dang truc",
+    status: location.Status || location.status || "Dang trong ca",
+    updatedAt: location.UpdatedAt || location.updatedAt || new Date().toISOString(),
+  };
+}
+
+function createPoliceLocationMarker(label: string) {
+  const markerElement = document.createElement("button");
+  markerElement.type = "button";
+  markerElement.className = "police-location-marker";
+  markerElement.setAttribute("aria-label", label);
+  return markerElement;
+}
+
+function createPoliceLocationPopup(location: NonNullable<ReturnType<typeof normalizePoliceLocation>>) {
+  const popupContent = document.createElement("div");
+  popupContent.className = "police-location-popup";
+  popupContent.innerHTML = `<strong></strong><span></span><small></small>`;
+  popupContent.querySelector("strong")!.textContent = location.displayName;
+  popupContent.querySelector("span")!.textContent = location.status;
+  popupContent.querySelector("small")!.textContent = `${location.district} - ${location.shiftId}`;
+  return popupContent;
 }
 
 function createIncidentMarker(incident: Incident, isActive: boolean) {
@@ -433,6 +492,24 @@ function fetchCrimeIncidents() {
   return apiFetch<Incident[]>("/api/incidents?sort=created_desc");
 }
 
+function fetchPoliceLocations() {
+  return apiFetch<PoliceLocation[]>("/api/police/locations");
+}
+
+function updatePoliceLocation(payload: {
+  DisplayName: string;
+  Latitude: number;
+  Longitude: number;
+  ShiftId: string;
+  Status: string;
+  Username: string;
+}) {
+  return apiFetch<PoliceLocation>("/api/police/me/location", {
+    body: JSON.stringify(payload),
+    method: "POST",
+  });
+}
+
 function MapView({
   center = DEFAULT_MAP_CENTER,
   className = "",
@@ -450,17 +527,20 @@ function MapView({
   variant = "full",
   zoom = DEFAULT_MAP_ZOOM,
 }: MapViewProps) {
+  const { user } = useUser();
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
   const currentLocationMarkerRef = useRef<mapboxgl.Marker | null>(null);
   const facilityMapMarkersRef = useRef<mapboxgl.Marker[]>([]);
   const incidentMapMarkersRef = useRef<mapboxgl.Marker[]>([]);
+  const policeLocationMarkersRef = useRef<Map<string, mapboxgl.Marker>>(new Map());
   const popupRef = useRef<mapboxgl.Popup | null>(null);
   const [currentLocation, setCurrentLocation] = useState<[number, number] | null>(null);
   const [facilities, setFacilities] = useState<FacilityMarker[]>(fallbackFacilityMarkers);
   const [crimeDataIncidents, setCrimeDataIncidents] = useState<Incident[]>([]);
   const [supportIncidents, setSupportIncidents] = useState<Incident[]>([]);
+  const [policeLocations, setPoliceLocations] = useState<PoliceLocation[]>([]);
   const [mode, setMode] = useState<MapMode>(initialMode);
   const [crimePeriod, setCrimePeriod] = useState<CrimePeriod>("month");
   const [crimeType, setCrimeType] = useState("all");
@@ -614,12 +694,14 @@ function MapView({
       currentLocationMarkerRef.current?.remove();
       facilityMapMarkersRef.current.forEach((marker) => marker.remove());
       incidentMapMarkersRef.current.forEach((marker) => marker.remove());
+      policeLocationMarkersRef.current.forEach((marker) => marker.remove());
       popupRef.current?.remove();
       map.remove();
       mapRef.current = null;
       currentLocationMarkerRef.current = null;
       facilityMapMarkersRef.current = [];
       incidentMapMarkersRef.current = [];
+      policeLocationMarkersRef.current.clear();
       popupRef.current = null;
     };
   }, [center, isSupportMap, zoom]);
@@ -674,6 +756,76 @@ function MapView({
   }, [facilities, isSupportMap, mode, showPoiInNormal]);
 
   useEffect(() => {
+    if (role !== "police") {
+      setPoliceLocations([]);
+      return;
+    }
+
+    let isMounted = true;
+
+    function loadPoliceLocations() {
+      fetchPoliceLocations()
+        .then((locations) => {
+          if (isMounted) {
+            setPoliceLocations(locations);
+          }
+        })
+        .catch(() => undefined);
+    }
+
+    loadPoliceLocations();
+    const intervalId = window.setInterval(loadPoliceLocations, 4000);
+
+    return () => {
+      isMounted = false;
+      window.clearInterval(intervalId);
+    };
+  }, [role]);
+
+  useEffect(() => {
+    if (role !== "police" || !navigator.geolocation) {
+      return;
+    }
+
+    const username = user?.id || user?.primaryEmailAddress?.emailAddress || user?.username || "police-session";
+    const displayName = user?.fullName || user?.username || user?.primaryEmailAddress?.emailAddress || "Canh sat";
+    let lastSentAt = 0;
+
+    function sendPosition(position: GeolocationPosition) {
+      const now = Date.now();
+      if (now - lastSentAt < 5000) {
+        return;
+      }
+
+      lastSentAt = now;
+      setCurrentLocation([position.coords.longitude, position.coords.latitude]);
+      void updatePoliceLocation({
+        DisplayName: displayName,
+        Latitude: position.coords.latitude,
+        Longitude: position.coords.longitude,
+        ShiftId: `shift-${new Date().toISOString().slice(0, 10)}`,
+        Status: "Dang trong ca",
+        Username: username,
+      })
+        .then(() => fetchPoliceLocations().then(setPoliceLocations))
+        .catch(() => undefined);
+    }
+
+    navigator.geolocation.getCurrentPosition(sendPosition, () => undefined, {
+      enableHighAccuracy: true,
+      maximumAge: 10000,
+      timeout: 10000,
+    });
+
+    const watchId = navigator.geolocation.watchPosition(sendPosition, () => undefined, {
+      enableHighAccuracy: true,
+      maximumAge: 10000,
+      timeout: 10000,
+    });
+
+    return () => navigator.geolocation.clearWatch(watchId);
+  }, [role, user?.fullName, user?.id, user?.primaryEmailAddress?.emailAddress, user?.username]);
+  useEffect(() => {
     const map = mapRef.current;
 
     if (!map || !currentLocation) {
@@ -699,6 +851,44 @@ function MapView({
     }
   }, [currentLocation, currentLocationLabel, defaultToCurrentLocation, zoom]);
 
+  useEffect(() => {
+    const map = mapRef.current;
+
+    if (!map || role !== "police") {
+      policeLocationMarkersRef.current.forEach((marker) => marker.remove());
+      policeLocationMarkersRef.current.clear();
+      return;
+    }
+
+    const nextUsernames = new Set<string>();
+
+    policeLocations.forEach((rawLocation) => {
+      const location = normalizePoliceLocation(rawLocation);
+      if (!location) {
+        return;
+      }
+
+      nextUsernames.add(location.username);
+      policeLocationMarkersRef.current.get(location.username)?.remove();
+
+      const marker = new mapboxgl.Marker({
+        anchor: "center",
+        element: createPoliceLocationMarker(`${location.displayName} dang trong ca`),
+      })
+        .setLngLat([location.longitude, location.latitude])
+        .setPopup(new mapboxgl.Popup({ offset: 20 }).setDOMContent(createPoliceLocationPopup(location)))
+        .addTo(map);
+
+      policeLocationMarkersRef.current.set(location.username, marker);
+    });
+
+    policeLocationMarkersRef.current.forEach((marker, username) => {
+      if (!nextUsernames.has(username)) {
+        marker.remove();
+        policeLocationMarkersRef.current.delete(username);
+      }
+    });
+  }, [policeLocations, role]);
   useEffect(() => {
     const map = mapRef.current;
 
