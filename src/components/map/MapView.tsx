@@ -15,6 +15,7 @@ import {
 
 type MapMode = "normal" | "crime";
 type CrimePeriod = "week" | "month" | "year";
+type CrimeView = "heatmap" | "point";
 type FacilityType = "hospital" | "police";
 type BoundaryGeoJson = GeoJSON.FeatureCollection<GeoJSON.Geometry, Record<string, unknown>>;
 type CrimeFeatureCollection = GeoJSON.FeatureCollection<GeoJSON.Point, Record<string, unknown>>;
@@ -399,6 +400,7 @@ function MapView({
   const [mode, setMode] = useState<MapMode>(initialMode);
   const [crimePeriod, setCrimePeriod] = useState<CrimePeriod>("month");
   const [crimeType, setCrimeType] = useState("all");
+  const [crimeView, setCrimeView] = useState<CrimeView>("heatmap");
 
   const crimeTypes = useMemo(
     () => Array.from(new Set(incidents.map(getIncidentType).filter(Boolean))),
@@ -461,8 +463,6 @@ function MapView({
         .catch(() => undefined);
 
       addCrimeLayers(map, buildCrimeGeoJson(filteredIncidents));
-      setLayerVisibility(map, CRIME_HEAT_LAYER_ID, mode === "crime");
-      setLayerVisibility(map, CRIME_POINT_LAYER_ID, mode === "crime");
     });
 
     fetchHoChiMinhFacilities()
@@ -517,7 +517,7 @@ function MapView({
       resizeObserverRef.current?.disconnect();
       resizeObserverRef.current = null;
     };
-  }, [className, mode, variant]);
+  }, [className, variant]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -578,9 +578,21 @@ function MapView({
     addCrimeLayers(map, buildCrimeGeoJson(filteredIncidents));
     const source = map.getSource(CRIME_SOURCE_ID) as mapboxgl.GeoJSONSource | undefined;
     source?.setData(buildCrimeGeoJson(filteredIncidents));
-    setLayerVisibility(map, CRIME_HEAT_LAYER_ID, mode === "crime");
-    setLayerVisibility(map, CRIME_POINT_LAYER_ID, mode === "crime");
-  }, [filteredIncidents, mode]);
+  }, [filteredIncidents]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+
+    if (!map || !map.isStyleLoaded()) {
+      return;
+    }
+
+    const showHeatmap = mode === "crime" && crimeView === "heatmap";
+    const showPoint = mode === "crime" && crimeView === "point";
+
+    setLayerVisibility(map, CRIME_HEAT_LAYER_ID, showHeatmap);
+    setLayerVisibility(map, CRIME_POINT_LAYER_ID, showPoint);
+  }, [crimeView, mode]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -655,6 +667,24 @@ function MapView({
           </div>
 
           <div className="crime-filters">
+            <div className="crime-view-controls" aria-label="Kieu hien thi vu an">
+              <button
+                className={crimeView === "heatmap" ? "is-active" : ""}
+                disabled={mode !== "crime"}
+                type="button"
+                onClick={() => setCrimeView("heatmap")}
+              >
+                Heatmap
+              </button>
+              <button
+                className={crimeView === "point" ? "is-active" : ""}
+                disabled={mode !== "crime"}
+                type="button"
+                onClick={() => setCrimeView("point")}
+              >
+                Cham
+              </button>
+            </div>
             <label>
               <span>Thoi gian</span>
               <select

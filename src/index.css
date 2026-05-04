@@ -988,7 +988,8 @@ tbody tr:hover {
 }
 
 .header-tabs button,
-.map-mode-controls button {
+.map-mode-controls button,
+.crime-view-controls button {
   min-height: 34px;
   border: 0;
   border-radius: 999px;
@@ -999,7 +1000,8 @@ tbody tr:hover {
 }
 
 .header-tabs button.is-active,
-.map-mode-controls button.is-active {
+.map-mode-controls button.is-active,
+.crime-view-controls button.is-active {
   color: #ffffff;
   background: var(--primary);
 }
@@ -1196,6 +1198,20 @@ tbody tr:hover {
   background: rgba(8, 17, 26, 0.74);
 }
 
+.crime-view-controls {
+  display: inline-flex;
+  gap: 6px;
+  width: fit-content;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(8, 17, 26, 0.74);
+}
+
+.crime-view-controls button:disabled {
+  opacity: 0.45;
+}
+
 .map-controls-footer {
   display: flex;
   flex-direction: column;
@@ -1208,6 +1224,7 @@ tbody tr:hover {
   grid-template-columns: repeat(3, minmax(0, 220px));
   gap: 12px;
   margin: 0;
+  align-items: end;
 }
 
 .crime-filters label {
@@ -1257,6 +1274,7 @@ tbody tr:hover {
 
   .header-tabs,
   .map-mode-controls,
+  .crime-view-controls,
   .photo-actions,
   .camera-capture-actions,
   .crime-filters,
@@ -1265,7 +1283,8 @@ tbody tr:hover {
   }
 
   .header-tabs,
-  .map-mode-controls {
+  .map-mode-controls,
+  .crime-view-controls {
     display: grid;
     width: 100%;
     border-radius: 14px;
