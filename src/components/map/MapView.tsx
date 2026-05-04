@@ -3,7 +3,7 @@ import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import hospitalLogo from "../../assets/hospital-logo.svg";
 import policeStationLogo from "../../assets/police-station-logo.svg";
-import { API_URL } from "../../services/api";
+import { API_URL, apiFetch } from "../../services/api";
 import type { Incident } from "../../types/incident";
 import {
   getIncidentCoordinates,
@@ -19,6 +19,7 @@ type MapMode = "normal" | "crime";
 type CrimePeriod = "week" | "month" | "year";
 type CrimeView = "heatmap" | "point";
 type FacilityType = "hospital" | "police";
+type MapRole = "user" | "support" | "police";
 type BoundaryGeoJson = GeoJSON.FeatureCollection<GeoJSON.Geometry, Record<string, unknown>>;
 type CrimeFeatureCollection = GeoJSON.FeatureCollection<GeoJSON.Point, Record<string, unknown>>;
 
@@ -29,7 +30,9 @@ interface MapViewProps {
   defaultToCurrentLocation?: boolean;
   incidents?: Incident[];
   initialMode?: MapMode;
+  onIncidentsLoad?: (incidents: Incident[]) => void;
   onIncidentSelect?: (incident: Incident) => void;
+  role?: MapRole;
   selectedIncident?: Incident | null;
   showModeControls?: boolean;
   showPoiInNormal?: boolean;
@@ -400,6 +403,10 @@ function buildCrimeGeoJson(incidents: Incident[]): CrimeFeatureCollection {
   };
 }
 
+function fetchSupportIncidents() {
+  return apiFetch<Incident[]>("/api/incidents?sort=created_desc");
+}
+
 function MapView({
   center = DEFAULT_MAP_CENTER,
   className = "",
@@ -407,7 +414,9 @@ function MapView({
   defaultToCurrentLocation = false,
   incidents = [],
   initialMode = "normal",
+  onIncidentsLoad,
   onIncidentSelect,
+  role = "user",
   selectedIncident = null,
   showModeControls = false,
   showPoiInNormal = true,
@@ -424,24 +433,29 @@ function MapView({
   const popupRef = useRef<mapboxgl.Popup | null>(null);
   const [currentLocation, setCurrentLocation] = useState<[number, number] | null>(null);
   const [facilities, setFacilities] = useState<FacilityMarker[]>(fallbackFacilityMarkers);
+  const [supportIncidents, setSupportIncidents] = useState<Incident[]>([]);
   const [mode, setMode] = useState<MapMode>(initialMode);
   const [crimePeriod, setCrimePeriod] = useState<CrimePeriod>("month");
   const [crimeType, setCrimeType] = useState("all");
   const [crimeView, setCrimeView] = useState<CrimeView>("heatmap");
 
+  const isSupportMap = role === "support";
+  const crimeIncidents = isSupportMap ? [] : incidents;
+  const markerIncidents = isSupportMap ? supportIncidents : [];
+
   const crimeTypes = useMemo(
-    () => Array.from(new Set(incidents.map(getIncidentType).filter(Boolean))),
-    [incidents],
+    () => Array.from(new Set(crimeIncidents.map(getIncidentType).filter(Boolean))),
+    [crimeIncidents],
   );
 
   const filteredIncidents = useMemo(
     () =>
-      incidents.filter(
+      crimeIncidents.filter(
         (incident) =>
           isIncidentInPeriod(incident, crimePeriod) &&
           (crimeType === "all" || getIncidentType(incident) === crimeType),
       ),
-    [crimePeriod, crimeType, incidents],
+    [crimeIncidents, crimePeriod, crimeType],
   );
 
   useEffect(() => {
@@ -455,6 +469,37 @@ function MapView({
       { enableHighAccuracy: true, maximumAge: 60000, timeout: 10000 },
     );
   }, [defaultToCurrentLocation]);
+
+  useEffect(() => {
+    if (!isSupportMap) {
+      setSupportIncidents([]);
+      onIncidentsLoad?.([]);
+      return;
+    }
+
+    let isMounted = true;
+
+    function loadSupportIncidents() {
+      fetchSupportIncidents()
+        .then((items) => {
+          if (!isMounted) {
+            return;
+          }
+
+          setSupportIncidents(items);
+          onIncidentsLoad?.(items);
+        })
+        .catch(() => undefined);
+    }
+
+    loadSupportIncidents();
+    const intervalId = window.setInterval(loadSupportIncidents, 10000);
+
+    return () => {
+      isMounted = false;
+      window.clearInterval(intervalId);
+    };
+  }, [isSupportMap, onIncidentsLoad]);
 
   useEffect(() => {
     if (!mapContainerRef.current || !MAPBOX_TOKEN || mapRef.current) {
@@ -489,20 +534,24 @@ function MapView({
         })
         .catch(() => undefined);
 
-      addCrimeLayers(map, buildCrimeGeoJson(filteredIncidents));
+      if (!isSupportMap) {
+        addCrimeLayers(map, buildCrimeGeoJson(filteredIncidents));
+      }
     });
 
-    fetchHoChiMinhFacilities()
-      .then((items) => {
-        if (isMounted) {
-          setFacilities(items);
-        }
-      })
-      .catch(() => {
-        if (isMounted) {
-          setFacilities(fallbackFacilityMarkers);
-        }
-      });
+    if (!isSupportMap) {
+      fetchHoChiMinhFacilities()
+        .then((items) => {
+          if (isMounted) {
+            setFacilities(items);
+          }
+        })
+        .catch(() => {
+          if (isMounted) {
+            setFacilities(fallbackFacilityMarkers);
+          }
+        });
+    }
 
     return () => {
       isMounted = false;
@@ -519,7 +568,7 @@ function MapView({
       incidentMapMarkersRef.current = [];
       popupRef.current = null;
     };
-  }, [center, zoom]);
+  }, [center, isSupportMap, zoom]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -557,7 +606,7 @@ function MapView({
 
     facilityMapMarkersRef.current.forEach((marker) => marker.remove());
 
-    if (mode !== "normal" || !showPoiInNormal) {
+    if (isSupportMap || mode !== "normal" || !showPoiInNormal) {
       facilityMapMarkersRef.current = [];
       return;
     }
@@ -568,7 +617,7 @@ function MapView({
         .setPopup(new mapboxgl.Popup({ offset: 28 }).setDOMContent(createFacilityPopup(facility)))
         .addTo(map),
     );
-  }, [facilities, mode, showPoiInNormal]);
+  }, [facilities, isSupportMap, mode, showPoiInNormal]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -605,8 +654,13 @@ function MapView({
 
     incidentMapMarkersRef.current.forEach((marker) => marker.remove());
 
+    if (!isSupportMap) {
+      incidentMapMarkersRef.current = [];
+      return;
+    }
+
     const selectedId = selectedIncident ? getIncidentId(selectedIncident) : "";
-    incidentMapMarkersRef.current = incidents.flatMap((incident) => {
+    incidentMapMarkersRef.current = markerIncidents.flatMap((incident) => {
       const coordinates = getIncidentCoordinates(incident);
 
       if (!coordinates) {
@@ -627,14 +681,14 @@ function MapView({
 
       return [marker];
     });
-  }, [incidents, onIncidentSelect, selectedIncident]);
+  }, [isSupportMap, markerIncidents, onIncidentSelect, selectedIncident]);
 
   useEffect(() => {
     const map = mapRef.current;
     const incident = selectedIncident;
     const coordinates = incident ? getIncidentCoordinates(incident) : null;
 
-    if (!map || !incident || !coordinates) {
+    if (!isSupportMap || !map || !incident || !coordinates) {
       return;
     }
 
@@ -651,12 +705,12 @@ function MapView({
       .setLngLat(coordinates)
       .setDOMContent(createIncidentPopup(incident))
       .addTo(map);
-  }, [selectedIncident, zoom]);
+  }, [isSupportMap, selectedIncident, zoom]);
 
   useEffect(() => {
     const map = mapRef.current;
 
-    if (!map || !map.isStyleLoaded()) {
+    if (!map || !map.isStyleLoaded() || isSupportMap) {
       return;
     }
 
@@ -664,7 +718,7 @@ function MapView({
     addCrimeLayers(map, buildCrimeGeoJson(filteredIncidents));
     const source = map.getSource(CRIME_SOURCE_ID) as mapboxgl.GeoJSONSource | undefined;
     source?.setData(buildCrimeGeoJson(filteredIncidents));
-  }, [filteredIncidents]);
+  }, [filteredIncidents, isSupportMap]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -673,12 +727,12 @@ function MapView({
       return;
     }
 
-    const showHeatmap = mode === "crime" && crimeView === "heatmap";
-    const showPoint = mode === "crime" && crimeView === "point";
+    const showHeatmap = !isSupportMap && mode === "crime" && crimeView === "heatmap";
+    const showPoint = !isSupportMap && mode === "crime" && crimeView === "point";
 
     setLayerVisibility(map, CRIME_HEAT_LAYER_ID, showHeatmap);
     setLayerVisibility(map, CRIME_POINT_LAYER_ID, showPoint);
-  }, [crimeView, mode]);
+  }, [crimeView, isSupportMap, mode]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -688,7 +742,7 @@ function MapView({
     }
 
     function handleClick(event: mapboxgl.MapMouseEvent) {
-      if (mode !== "crime" || !mapRef.current) {
+      if (isSupportMap || mode !== "crime" || !mapRef.current) {
         return;
       }
 
@@ -713,7 +767,7 @@ function MapView({
     return () => {
       map.off("click", handleClick);
     };
-  }, [filteredIncidents, mode]);
+  }, [filteredIncidents, isSupportMap, mode]);
 
   return (
     <section className={`map-card map-card-${variant} map-wrapper ${className}`.trim()} id="map">

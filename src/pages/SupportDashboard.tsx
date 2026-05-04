@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import DashboardLayout from "../components/layout/DashboardLayout";
 import MapView from "../components/map/MapView";
 import { API_URL } from "../services/api";
-import { getSupportRequests } from "../services/supportService";
 import type { Incident, IncidentSeverity } from "../types/incident";
 import {
   getIncidentCategory,
@@ -65,42 +64,16 @@ function SupportDashboard() {
   const [selectedIncidentId, setSelectedIncidentId] = useState("");
   const [statusByIncident, setStatusByIncident] = useState<Record<string, string>>({});
   const [previewImage, setPreviewImage] = useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = useState("");
-
-  useEffect(() => {
-    let isMounted = true;
-
-    function loadRequests() {
-      getSupportRequests()
-        .then((items) => {
-          if (!isMounted) {
-            return;
-          }
-
-          setIncidents(items);
-          setErrorMessage("");
-          setSelectedIncidentId((currentId) => currentId || (items[0] ? getIncidentId(items[0]) : ""));
-        })
-        .catch((error) => {
-          if (isMounted) {
-            setErrorMessage(error instanceof Error ? error.message : "Không tải được danh sách báo cáo.");
-          }
-        });
-    }
-
-    loadRequests();
-    const intervalId = window.setInterval(loadRequests, 10000);
-
-    return () => {
-      isMounted = false;
-      window.clearInterval(intervalId);
-    };
-  }, []);
 
   const selectedIncident = useMemo(
     () => incidents.find((incident) => getIncidentId(incident) === selectedIncidentId) || incidents[0] || null,
     [incidents, selectedIncidentId],
   );
+
+  const handleIncidentsLoad = useCallback((items: Incident[]) => {
+    setIncidents(items);
+    setSelectedIncidentId((currentId) => currentId || (items[0] ? getIncidentId(items[0]) : ""));
+  }, []);
 
   function handleSelectIncident(incident: Incident) {
     setSelectedIncidentId(getIncidentId(incident));
@@ -128,10 +101,10 @@ function SupportDashboard() {
       <section className="support-workspace">
         <MapView
           className="support-map"
-          incidents={incidents}
+          onIncidentsLoad={handleIncidentsLoad}
           onIncidentSelect={handleSelectIncident}
+          role="support"
           selectedIncident={selectedIncident}
-          showPoiInNormal={false}
           title="Bản đồ báo cáo"
           variant="full"
         />
@@ -145,9 +118,6 @@ function SupportDashboard() {
               </div>
               <span className="support-count">{incidents.length}</span>
             </div>
-
-            {errorMessage ? <p className="form-message">{errorMessage}</p> : null}
-
             <div className="support-report-list">
               {incidents.map((incident) => {
                 const incidentId = getIncidentId(incident);
@@ -178,7 +148,7 @@ function SupportDashboard() {
                 );
               })}
 
-              {!incidents.length && !errorMessage ? (
+              {!incidents.length ? (
                 <div className="support-empty-state">Chưa có báo cáo cần hỗ trợ.</div>
               ) : null}
             </div>

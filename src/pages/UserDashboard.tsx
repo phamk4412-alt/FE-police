@@ -2,8 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent 
 import Button from "../components/common/Button";
 import DashboardLayout from "../components/layout/DashboardLayout";
 import MapView from "../components/map/MapView";
-import { createIncidentWithImages, getIncidents } from "../services/userService";
-import type { Incident } from "../types/incident";
+import { createIncidentWithImages } from "../services/userService";
 
 const MAX_IMAGES = 3;
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
@@ -49,7 +48,6 @@ function UserDashboard() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [canUseLiveCamera, setCanUseLiveCamera] = useState(false);
-  const [mapIncidents, setMapIncidents] = useState<Incident[]>([]);
 
   const imagePreviews = useMemo(
     () => images.map((image) => ({ name: image.name, url: URL.createObjectURL(image) })),
@@ -63,16 +61,7 @@ function UserDashboard() {
         typeof navigator.mediaDevices?.getUserMedia === "function",
     );
 
-    loadMapIncidents();
     updateCurrentLocation();
-  }, []);
-
-  useEffect(() => {
-    const intervalId = window.setInterval(loadMapIncidents, 10000);
-
-    return () => {
-      window.clearInterval(intervalId);
-    };
   }, []);
 
   useEffect(
@@ -114,12 +103,6 @@ function UserDashboard() {
       },
       { enableHighAccuracy: true, maximumAge: 60000, timeout: 10000 },
     );
-  }
-
-  function loadMapIncidents() {
-    getIncidents()
-      .then(setMapIncidents)
-      .catch(() => undefined);
   }
 
   function validateAndAppendImages(nextImages: File[], selectedImages: File[]) {
@@ -263,9 +246,6 @@ function UserDashboard() {
 
     try {
       const result = await createIncidentWithImages(formData);
-      if (result?.Incident) {
-        setMapIncidents((current) => [result.Incident, ...current]);
-      }
 
       setDescription("");
       setImages([]);
@@ -292,6 +272,7 @@ function UserDashboard() {
               className="home-main-map"
               currentLocationLabel="Vị trí hiện tại của bạn"
               defaultToCurrentLocation
+              role="user"
               showPoiInNormal={false}
               title="Vị trí hiện tại tại TP.HCM"
               variant="compact"
@@ -449,7 +430,7 @@ function UserDashboard() {
               className="city-map-view"
               currentLocationLabel="Vị trí hiện tại của bạn"
               defaultToCurrentLocation
-              incidents={mapIncidents}
+              role="user"
               showModeControls
               title="Bản đồ an ninh 3D"
               variant="full"
