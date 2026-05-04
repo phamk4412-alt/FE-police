@@ -582,7 +582,7 @@ function MapView({
 
   const isSupportMap = role === "support";
   const crimeIncidents = isSupportMap ? [] : incidents.length ? incidents : crimeDataIncidents;
-  const markerIncidents = isSupportMap ? supportIncidents : [];
+  const markerIncidents = isSupportMap ? supportIncidents : role === "police" ? incidents : [];
 
   const crimeTypes = useMemo(
     () => Array.from(new Set(crimeIncidents.map(getIncidentType).filter(Boolean))),
@@ -961,7 +961,7 @@ function MapView({
 
     incidentMapMarkersRef.current.forEach((marker) => marker.remove());
 
-    if (!isSupportMap) {
+    if (!isSupportMap && role !== "police") {
       incidentMapMarkersRef.current = [];
       return;
     }
@@ -988,7 +988,7 @@ function MapView({
 
       return [marker];
     });
-  }, [isSupportMap, markerIncidents, onIncidentSelect, selectedIncident]);
+  }, [isSupportMap, markerIncidents, onIncidentSelect, role, selectedIncident]);
 
   useEffect(() => {
     const map = mapRef.current;
