@@ -825,10 +825,12 @@ function MapView({
     const displayName = user?.fullName || user?.username || user?.primaryEmailAddress?.emailAddress || "Canh sat";
     let lastSentAt = 0;
     let hasSharedLocation = false;
+    let latestPosition: GeolocationPosition | null = null;
 
-    function sendPosition(position: GeolocationPosition) {
+    function sendPosition(position: GeolocationPosition, force = false) {
+      latestPosition = position;
       const now = Date.now();
-      if (now - lastSentAt < 5000) {
+      if (!force && now - lastSentAt < 5000) {
         return;
       }
 
@@ -859,6 +861,12 @@ function MapView({
       timeout: 10000,
     });
 
+    const heartbeatId = window.setInterval(() => {
+      if (latestPosition) {
+        sendPosition(latestPosition, true);
+      }
+    }, 8000);
+
     function handlePageExit() {
       if (hasSharedLocation) {
         sendEndPoliceShiftBeacon(username);
@@ -870,6 +878,7 @@ function MapView({
 
     return () => {
       navigator.geolocation.clearWatch(watchId);
+      window.clearInterval(heartbeatId);
       window.removeEventListener("pagehide", handlePageExit);
       window.removeEventListener("beforeunload", handlePageExit);
       if (hasSharedLocation) {
