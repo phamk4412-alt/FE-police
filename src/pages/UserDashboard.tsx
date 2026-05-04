@@ -273,7 +273,7 @@ function UserDashboard() {
           <section className="page-title citizen-title">
             <p className="eyebrow">Người dân</p>
             <h2>Báo cáo nhanh trong vài giây</h2>
-            <span>Map lớn để nhìn khu vực, camera thật khi môi trường cho phép, gửi bằng multipart/form-data.</span>
+            <span>Gửi báo cáo nhanh chóng và chính xác.</span>
           </section>
 
           <section className="citizen-home-grid">
@@ -430,7 +430,7 @@ function UserDashboard() {
           <section className="page-title citizen-title">
             <p className="eyebrow">Bản đồ TP.HCM</p>
             <h2>Theo dõi khu vực và vụ việc</h2>
-            <span>Map full-width, không còn panel thừa, toàn bộ filter và nút nằm dưới map.</span>
+            <span>Theo dõi tình hình an ninh theo thời gian thực.</span>
           </section>
 
           <section className="citizen-map-wrapper">
