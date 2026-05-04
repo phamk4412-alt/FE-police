@@ -21,7 +21,7 @@ function Sidebar({ isCollapsed, onToggle, role }: SidebarProps) {
       const payload = JSON.stringify({ Username: username });
       if (navigator.sendBeacon) {
         navigator.sendBeacon(
-          `${import.meta.env.VITE_API_URL || "https://be-police-n8zf.onrender.com"}/api/police/me/location`,
+          `${import.meta.env.VITE_API_URL || "https://be-police-n8zf.onrender.com"}/api/police/me/location/end`,
           new Blob([payload], { type: "application/json" }),
         );
       }

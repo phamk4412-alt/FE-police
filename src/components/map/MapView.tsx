@@ -515,8 +515,7 @@ function endPoliceShift(username: string) {
     return Promise.resolve();
   }
 
-  return apiFetch<void>("/api/police/me/location", {
-    body: JSON.stringify({ Username: username }),
+  return apiFetch<void>(`/api/police/me/location?username=${encodeURIComponent(username)}`, {
     method: "DELETE",
   });
 }
@@ -529,18 +528,18 @@ function sendEndPoliceShiftBeacon(username: string) {
   const payload = JSON.stringify({ Username: username });
   if (navigator.sendBeacon) {
     navigator.sendBeacon(
-      `${API_URL}/api/police/me/location`,
+      `${API_URL}/api/police/me/location/end`,
       new Blob([payload], { type: "application/json" }),
     );
     return;
   }
 
-  void fetch(`${API_URL}/api/police/me/location`, {
+  void fetch(`${API_URL}/api/police/me/location/end`, {
     body: payload,
     credentials: "include",
     headers: { "Content-Type": "application/json" },
     keepalive: true,
-    method: "DELETE",
+    method: "POST",
   });
 }
 
