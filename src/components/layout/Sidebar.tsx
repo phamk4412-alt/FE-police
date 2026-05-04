@@ -1,4 +1,4 @@
-import { useClerk } from "@clerk/react";
+import { useClerk, useUser } from "@clerk/react";
 import { NavLink, useNavigate } from "react-router-dom";
 import type { UserRole } from "../../types/user";
 import { ROLE_HOME_PATHS, ROLES_WITH_MAP } from "../../utils/constants";
@@ -12,9 +12,21 @@ interface SidebarProps {
 function Sidebar({ isCollapsed, onToggle, role }: SidebarProps) {
   const navigate = useNavigate();
   const { signOut } = useClerk();
+  const { user } = useUser();
   const hasMap = ROLES_WITH_MAP.includes(role);
 
   function handleLogout() {
+    const username = user?.id || user?.primaryEmailAddress?.emailAddress || user?.username;
+    if (role === "police" && username) {
+      const payload = JSON.stringify({ Username: username });
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon(
+          `${import.meta.env.VITE_API_URL || "https://be-police-n8zf.onrender.com"}/api/police/me/location`,
+          new Blob([payload], { type: "application/json" }),
+        );
+      }
+    }
+
     void signOut(() => navigate("/login", { replace: true }));
   }
 

@@ -510,6 +510,40 @@ function updatePoliceLocation(payload: {
   });
 }
 
+function endPoliceShift(username: string) {
+  if (!username) {
+    return Promise.resolve();
+  }
+
+  return apiFetch<void>("/api/police/me/location", {
+    body: JSON.stringify({ Username: username }),
+    method: "DELETE",
+  });
+}
+
+function sendEndPoliceShiftBeacon(username: string) {
+  if (!username) {
+    return;
+  }
+
+  const payload = JSON.stringify({ Username: username });
+  if (navigator.sendBeacon) {
+    navigator.sendBeacon(
+      `${API_URL}/api/police/me/location`,
+      new Blob([payload], { type: "application/json" }),
+    );
+    return;
+  }
+
+  void fetch(`${API_URL}/api/police/me/location`, {
+    body: payload,
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    keepalive: true,
+    method: "DELETE",
+  });
+}
+
 function MapView({
   center = DEFAULT_MAP_CENTER,
   className = "",
@@ -790,6 +824,7 @@ function MapView({
     const username = user?.id || user?.primaryEmailAddress?.emailAddress || user?.username || "police-session";
     const displayName = user?.fullName || user?.username || user?.primaryEmailAddress?.emailAddress || "Canh sat";
     let lastSentAt = 0;
+    let hasSharedLocation = false;
 
     function sendPosition(position: GeolocationPosition) {
       const now = Date.now();
@@ -798,6 +833,7 @@ function MapView({
       }
 
       lastSentAt = now;
+      hasSharedLocation = true;
       setCurrentLocation([position.coords.longitude, position.coords.latitude]);
       void updatePoliceLocation({
         DisplayName: displayName,
@@ -823,7 +859,23 @@ function MapView({
       timeout: 10000,
     });
 
-    return () => navigator.geolocation.clearWatch(watchId);
+    function handlePageExit() {
+      if (hasSharedLocation) {
+        sendEndPoliceShiftBeacon(username);
+      }
+    }
+
+    window.addEventListener("pagehide", handlePageExit);
+    window.addEventListener("beforeunload", handlePageExit);
+
+    return () => {
+      navigator.geolocation.clearWatch(watchId);
+      window.removeEventListener("pagehide", handlePageExit);
+      window.removeEventListener("beforeunload", handlePageExit);
+      if (hasSharedLocation) {
+        void endPoliceShift(username).catch(() => undefined);
+      }
+    };
   }, [role, user?.fullName, user?.id, user?.primaryEmailAddress?.emailAddress, user?.username]);
   useEffect(() => {
     const map = mapRef.current;
