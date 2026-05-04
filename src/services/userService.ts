@@ -1,4 +1,4 @@
-import { apiFetch } from "./api";
+import { API_URL, apiFetch } from "./api";
 import type { Incident } from "../types/incident";
 
 export function getUserReports() {
@@ -22,4 +22,37 @@ export function createIncident(payload: CreateIncidentPayload) {
     body: JSON.stringify(payload),
     method: "POST",
   });
+}
+
+export async function createIncidentWithImages(formData: FormData) {
+  const res = await fetch(`${API_URL}/api/incidents`, {
+    body: formData,
+    credentials: "include",
+    method: "POST",
+  });
+
+  if (!res.ok) {
+    let message = `API error: ${res.status}`;
+
+    try {
+      const errorBody = (await res.json()) as { message?: string; Message?: string };
+      message = errorBody.message || errorBody.Message || message;
+    } catch {
+      message = res.statusText ? `API error: ${res.status} ${res.statusText}` : message;
+    }
+
+    throw new Error(message);
+  }
+
+  if (res.status === 204) {
+    return undefined as unknown as CreateIncidentResult;
+  }
+
+  const contentType = res.headers.get("content-type") || "";
+
+  if (!contentType.includes("application/json")) {
+    return undefined as unknown as CreateIncidentResult;
+  }
+
+  return res.json() as Promise<CreateIncidentResult>;
 }

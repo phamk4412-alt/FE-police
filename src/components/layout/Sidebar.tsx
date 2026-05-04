@@ -19,7 +19,6 @@ function Sidebar({ role }: SidebarProps) {
   return (
     <aside className="sidebar">
       <div className="sidebar-brand">
-        <span>PSH</span>
         <strong>Trung tâm Cảnh sát</strong>
       </div>
 

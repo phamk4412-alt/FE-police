@@ -971,3 +971,310 @@ tbody tr:hover {
     width: 76px;
   }
 }
+
+.header-tabs {
+  display: inline-flex;
+  gap: 6px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(8, 17, 26, 0.74);
+}
+
+.header-tabs button,
+.map-mode-controls button {
+  min-height: 34px;
+  border: 0;
+  border-radius: 999px;
+  padding: 7px 14px;
+  color: var(--muted);
+  background: transparent;
+  font-weight: 800;
+}
+
+.header-tabs button.is-active,
+.map-mode-controls button.is-active {
+  color: #ffffff;
+  background: var(--primary);
+}
+
+.citizen-title {
+  display: grid;
+  gap: 4px;
+}
+
+.citizen-home-grid {
+  display: grid;
+  grid-template-columns: minmax(320px, 0.9fr) minmax(360px, 1.1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.citizen-map-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+  gap: 20px;
+  align-items: start;
+}
+
+.map-side-panel,
+.home-bottom-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.home-bottom-grid {
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+}
+
+.map-card-compact .mapbox-container,
+.map-card-compact .map-token-warning {
+  min-height: 420px;
+}
+
+.map-card-full .mapbox-container,
+.map-card-full .map-token-warning {
+  min-height: min(680px, calc(100vh - 230px));
+}
+
+.quick-report-form {
+  gap: 14px;
+}
+
+.photo-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.image-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.image-preview-grid figure {
+  position: relative;
+  min-height: 112px;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg-dark);
+}
+
+.image-preview-grid img {
+  width: 100%;
+  height: 112px;
+  object-fit: cover;
+}
+
+.image-preview-grid button {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  border: 0;
+  border-radius: 999px;
+  padding: 5px 10px;
+  color: #ffffff;
+  background: rgba(8, 17, 26, 0.84);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.emergency-card {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.emergency-card .eyebrow {
+  grid-column: 1 / -1;
+}
+
+.emergency-card div,
+.location-card,
+.mini-stat,
+.news-panel article {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-elevated);
+}
+
+.emergency-card div {
+  display: grid;
+  gap: 2px;
+  padding: 14px;
+}
+
+.emergency-card strong {
+  color: var(--primary);
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.emergency-card span,
+.location-card p,
+.news-panel article span,
+.mini-stat span {
+  color: var(--muted);
+}
+
+.location-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px;
+}
+
+.location-card h2,
+.location-card p {
+  margin: 0;
+}
+
+.map-mode-controls {
+  display: inline-flex;
+  gap: 6px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(8, 17, 26, 0.74);
+}
+
+.crime-filters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 180px));
+  gap: 12px;
+  margin: -4px 0 16px;
+}
+
+.crime-filters label {
+  display: grid;
+  gap: 6px;
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.crime-filters span {
+  font-size: 0.82rem;
+}
+
+.news-panel,
+.crime-stats-panel,
+.recent-panel {
+  padding: 18px;
+}
+
+.news-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.news-panel article {
+  display: grid;
+  gap: 5px;
+  padding: 14px;
+}
+
+.crime-stats-panel {
+  display: grid;
+  gap: 10px;
+}
+
+.mini-stat {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 14px;
+}
+
+.mini-stat strong {
+  color: var(--ink);
+  font-size: 1.55rem;
+}
+
+.compact-list {
+  max-height: 300px;
+  overflow: auto;
+}
+
+.compact-list .incident-item {
+  align-items: flex-start;
+  flex-direction: column;
+}
+
+.current-location-marker::after {
+  animation: location-pulse 1.6s ease-out infinite;
+}
+
+@keyframes location-pulse {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.65);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.65);
+  }
+}
+
+@media (max-width: 1180px) {
+  .citizen-home-grid,
+  .citizen-map-grid,
+  .home-bottom-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .map-side-panel {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .dashboard-header-actions {
+    align-items: stretch;
+  }
+
+  .header-tabs,
+  .map-mode-controls,
+  .photo-actions,
+  .crime-filters,
+  .emergency-card,
+  .map-side-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .header-tabs,
+  .map-mode-controls {
+    display: grid;
+    width: 100%;
+    border-radius: 14px;
+  }
+
+  .citizen-home-grid {
+    gap: 16px;
+  }
+
+  .image-preview-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .location-card {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
