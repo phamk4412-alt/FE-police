@@ -12,14 +12,35 @@ const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const DEFAULT_HCM_LOCATION = { lat: 10.7769, lng: 106.7009 };
 
 function getLocationText(lat: number | "", lng: number | "") {
-  return typeof lat === "number" && typeof lng === "number" ? `${lat.toFixed(6)}, ${lng.toFixed(6)}` : "";
+  return typeof lat === "number" && typeof lng === "number"
+    ? `${lat.toFixed(6)}, ${lng.toFixed(6)}`
+    : "";
+}
+
+function isDirectCameraSupported() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  const isSecureContextHost =
+    window.location.protocol === "https:" ||
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1";
+  const isMobileDevice = /Android|iPhone|iPad|iPod/i.test(window.navigator.userAgent);
+
+  return isSecureContextHost && isMobileDevice;
+}
+
+function buildIncidentTitle(category: string, description: string) {
+  const summary = description.trim().slice(0, 48);
+  return summary ? `${category} - ${summary}` : category;
 }
 
 function UserDashboard() {
   const cameraInputRef = useRef<HTMLInputElement | null>(null);
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
   const [tab, setTab] = useState<"home" | "map">("home");
-  const [type, setType] = useState("Trộm cắp");
+  const [category, setCategory] = useState("Trộm cắp");
   const [description, setDescription] = useState("");
   const [lat, setLat] = useState<number | "">("");
   const [lng, setLng] = useState<number | "">("");
@@ -27,6 +48,7 @@ function UserDashboard() {
   const [formMessage, setFormMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [reportHistory, setReportHistory] = useState<Incident[]>([]);
+  const [canOpenDirectCamera, setCanOpenDirectCamera] = useState(false);
 
   const imagePreviews = useMemo(
     () => images.map((image) => ({ name: image.name, url: URL.createObjectURL(image) })),
@@ -39,12 +61,14 @@ function UserDashboard() {
       getIncidentStatus(incident).toLowerCase().includes("mới"),
     ).length;
     const resolved = reportHistory.filter((incident) =>
-      getIncidentStatus(incident).toLowerCase().includes("xong"),
+      getIncidentStatus(incident).toLowerCase().includes("xử lý"),
     ).length;
     return { pending, resolved, total };
   }, [reportHistory]);
 
   useEffect(() => {
+    setCanOpenDirectCamera(isDirectCameraSupported());
+
     getUserReports()
       .then(setReportHistory)
       .catch(() => undefined);
@@ -114,6 +138,19 @@ function UserDashboard() {
     setImages((current) => current.filter((_, currentIndex) => currentIndex !== index));
   }
 
+  function handleCaptureClick() {
+    setFormMessage("");
+
+    if (!canOpenDirectCamera) {
+      setFormMessage(
+        "Camera trực tiếp chỉ hoạt động ổn định trên mobile qua HTTPS hoặc localhost. Trên desktop hãy dùng Chọn từ máy.",
+      );
+      return;
+    }
+
+    cameraInputRef.current?.click();
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setFormMessage("");
@@ -131,10 +168,11 @@ function UserDashboard() {
     setIsSubmitting(true);
 
     const formData = new FormData();
-    formData.append("type", type);
-    formData.append("description", description.trim());
-    formData.append("lat", String(lat));
-    formData.append("lng", String(lng));
+    formData.append("title", buildIncidentTitle(category, description));
+    formData.append("detail", description.trim());
+    formData.append("category", category);
+    formData.append("latitude", String(lat));
+    formData.append("longitude", String(lng));
     images.forEach((image) => formData.append("images", image));
 
     try {
@@ -161,16 +199,16 @@ function UserDashboard() {
           <section className="page-title citizen-title">
             <p className="eyebrow">Người dân</p>
             <h2>Báo cáo nhanh trong vài giây</h2>
-            <span>Chọn loại vụ việc, chụp ảnh, gửi kèm vị trí hiện tại.</span>
+            <span>Map lớn để nhìn ngay khu vực, form gọn để chụp ảnh và gửi tức thì.</span>
           </section>
 
           <section className="citizen-home-grid">
             <MapView
-              className="home-mini-map"
+              className="home-main-map"
               currentLocationLabel="Vị trí hiện tại của bạn"
               defaultToCurrentLocation
               showPoiInNormal={false}
-              title="Vị trí của bạn tại TP.HCM"
+              title="Vị trí hiện tại tại TP.HCM"
               variant="compact"
             />
 
@@ -182,7 +220,11 @@ function UserDashboard() {
 
               <label className="field" htmlFor="incident-type">
                 <span>Loại vụ việc</span>
-                <select id="incident-type" value={type} onChange={(event) => setType(event.target.value)}>
+                <select
+                  id="incident-type"
+                  value={category}
+                  onChange={(event) => setCategory(event.target.value)}
+                >
                   <option>Trộm cắp</option>
                   <option>Gây rối trật tự</option>
                   <option>Tai nạn giao thông</option>
@@ -196,7 +238,7 @@ function UserDashboard() {
                 <textarea
                   id="description"
                   name="description"
-                  placeholder="Ví dụ: Có người giật túi tại trước cửa hàng, hướng chạy về..."
+                  placeholder="Ví dụ: Có người giật túi trước cửa hàng, hướng chạy về..."
                   rows={4}
                   value={description}
                   onChange={(event) => setDescription(event.target.value)}
@@ -205,11 +247,16 @@ function UserDashboard() {
 
               <label className="field" htmlFor="location">
                 <span>Vị trí (auto)</span>
-                <input id="location" readOnly value={getLocationText(lat, lng)} placeholder="Đang lấy vị trí..." />
+                <input
+                  id="location"
+                  readOnly
+                  value={getLocationText(lat, lng)}
+                  placeholder="Đang lấy vị trí..."
+                />
               </label>
 
               <div className="photo-actions">
-                <button className="btn btn-secondary" type="button" onClick={() => cameraInputRef.current?.click()}>
+                <button className="btn btn-secondary" type="button" onClick={handleCaptureClick}>
                   📷 Chụp ảnh
                 </button>
                 <button className="btn btn-ghost" type="button" onClick={() => uploadInputRef.current?.click()}>
@@ -221,7 +268,6 @@ function UserDashboard() {
                   type="file"
                   accept="image/*"
                   capture="environment"
-                  multiple
                   onChange={handleImagesSelected}
                 />
                 <input
@@ -232,6 +278,11 @@ function UserDashboard() {
                   multiple
                   onChange={handleImagesSelected}
                 />
+              </div>
+
+              <div className="camera-hint">
+                <span>{`Ảnh đã chọn: ${images.length}/${MAX_IMAGES}`}</span>
+                <small>Camera trực tiếp ưu tiên cho Chrome Android, HTTPS hoặc localhost.</small>
               </div>
 
               {imagePreviews.length ? (
@@ -287,17 +338,18 @@ function UserDashboard() {
         <>
           <section className="page-title citizen-title">
             <p className="eyebrow">Bản đồ TP.HCM</p>
-            <h2>Theo dõi khu vực và vụ án</h2>
-            <span>Bản đồ thường hiển thị công an, bệnh viện. Bản đồ vụ án chỉ hiển thị heatmap và điểm vụ việc.</span>
+            <h2>Theo dõi khu vực và vụ việc</h2>
+            <span>Map chiếm phần lớn khung nhìn, panel tách riêng, filter nằm dưới map để thao tác rõ ràng.</span>
           </section>
 
           <section className="citizen-map-grid">
             <MapView
+              className="city-map-view"
               currentLocationLabel="Vị trí hiện tại của bạn"
               defaultToCurrentLocation
               incidents={reportHistory}
               showModeControls
-              title="Bản đồ an ninh"
+              title="Bản đồ an ninh 3D"
               variant="full"
             />
 
@@ -309,17 +361,17 @@ function UserDashboard() {
                 </div>
                 <article>
                   <strong>Tăng cường tuần tra khu trung tâm</strong>
-                  <span>Ưu tiên phản ứng nhanh tại khu đông người và tuyến giao thông chính.</span>
+                  <span>Ưu tiên phản ứng nhanh tại khu đông người và các trục giao thông chính.</span>
                 </article>
                 <article>
                   <strong>Khuyến nghị gửi ảnh hiện trường</strong>
-                  <span>Ảnh rõ giúp lực lượng xử lý xác minh nhanh hơn.</span>
+                  <span>Ảnh rõ và đúng góc chụp giúp xác minh vụ việc nhanh hơn.</span>
                 </article>
               </section>
 
               <section className="panel crime-stats-panel">
                 <div className="section-heading">
-                  <span className="eyebrow">Thống kê vụ án</span>
+                  <span className="eyebrow">Thống kê</span>
                   <h2>Tình hình báo cáo</h2>
                 </div>
                 <div className="mini-stat">
@@ -343,7 +395,10 @@ function UserDashboard() {
                 </div>
                 <div className="incident-list compact-list">
                   {reportHistory.slice(0, 5).map((report) => (
-                    <article className="incident-item" key={`${getIncidentTitle(report)}-${getIncidentCreatedAt(report)}`}>
+                    <article
+                      className="incident-item"
+                      key={`${getIncidentTitle(report)}-${getIncidentCreatedAt(report)}`}
+                    >
                       <div>
                         <strong>{getIncidentTitle(report)}</strong>
                         <span>{getIncidentCreatedAt(report) || "Vừa cập nhật"}</span>

@@ -56,48 +56,49 @@ const DEFAULT_MAP_ZOOM = 8.8;
 const CRIME_SOURCE_ID = "crime-incidents";
 const CRIME_HEAT_LAYER_ID = "crime-heatmap";
 const CRIME_POINT_LAYER_ID = "crime-points";
+const BUILDING_LAYER_ID = "3d-buildings";
 
 const fallbackFacilityMarkers: FacilityMarker[] = [
   {
-    address: "73 Yersin, phường Cầu Ông Lãnh, Quận 1, TP.HCM",
+    address: "73 Yersin, phuong Cau Ong Lanh, Quan 1, TP.HCM",
     coordinates: [106.700981, 10.776889],
     logo: policeStationLogo,
-    name: "Công an Quận 1",
+    name: "Cong an Quan 1",
     type: "police",
   },
   {
-    address: "359 Trần Hưng Đạo, Phường 10, Quận 5, TP.HCM",
+    address: "359 Tran Hung Dao, Phuong 10, Quan 5, TP.HCM",
     coordinates: [106.6728, 10.7536],
     logo: policeStationLogo,
-    name: "Công an Quận 5",
+    name: "Cong an Quan 5",
     type: "police",
   },
   {
-    address: "47 Thành Thái, Phường 14, Quận 10, TP.HCM",
+    address: "47 Thanh Thai, Phuong 14, Quan 10, TP.HCM",
     coordinates: [106.667, 10.7728],
     logo: policeStationLogo,
-    name: "Công an Quận 10",
+    name: "Cong an Quan 10",
     type: "police",
   },
   {
-    address: "201B Nguyễn Chí Thanh, Phường 12, Quận 5, TP.HCM",
+    address: "201B Nguyen Chi Thanh, Phuong 12, Quan 5, TP.HCM",
     coordinates: [106.681637, 10.755106],
     logo: hospitalLogo,
-    name: "Bệnh viện Chợ Rẫy",
+    name: "Benh vien Cho Ray",
     type: "hospital",
   },
   {
-    address: "14 Lý Tự Trọng, phường Bến Nghé, Quận 1, TP.HCM",
+    address: "14 Ly Tu Trong, phuong Ben Nghe, Quan 1, TP.HCM",
     coordinates: [106.700622, 10.777204],
     logo: hospitalLogo,
-    name: "Bệnh viện Nhi Đồng 2",
+    name: "Benh vien Nhi Dong 2",
     type: "hospital",
   },
   {
-    address: "1 Nơ Trang Long, Phường 7, Quận Bình Thạnh, TP.HCM",
+    address: "1 No Trang Long, Phuong 7, Quan Binh Thanh, TP.HCM",
     coordinates: [106.6943, 10.8103],
     logo: hospitalLogo,
-    name: "Bệnh viện Nhân dân Gia Định",
+    name: "Benh vien Nhan dan Gia Dinh",
     type: "hospital",
   },
 ];
@@ -136,10 +137,10 @@ function normalizeFacilityMarkers(elements: OverpassElement[]) {
       address:
         [tags["addr:housenumber"], tags["addr:street"], tags["addr:district"], tags["addr:city"]]
           .filter(Boolean)
-          .join(", ") || "Thành phố Hồ Chí Minh",
+          .join(", ") || "Thanh pho Ho Chi Minh",
       coordinates,
       logo: type === "hospital" ? hospitalLogo : policeStationLogo,
-      name: tags.name || (type === "hospital" ? "Bệnh viện" : "Công an"),
+      name: tags.name || (type === "hospital" ? "Benh vien" : "Cong an"),
       type,
     });
 
@@ -207,7 +208,7 @@ function createFacilityPopup({ address, name, type }: FacilityMarker) {
   popupContent.className = "facility-popup";
   popupContent.innerHTML = `<strong></strong><span></span><small></small>`;
   popupContent.querySelector("strong")!.textContent = name;
-  popupContent.querySelector("span")!.textContent = type === "hospital" ? "Bệnh viện" : "Công an";
+  popupContent.querySelector("span")!.textContent = type === "hospital" ? "Benh vien" : "Cong an";
   popupContent.querySelector("small")!.textContent = address;
   return popupContent;
 }
@@ -240,16 +241,37 @@ function addBoundaryLayer(map: mapboxgl.Map, boundary: BoundaryGeoJson) {
   map.addSource("hcm-boundary", { data: boundary, type: "geojson" });
   map.addLayer({
     id: "hcm-boundary-fill",
-    paint: { "fill-color": "#ff4655", "fill-opacity": 0.12 },
+    paint: { "fill-color": "#ff4655", "fill-opacity": 0.1 },
     source: "hcm-boundary",
     type: "fill",
   });
   map.addLayer({
     id: "hcm-boundary-line",
     layout: { "line-cap": "round", "line-join": "round" },
-    paint: { "line-color": "#ff9aa3", "line-opacity": 0.95, "line-width": 3 },
+    paint: { "line-color": "#ff9aa3", "line-opacity": 0.9, "line-width": 3 },
     source: "hcm-boundary",
     type: "line",
+  });
+}
+
+function add3DBuildings(map: mapboxgl.Map) {
+  if (map.getLayer(BUILDING_LAYER_ID)) {
+    return;
+  }
+
+  map.addLayer({
+    id: BUILDING_LAYER_ID,
+    filter: ["==", "extrude", "true"],
+    minzoom: 15,
+    paint: {
+      "fill-extrusion-base": ["coalesce", ["get", "min_height"], 0],
+      "fill-extrusion-color": "#aaaaaa",
+      "fill-extrusion-height": ["coalesce", ["get", "height"], 0],
+      "fill-extrusion-opacity": 0.6,
+    },
+    source: "composite",
+    "source-layer": "building",
+    type: "fill-extrusion",
   });
 }
 
@@ -356,13 +378,13 @@ function buildCrimeGeoJson(incidents: Incident[]): CrimeFeatureCollection {
 function MapView({
   center = DEFAULT_MAP_CENTER,
   className = "",
-  currentLocationLabel = "Vị trí hiện tại",
+  currentLocationLabel = "Vi tri hien tai",
   defaultToCurrentLocation = false,
   incidents = [],
   initialMode = "normal",
   showModeControls = false,
   showPoiInNormal = true,
-  title = "Bản đồ tác nghiệp",
+  title = "Ban do tac nghiep",
   variant = "full",
   zoom = DEFAULT_MAP_ZOOM,
 }: MapViewProps) {
@@ -410,9 +432,13 @@ function MapView({
     }
 
     mapboxgl.accessToken = MAPBOX_TOKEN;
+
     const map = new mapboxgl.Map({
+      antialias: true,
+      bearing: -30,
       center,
       container: mapContainerRef.current,
+      pitch: 60,
       style: "mapbox://styles/mapbox/dark-v11",
       zoom,
     });
@@ -421,7 +447,10 @@ function MapView({
     map.addControl(new mapboxgl.NavigationControl({ showCompass: true }), "top-right");
 
     let isMounted = true;
+
     map.on("load", () => {
+      add3DBuildings(map);
+
       fetchHoChiMinhBoundary()
         .then((boundary) => {
           if (isMounted) {
@@ -498,7 +527,13 @@ function MapView({
       .addTo(map);
 
     if (defaultToCurrentLocation) {
-      map.easeTo({ center: currentLocation, duration: 500, zoom: Math.max(zoom, 13) });
+      map.easeTo({
+        bearing: -30,
+        center: currentLocation,
+        duration: 700,
+        pitch: 60,
+        zoom: Math.max(zoom, 14),
+      });
     }
   }, [currentLocation, currentLocationLabel, defaultToCurrentLocation, zoom]);
 
@@ -509,6 +544,7 @@ function MapView({
       return;
     }
 
+    add3DBuildings(map);
     addCrimeLayers(map, buildCrimeGeoJson(filteredIncidents));
     const source = map.getSource(CRIME_SOURCE_ID) as mapboxgl.GeoJSONSource | undefined;
     source?.setData(buildCrimeGeoJson(filteredIncidents));
@@ -555,61 +591,85 @@ function MapView({
     <section className={`map-card map-card-${variant} ${className}`.trim()} id="map">
       <div className="section-heading map-heading">
         <div>
-          <span className="eyebrow">Bản đồ</span>
+          <span className="eyebrow">Ban do</span>
           <h2>{title}</h2>
         </div>
-        {showModeControls ? (
-          <div className="map-mode-controls" aria-label="Chế độ bản đồ">
+      </div>
+
+      {MAPBOX_TOKEN ? (
+        <div aria-label={title} className="mapbox-container" ref={mapContainerRef} role="region" />
+      ) : (
+        <div className="map-token-warning">
+          <strong>Thieu Mapbox token</strong>
+          <span>Them VITE_MAPBOX_TOKEN vao file .env de tai ban do.</span>
+        </div>
+      )}
+
+      {showModeControls ? (
+        <div className="map-controls-footer">
+          <div className="map-mode-controls" aria-label="Che do ban do">
             <button
               className={mode === "normal" ? "is-active" : ""}
               type="button"
               onClick={() => setMode("normal")}
             >
-              Bản đồ thường
+              Ban do thuong
             </button>
             <button
               className={mode === "crime" ? "is-active" : ""}
               type="button"
               onClick={() => setMode("crime")}
             >
-              Vụ án
+              Vu an
             </button>
           </div>
-        ) : null}
-      </div>
 
-      {mode === "crime" && showModeControls ? (
-        <div className="crime-filters">
-          <label>
-            <span>Thời gian</span>
-            <select value={crimePeriod} onChange={(event) => setCrimePeriod(event.target.value as CrimePeriod)}>
-              <option value="week">Tuần</option>
-              <option value="month">Tháng</option>
-              <option value="year">Năm</option>
-            </select>
-          </label>
-          <label>
-            <span>Loại tội phạm</span>
-            <select value={crimeType} onChange={(event) => setCrimeType(event.target.value)}>
-              <option value="all">Tất cả</option>
-              {crimeTypes.map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
-            </select>
-          </label>
+          {mode === "crime" ? (
+            <div className="crime-filters">
+              <label>
+                <span>Thoi gian</span>
+                <select
+                  value={crimePeriod}
+                  onChange={(event) => setCrimePeriod(event.target.value as CrimePeriod)}
+                >
+                  <option value="week">Tuan</option>
+                  <option value="month">Thang</option>
+                  <option value="year">Nam</option>
+                </select>
+              </label>
+              <label>
+                <span>Loai toi pham</span>
+                <select value={crimeType} onChange={(event) => setCrimeType(event.target.value)}>
+                  <option value="all">Tat ca</option>
+                  {crimeTypes.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          ) : null}
+
+          <div className="map-footer-actions">
+            <button
+              className="btn btn-ghost"
+              type="button"
+              onClick={() =>
+                mapRef.current?.easeTo({
+                  bearing: -30,
+                  center: currentLocation || center,
+                  duration: 700,
+                  pitch: 60,
+                  zoom: currentLocation ? Math.max(zoom, 14) : zoom,
+                })
+              }
+            >
+              Canh lai ban do
+            </button>
+          </div>
         </div>
       ) : null}
-
-      {MAPBOX_TOKEN ? (
-        <div aria-label={title} className="mapbox-container" ref={mapContainerRef} role="region" />
-      ) : (
-        <div className="map-token-warning">
-          <strong>Thiếu Mapbox token</strong>
-          <span>Thêm VITE_MAPBOX_TOKEN vào file .env để tải bản đồ.</span>
-        </div>
-      )}
     </section>
   );
 }

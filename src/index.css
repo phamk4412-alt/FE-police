@@ -1005,14 +1005,14 @@ tbody tr:hover {
 
 .citizen-home-grid {
   display: grid;
-  grid-template-columns: minmax(320px, 0.9fr) minmax(360px, 1.1fr);
+  grid-template-columns: minmax(0, 2fr) minmax(340px, 1fr);
   gap: 20px;
   align-items: start;
 }
 
 .citizen-map-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+  grid-template-columns: minmax(0, 1.85fr) minmax(320px, 0.8fr);
   gap: 20px;
   align-items: start;
 }
@@ -1024,17 +1024,17 @@ tbody tr:hover {
 }
 
 .home-bottom-grid {
-  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 }
 
 .map-card-compact .mapbox-container,
 .map-card-compact .map-token-warning {
-  min-height: 420px;
+  min-height: 560px;
 }
 
 .map-card-full .mapbox-container,
 .map-card-full .map-token-warning {
-  min-height: min(680px, calc(100vh - 230px));
+  min-height: min(720px, calc(100vh - 230px));
 }
 
 .quick-report-form {
@@ -1045,6 +1045,13 @@ tbody tr:hover {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
+}
+
+.camera-hint {
+  display: grid;
+  gap: 4px;
+  color: var(--muted);
+  font-size: 0.84rem;
 }
 
 .visually-hidden {
@@ -1153,11 +1160,17 @@ tbody tr:hover {
   background: rgba(8, 17, 26, 0.74);
 }
 
+.map-controls-footer {
+  display: grid;
+  gap: 14px;
+  margin-top: 16px;
+}
+
 .crime-filters {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 180px));
+  grid-template-columns: repeat(2, minmax(0, 220px));
   gap: 12px;
-  margin: -4px 0 16px;
+  margin: 0;
 }
 
 .crime-filters label {
@@ -1169,6 +1182,11 @@ tbody tr:hover {
 
 .crime-filters span {
   font-size: 0.82rem;
+}
+
+.map-footer-actions {
+  display: flex;
+  justify-content: flex-start;
 }
 
 .news-panel,
@@ -1263,6 +1281,14 @@ tbody tr:hover {
     display: grid;
     width: 100%;
     border-radius: 14px;
+  }
+
+  .map-footer-actions {
+    justify-content: stretch;
+  }
+
+  .map-footer-actions .btn {
+    width: 100%;
   }
 
   .citizen-home-grid {
