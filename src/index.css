@@ -636,6 +636,12 @@ tbody tr:hover {
   width: 100%;
 }
 
+.map-container {
+  width: 100%;
+  height: 600px;
+  min-height: 600px;
+}
+
 .map-heading {
   display: flex;
   align-items: flex-start;
@@ -1017,6 +1023,13 @@ tbody tr:hover {
   align-items: start;
 }
 
+.citizen-map-wrapper,
+.map-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
 .map-side-panel,
 .home-bottom-grid {
   display: grid;
@@ -1052,6 +1065,29 @@ tbody tr:hover {
   gap: 4px;
   color: var(--muted);
   font-size: 0.84rem;
+}
+
+.camera-capture-panel {
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-elevated);
+}
+
+.camera-capture-panel video {
+  width: 100%;
+  min-height: 240px;
+  border-radius: 10px;
+  background: #000000;
+  object-fit: cover;
+}
+
+.camera-capture-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
 }
 
 .visually-hidden {
@@ -1161,14 +1197,15 @@ tbody tr:hover {
 }
 
 .map-controls-footer {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 14px;
-  margin-top: 16px;
+  margin-top: 0;
 }
 
 .crime-filters {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 220px));
+  grid-template-columns: repeat(3, minmax(0, 220px));
   gap: 12px;
   margin: 0;
 }
@@ -1187,51 +1224,6 @@ tbody tr:hover {
 .map-footer-actions {
   display: flex;
   justify-content: flex-start;
-}
-
-.news-panel,
-.crime-stats-panel,
-.recent-panel {
-  padding: 18px;
-}
-
-.news-panel {
-  display: grid;
-  gap: 12px;
-}
-
-.news-panel article {
-  display: grid;
-  gap: 5px;
-  padding: 14px;
-}
-
-.crime-stats-panel {
-  display: grid;
-  gap: 10px;
-}
-
-.mini-stat {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 13px 14px;
-}
-
-.mini-stat strong {
-  color: var(--ink);
-  font-size: 1.55rem;
-}
-
-.compact-list {
-  max-height: 300px;
-  overflow: auto;
-}
-
-.compact-list .incident-item {
-  align-items: flex-start;
-  flex-direction: column;
 }
 
 .current-location-marker::after {
@@ -1256,10 +1248,6 @@ tbody tr:hover {
   .home-bottom-grid {
     grid-template-columns: 1fr;
   }
-
-  .map-side-panel {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 @media (max-width: 760px) {
@@ -1270,9 +1258,9 @@ tbody tr:hover {
   .header-tabs,
   .map-mode-controls,
   .photo-actions,
+  .camera-capture-actions,
   .crime-filters,
-  .emergency-card,
-  .map-side-panel {
+  .emergency-card {
     grid-template-columns: 1fr;
   }
 
@@ -1297,6 +1285,11 @@ tbody tr:hover {
 
   .image-preview-grid {
     grid-template-columns: 1fr;
+  }
+
+  .map-container {
+    height: 420px;
+    min-height: 420px;
   }
 
   .location-card {

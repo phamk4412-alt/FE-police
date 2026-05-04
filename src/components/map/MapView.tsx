@@ -390,6 +390,7 @@ function MapView({
 }: MapViewProps) {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
+  const resizeObserverRef = useRef<ResizeObserver | null>(null);
   const currentLocationMarkerRef = useRef<mapboxgl.Marker | null>(null);
   const facilityMapMarkersRef = useRef<mapboxgl.Marker[]>([]);
   const popupRef = useRef<mapboxgl.Popup | null>(null);
@@ -478,6 +479,8 @@ function MapView({
 
     return () => {
       isMounted = false;
+      resizeObserverRef.current?.disconnect();
+      resizeObserverRef.current = null;
       currentLocationMarkerRef.current?.remove();
       facilityMapMarkersRef.current.forEach((marker) => marker.remove());
       popupRef.current?.remove();
@@ -488,6 +491,33 @@ function MapView({
       popupRef.current = null;
     };
   }, [center, zoom]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    const container = mapContainerRef.current;
+
+    if (!map || !container) {
+      return;
+    }
+
+    const resize = () => map.resize();
+    resize();
+    window.addEventListener("resize", resize);
+
+    if (typeof ResizeObserver !== "undefined") {
+      resizeObserverRef.current?.disconnect();
+      resizeObserverRef.current = new ResizeObserver(() => {
+        map.resize();
+      });
+      resizeObserverRef.current.observe(container);
+    }
+
+    return () => {
+      window.removeEventListener("resize", resize);
+      resizeObserverRef.current?.disconnect();
+      resizeObserverRef.current = null;
+    };
+  }, [className, mode, variant]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -588,7 +618,7 @@ function MapView({
   }, [filteredIncidents, mode]);
 
   return (
-    <section className={`map-card map-card-${variant} ${className}`.trim()} id="map">
+    <section className={`map-card map-card-${variant} map-wrapper ${className}`.trim()} id="map">
       <div className="section-heading map-heading">
         <div>
           <span className="eyebrow">Ban do</span>
@@ -597,7 +627,7 @@ function MapView({
       </div>
 
       {MAPBOX_TOKEN ? (
-        <div aria-label={title} className="mapbox-container" ref={mapContainerRef} role="region" />
+        <div aria-label={title} className="mapbox-container map-container" ref={mapContainerRef} role="region" />
       ) : (
         <div className="map-token-warning">
           <strong>Thieu Mapbox token</strong>
@@ -624,32 +654,35 @@ function MapView({
             </button>
           </div>
 
-          {mode === "crime" ? (
-            <div className="crime-filters">
-              <label>
-                <span>Thoi gian</span>
-                <select
-                  value={crimePeriod}
-                  onChange={(event) => setCrimePeriod(event.target.value as CrimePeriod)}
-                >
-                  <option value="week">Tuan</option>
-                  <option value="month">Thang</option>
-                  <option value="year">Nam</option>
-                </select>
-              </label>
-              <label>
-                <span>Loai toi pham</span>
-                <select value={crimeType} onChange={(event) => setCrimeType(event.target.value)}>
-                  <option value="all">Tat ca</option>
-                  {crimeTypes.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-          ) : null}
+          <div className="crime-filters">
+            <label>
+              <span>Thoi gian</span>
+              <select
+                disabled={mode !== "crime"}
+                value={crimePeriod}
+                onChange={(event) => setCrimePeriod(event.target.value as CrimePeriod)}
+              >
+                <option value="week">Tuan</option>
+                <option value="month">Thang</option>
+                <option value="year">Nam</option>
+              </select>
+            </label>
+            <label>
+              <span>Loai toi pham</span>
+              <select
+                disabled={mode !== "crime"}
+                value={crimeType}
+                onChange={(event) => setCrimeType(event.target.value)}
+              >
+                <option value="all">Tat ca</option>
+                {crimeTypes.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
 
           <div className="map-footer-actions">
             <button

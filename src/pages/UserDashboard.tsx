@@ -4,7 +4,6 @@ import DashboardLayout from "../components/layout/DashboardLayout";
 import MapView from "../components/map/MapView";
 import { createIncidentWithImages, getUserReports } from "../services/userService";
 import type { Incident } from "../types/incident";
-import { getIncidentCreatedAt, getIncidentStatus, getIncidentTitle } from "../types/incident";
 
 const MAX_IMAGES = 3;
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
@@ -17,18 +16,16 @@ function getLocationText(lat: number | "", lng: number | "") {
     : "";
 }
 
-function isDirectCameraSupported() {
+function isSecureHost() {
   if (typeof window === "undefined") {
     return false;
   }
 
-  const isSecureContextHost =
+  return (
     window.location.protocol === "https:" ||
     window.location.hostname === "localhost" ||
-    window.location.hostname === "127.0.0.1";
-  const isMobileDevice = /Android|iPhone|iPad|iPod/i.test(window.navigator.userAgent);
-
-  return isSecureContextHost && isMobileDevice;
+    window.location.hostname === "127.0.0.1"
+  );
 }
 
 function buildIncidentTitle(category: string, description: string) {
@@ -39,6 +36,9 @@ function buildIncidentTitle(category: string, description: string) {
 function UserDashboard() {
   const cameraInputRef = useRef<HTMLInputElement | null>(null);
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const [tab, setTab] = useState<"home" | "map">("home");
   const [category, setCategory] = useState("Trộm cắp");
   const [description, setDescription] = useState("");
@@ -47,40 +47,45 @@ function UserDashboard() {
   const [images, setImages] = useState<File[]>([]);
   const [formMessage, setFormMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [canUseLiveCamera, setCanUseLiveCamera] = useState(false);
   const [reportHistory, setReportHistory] = useState<Incident[]>([]);
-  const [canOpenDirectCamera, setCanOpenDirectCamera] = useState(false);
 
   const imagePreviews = useMemo(
     () => images.map((image) => ({ name: image.name, url: URL.createObjectURL(image) })),
     [images],
   );
 
-  const incidentStats = useMemo(() => {
-    const total = reportHistory.length;
-    const pending = reportHistory.filter((incident) =>
-      getIncidentStatus(incident).toLowerCase().includes("mới"),
-    ).length;
-    const resolved = reportHistory.filter((incident) =>
-      getIncidentStatus(incident).toLowerCase().includes("xử lý"),
-    ).length;
-    return { pending, resolved, total };
-  }, [reportHistory]);
-
   useEffect(() => {
-    setCanOpenDirectCamera(isDirectCameraSupported());
+    setCanUseLiveCamera(
+      typeof navigator !== "undefined" &&
+        isSecureHost() &&
+        typeof navigator.mediaDevices?.getUserMedia === "function",
+    );
 
     getUserReports()
       .then(setReportHistory)
       .catch(() => undefined);
+
     updateCurrentLocation();
   }, []);
 
   useEffect(
     () => () => {
       imagePreviews.forEach((preview) => URL.revokeObjectURL(preview.url));
+      stopCameraStream();
     },
     [imagePreviews],
   );
+
+  useEffect(() => {
+    if (!isCameraOpen || !videoRef.current || !streamRef.current) {
+      return;
+    }
+
+    videoRef.current.srcObject = streamRef.current;
+    void videoRef.current.play().catch(() => undefined);
+  }, [isCameraOpen]);
 
   function updateCurrentLocation() {
     setFormMessage("");
@@ -106,31 +111,35 @@ function UserDashboard() {
     );
   }
 
-  function handleImagesSelected(event: ChangeEvent<HTMLInputElement>) {
-    const selectedImages = Array.from(event.target.files || []);
-    const nextImages = [...images];
-    setFormMessage("");
+  function validateAndAppendImages(nextImages: File[], selectedImages: File[]) {
+    let nextMessage = "";
 
     for (const image of selectedImages) {
       if (nextImages.length >= MAX_IMAGES) {
-        setFormMessage("Tối đa 3 ảnh cho mỗi báo cáo.");
+        nextMessage = "Tối đa 3 ảnh cho mỗi báo cáo.";
         break;
       }
 
       if (!ACCEPTED_IMAGE_TYPES.includes(image.type)) {
-        setFormMessage("Chỉ nhận ảnh jpg, png hoặc webp.");
+        nextMessage = "Chỉ nhận ảnh jpg, png hoặc webp.";
         continue;
       }
 
       if (image.size > MAX_IMAGE_SIZE) {
-        setFormMessage("Mỗi ảnh phải nhỏ hơn 5MB.");
+        nextMessage = "Mỗi ảnh phải nhỏ hơn 5MB.";
         continue;
       }
 
       nextImages.push(image);
     }
 
+    setFormMessage(nextMessage);
     setImages(nextImages);
+  }
+
+  function handleImagesSelected(event: ChangeEvent<HTMLInputElement>) {
+    const selectedImages = Array.from(event.target.files || []);
+    validateAndAppendImages([...images], selectedImages);
     event.target.value = "";
   }
 
@@ -138,17 +147,81 @@ function UserDashboard() {
     setImages((current) => current.filter((_, currentIndex) => currentIndex !== index));
   }
 
-  function handleCaptureClick() {
-    setFormMessage("");
+  function stopCameraStream() {
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    streamRef.current = null;
+  }
 
-    if (!canOpenDirectCamera) {
-      setFormMessage(
-        "Camera trực tiếp chỉ hoạt động ổn định trên mobile qua HTTPS hoặc localhost. Trên desktop hãy dùng Chọn từ máy.",
-      );
+  async function openLiveCamera() {
+    if (!canUseLiveCamera) {
+      cameraInputRef.current?.click();
       return;
     }
 
-    cameraInputRef.current?.click();
+    try {
+      stopCameraStream();
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: {
+          facingMode: { ideal: "environment" },
+        },
+      });
+
+      streamRef.current = stream;
+      setIsCameraOpen(true);
+      setFormMessage("");
+    } catch {
+      cameraInputRef.current?.click();
+      setFormMessage("Không mở được camera trực tiếp. Đã chuyển sang trình chọn ảnh/camera của thiết bị.");
+    }
+  }
+
+  function closeLiveCamera() {
+    stopCameraStream();
+    setIsCameraOpen(false);
+  }
+
+  function captureFromLiveCamera() {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+
+    if (!video || !canvas) {
+      return;
+    }
+
+    const width = video.videoWidth;
+    const height = video.videoHeight;
+
+    if (!width || !height) {
+      setFormMessage("Camera chưa sẵn sàng để chụp.");
+      return;
+    }
+
+    canvas.width = width;
+    canvas.height = height;
+
+    const context = canvas.getContext("2d");
+
+    if (!context) {
+      setFormMessage("Không thể đọc dữ liệu từ camera.");
+      return;
+    }
+
+    context.drawImage(video, 0, 0, width, height);
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) {
+          setFormMessage("Không thể tạo ảnh từ camera.");
+          return;
+        }
+
+        const file = new File([blob], `camera-${Date.now()}.jpg`, { type: "image/jpeg" });
+        validateAndAppendImages([...images], [file]);
+        closeLiveCamera();
+      },
+      "image/jpeg",
+      0.92,
+    );
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -173,11 +246,12 @@ function UserDashboard() {
     formData.append("category", category);
     formData.append("latitude", String(lat));
     formData.append("longitude", String(lng));
-    images.forEach((image) => formData.append("images", image));
+    images.forEach((image) => {
+      formData.append("images", image);
+    });
 
     try {
       const result = await createIncidentWithImages(formData);
-
       if (result?.Incident) {
         setReportHistory((current) => [result.Incident, ...current]);
       }
@@ -199,7 +273,7 @@ function UserDashboard() {
           <section className="page-title citizen-title">
             <p className="eyebrow">Người dân</p>
             <h2>Báo cáo nhanh trong vài giây</h2>
-            <span>Map lớn để nhìn ngay khu vực, form gọn để chụp ảnh và gửi tức thì.</span>
+            <span>Map lớn để nhìn khu vực, camera thật khi môi trường cho phép, gửi bằng multipart/form-data.</span>
           </section>
 
           <section className="citizen-home-grid">
@@ -256,11 +330,11 @@ function UserDashboard() {
               </label>
 
               <div className="photo-actions">
-                <button className="btn btn-secondary" type="button" onClick={handleCaptureClick}>
+                <button className="btn btn-secondary" type="button" onClick={() => void openLiveCamera()}>
                   📷 Chụp ảnh
                 </button>
                 <button className="btn btn-ghost" type="button" onClick={() => uploadInputRef.current?.click()}>
-                  📁 Chọn từ máy
+                  📁 Chọn ảnh
                 </button>
                 <input
                   ref={cameraInputRef}
@@ -282,8 +356,25 @@ function UserDashboard() {
 
               <div className="camera-hint">
                 <span>{`Ảnh đã chọn: ${images.length}/${MAX_IMAGES}`}</span>
-                <small>Camera trực tiếp ưu tiên cho Chrome Android, HTTPS hoặc localhost.</small>
+                <small>
+                  `getUserMedia` dùng khi chạy trên HTTPS hoặc localhost. Nếu không được, nút chụp sẽ fallback sang input `capture="environment"`.
+                </small>
               </div>
+
+              {isCameraOpen ? (
+                <div className="camera-capture-panel">
+                  <video ref={videoRef} autoPlay muted playsInline />
+                  <canvas ref={canvasRef} className="visually-hidden" />
+                  <div className="camera-capture-actions">
+                    <button className="btn btn-secondary" type="button" onClick={captureFromLiveCamera}>
+                      Chụp khung hình
+                    </button>
+                    <button className="btn btn-ghost" type="button" onClick={closeLiveCamera}>
+                      Đóng camera
+                    </button>
+                  </div>
+                </div>
+              ) : null}
 
               {imagePreviews.length ? (
                 <div className="image-preview-grid" aria-label="Ảnh đã chọn">
@@ -339,10 +430,10 @@ function UserDashboard() {
           <section className="page-title citizen-title">
             <p className="eyebrow">Bản đồ TP.HCM</p>
             <h2>Theo dõi khu vực và vụ việc</h2>
-            <span>Map chiếm phần lớn khung nhìn, panel tách riêng, filter nằm dưới map để thao tác rõ ràng.</span>
+            <span>Map full-width, không còn panel thừa, toàn bộ filter và nút nằm dưới map.</span>
           </section>
 
-          <section className="citizen-map-grid">
+          <section className="citizen-map-wrapper">
             <MapView
               className="city-map-view"
               currentLocationLabel="Vị trí hiện tại của bạn"
@@ -352,63 +443,6 @@ function UserDashboard() {
               title="Bản đồ an ninh 3D"
               variant="full"
             />
-
-            <aside className="map-side-panel">
-              <section className="panel news-panel">
-                <div className="section-heading">
-                  <span className="eyebrow">Tin tức</span>
-                  <h2>Cập nhật nhanh</h2>
-                </div>
-                <article>
-                  <strong>Tăng cường tuần tra khu trung tâm</strong>
-                  <span>Ưu tiên phản ứng nhanh tại khu đông người và các trục giao thông chính.</span>
-                </article>
-                <article>
-                  <strong>Khuyến nghị gửi ảnh hiện trường</strong>
-                  <span>Ảnh rõ và đúng góc chụp giúp xác minh vụ việc nhanh hơn.</span>
-                </article>
-              </section>
-
-              <section className="panel crime-stats-panel">
-                <div className="section-heading">
-                  <span className="eyebrow">Thống kê</span>
-                  <h2>Tình hình báo cáo</h2>
-                </div>
-                <div className="mini-stat">
-                  <span>Tổng vụ việc</span>
-                  <strong>{incidentStats.total}</strong>
-                </div>
-                <div className="mini-stat">
-                  <span>Mới tiếp nhận</span>
-                  <strong>{incidentStats.pending}</strong>
-                </div>
-                <div className="mini-stat">
-                  <span>Đã xử lý</span>
-                  <strong>{incidentStats.resolved}</strong>
-                </div>
-              </section>
-
-              <section className="panel recent-panel" id="incidents">
-                <div className="section-heading">
-                  <span className="eyebrow">Gần đây</span>
-                  <h2>Báo cáo của bạn</h2>
-                </div>
-                <div className="incident-list compact-list">
-                  {reportHistory.slice(0, 5).map((report) => (
-                    <article
-                      className="incident-item"
-                      key={`${getIncidentTitle(report)}-${getIncidentCreatedAt(report)}`}
-                    >
-                      <div>
-                        <strong>{getIncidentTitle(report)}</strong>
-                        <span>{getIncidentCreatedAt(report) || "Vừa cập nhật"}</span>
-                      </div>
-                      <span className="status-pill">{getIncidentStatus(report)}</span>
-                    </article>
-                  ))}
-                </div>
-              </section>
-            </aside>
           </section>
         </>
       )}
