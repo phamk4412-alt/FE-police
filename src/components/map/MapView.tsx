@@ -8,7 +8,9 @@ import type { Incident } from "../../types/incident";
 import {
   getIncidentCoordinates,
   getIncidentCreatedAt,
+  getIncidentId,
   getIncidentLocation,
+  getIncidentSeverity,
   getIncidentStatus,
   getIncidentTitle,
 } from "../../types/incident";
@@ -27,6 +29,8 @@ interface MapViewProps {
   defaultToCurrentLocation?: boolean;
   incidents?: Incident[];
   initialMode?: MapMode;
+  onIncidentSelect?: (incident: Incident) => void;
+  selectedIncident?: Incident | null;
   showModeControls?: boolean;
   showPoiInNormal?: boolean;
   title?: string;
@@ -222,6 +226,15 @@ function createCurrentLocationMarker(label: string) {
   return markerElement;
 }
 
+function createIncidentMarker(incident: Incident, isActive: boolean) {
+  const severity = getIncidentSeverity(incident);
+  const markerElement = document.createElement("button");
+  markerElement.type = "button";
+  markerElement.className = `incident-map-marker incident-map-marker-${severity}${isActive ? " is-active" : ""}`;
+  markerElement.setAttribute("aria-label", getIncidentTitle(incident));
+  return markerElement;
+}
+
 function createIncidentPopup(incident: Incident) {
   const popupContent = document.createElement("div");
   popupContent.className = "incident-map-popup";
@@ -313,7 +326,17 @@ function addCrimeLayers(map: mapboxgl.Map, data: CrimeFeatureCollection) {
       id: CRIME_POINT_LAYER_ID,
       minzoom: 10,
       paint: {
-        "circle-color": "#ff4655",
+        "circle-color": [
+          "match",
+          ["get", "severity"],
+          "critical",
+          "#ff4655",
+          "medium",
+          "#f59e0b",
+          "low",
+          "#21c55d",
+          "#ff4655",
+        ],
         "circle-opacity": 0.88,
         "circle-radius": 7,
         "circle-stroke-color": "#ffffff",
@@ -365,6 +388,7 @@ function buildCrimeGeoJson(incidents: Incident[]): CrimeFeatureCollection {
       return {
         geometry: { coordinates, type: "Point" as const },
         properties: {
+          severity: getIncidentSeverity(incident),
           status: getIncidentStatus(incident),
           title: getIncidentTitle(incident),
           type: getIncidentType(incident),
@@ -383,6 +407,8 @@ function MapView({
   defaultToCurrentLocation = false,
   incidents = [],
   initialMode = "normal",
+  onIncidentSelect,
+  selectedIncident = null,
   showModeControls = false,
   showPoiInNormal = true,
   title = "Ban do tac nghiep",
@@ -394,6 +420,7 @@ function MapView({
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
   const currentLocationMarkerRef = useRef<mapboxgl.Marker | null>(null);
   const facilityMapMarkersRef = useRef<mapboxgl.Marker[]>([]);
+  const incidentMapMarkersRef = useRef<mapboxgl.Marker[]>([]);
   const popupRef = useRef<mapboxgl.Popup | null>(null);
   const [currentLocation, setCurrentLocation] = useState<[number, number] | null>(null);
   const [facilities, setFacilities] = useState<FacilityMarker[]>(fallbackFacilityMarkers);
@@ -483,11 +510,13 @@ function MapView({
       resizeObserverRef.current = null;
       currentLocationMarkerRef.current?.remove();
       facilityMapMarkersRef.current.forEach((marker) => marker.remove());
+      incidentMapMarkersRef.current.forEach((marker) => marker.remove());
       popupRef.current?.remove();
       map.remove();
       mapRef.current = null;
       currentLocationMarkerRef.current = null;
       facilityMapMarkersRef.current = [];
+      incidentMapMarkersRef.current = [];
       popupRef.current = null;
     };
   }, [center, zoom]);
@@ -566,6 +595,63 @@ function MapView({
       });
     }
   }, [currentLocation, currentLocationLabel, defaultToCurrentLocation, zoom]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+
+    if (!map) {
+      return;
+    }
+
+    incidentMapMarkersRef.current.forEach((marker) => marker.remove());
+
+    const selectedId = selectedIncident ? getIncidentId(selectedIncident) : "";
+    incidentMapMarkersRef.current = incidents.flatMap((incident) => {
+      const coordinates = getIncidentCoordinates(incident);
+
+      if (!coordinates) {
+        return [];
+      }
+
+      const marker = new mapboxgl.Marker({
+        anchor: "bottom",
+        element: createIncidentMarker(incident, getIncidentId(incident) === selectedId),
+      })
+        .setLngLat(coordinates)
+        .setPopup(new mapboxgl.Popup({ offset: 28 }).setDOMContent(createIncidentPopup(incident)))
+        .addTo(map);
+
+      marker.getElement().addEventListener("click", () => {
+        onIncidentSelect?.(incident);
+      });
+
+      return [marker];
+    });
+  }, [incidents, onIncidentSelect, selectedIncident]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    const incident = selectedIncident;
+    const coordinates = incident ? getIncidentCoordinates(incident) : null;
+
+    if (!map || !incident || !coordinates) {
+      return;
+    }
+
+    map.easeTo({
+      bearing: -30,
+      center: coordinates,
+      duration: 700,
+      pitch: 60,
+      zoom: Math.max(zoom, 15),
+    });
+
+    popupRef.current?.remove();
+    popupRef.current = new mapboxgl.Popup({ offset: 28 })
+      .setLngLat(coordinates)
+      .setDOMContent(createIncidentPopup(incident))
+      .addTo(map);
+  }, [selectedIncident, zoom]);
 
   useEffect(() => {
     const map = mapRef.current;

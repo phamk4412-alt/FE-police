@@ -1,80 +1,289 @@
+import { useEffect, useMemo, useState } from "react";
 import DashboardLayout from "../components/layout/DashboardLayout";
 import MapView from "../components/map/MapView";
+import { API_URL } from "../services/api";
+import { getSupportRequests } from "../services/supportService";
+import type { Incident, IncidentSeverity } from "../types/incident";
+import {
+  getIncidentCategory,
+  getIncidentCoordinates,
+  getIncidentCreatedAt,
+  getIncidentDetail,
+  getIncidentId,
+  getIncidentImageUrls,
+  getIncidentPhone,
+  getIncidentReporterName,
+  getIncidentSeverity,
+  getIncidentStatus,
+  getIncidentTitle,
+} from "../types/incident";
 
-const supportRequests = [
-  { id: "YC-2101", title: "Cần điều phối xe cứu thương", priority: "Cao", status: "Đang mở" },
-  { id: "YC-2102", title: "Gọi lại xác minh với người dân", priority: "Trung bình", status: "Đang chờ" },
-  { id: "YC-2103", title: "Kiểm tra tệp đính kèm báo cáo", priority: "Thấp", status: "Đang xem xét" },
-];
+const statusActions = ["Nhận xử lý", "Đang xử lý", "Hoàn thành"];
 
-const dispatchRows = [
-  { unit: "Tổ hỗ trợ A", area: "Quận 1", assignment: "Chuyển tiếp khẩn cấp", eta: "8 phút" },
-  { unit: "Tổ hỗ trợ B", area: "Quận 3", assignment: "Xác minh cuộc gọi", eta: "14 phút" },
-  { unit: "Tổ hỗ trợ C", area: "Quận 7", assignment: "Phân loại báo cáo", eta: "22 phút" },
-];
+const severityLabels: Record<IncidentSeverity, string> = {
+  critical: "Khẩn cấp",
+  low: "Thấp",
+  medium: "Trung bình",
+};
+
+function formatDateTime(value: string) {
+  if (!value) {
+    return "Chưa rõ";
+  }
+
+  const date = new Date(value);
+
+  if (!Number.isFinite(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("vi-VN", {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(date);
+}
+
+function resolveImageUrl(url: string) {
+  if (/^https?:\/\//i.test(url)) {
+    return url;
+  }
+
+  return `${API_URL}${url.startsWith("/") ? "" : "/"}${url}`;
+}
+
+function getCoordinateText(incident: Incident) {
+  const coordinates = getIncidentCoordinates(incident);
+  return coordinates ? `${coordinates[1].toFixed(6)}, ${coordinates[0].toFixed(6)}` : "Chưa có tọa độ";
+}
+
+function getSeverityClass(incident: Incident) {
+  return `support-severity-${getIncidentSeverity(incident)}`;
+}
 
 function SupportDashboard() {
+  const [incidents, setIncidents] = useState<Incident[]>([]);
+  const [selectedIncidentId, setSelectedIncidentId] = useState("");
+  const [statusByIncident, setStatusByIncident] = useState<Record<string, string>>({});
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    let isMounted = true;
+
+    function loadRequests() {
+      getSupportRequests()
+        .then((items) => {
+          if (!isMounted) {
+            return;
+          }
+
+          setIncidents(items);
+          setErrorMessage("");
+          setSelectedIncidentId((currentId) => currentId || (items[0] ? getIncidentId(items[0]) : ""));
+        })
+        .catch((error) => {
+          if (isMounted) {
+            setErrorMessage(error instanceof Error ? error.message : "Không tải được danh sách báo cáo.");
+          }
+        });
+    }
+
+    loadRequests();
+    const intervalId = window.setInterval(loadRequests, 10000);
+
+    return () => {
+      isMounted = false;
+      window.clearInterval(intervalId);
+    };
+  }, []);
+
+  const selectedIncident = useMemo(
+    () => incidents.find((incident) => getIncidentId(incident) === selectedIncidentId) || incidents[0] || null,
+    [incidents, selectedIncidentId],
+  );
+
+  function handleSelectIncident(incident: Incident) {
+    setSelectedIncidentId(getIncidentId(incident));
+  }
+
+  function handleStatusAction(action: string) {
+    if (!selectedIncident) {
+      return;
+    }
+
+    setStatusByIncident((current) => ({
+      ...current,
+      [getIncidentId(selectedIncident)]: action,
+    }));
+  }
+
   return (
     <DashboardLayout role="support">
-      <section className="page-title">
-        <p className="eyebrow">Bảng điều khiển hỗ trợ</p>
-        <h2>Điều phối hỗ trợ</h2>
-        <span>Theo dõi yêu cầu hỗ trợ, bối cảnh bản đồ và khả năng điều phối.</span>
+      <section className="page-title support-title">
+        <p className="eyebrow">Hỗ trợ hiện trường</p>
+        <h2>Tiếp nhận và xử lý báo cáo</h2>
+        <span>Danh sách, bản đồ, ảnh hiện trường và thao tác xử lý nằm cùng một màn hình.</span>
       </section>
 
-      <section className="dashboard-grid">
-        <section className="panel" id="incidents">
-          <div className="section-heading">
-            <span className="eyebrow">Yêu cầu</span>
-            <h2>Hàng đợi hỗ trợ</h2>
-          </div>
-          <div className="incident-list">
-            {supportRequests.map((request) => (
-              <article className="incident-item" key={request.id}>
-                <div>
-                  <strong>{request.title}</strong>
-                  <span>{request.id}</span>
-                </div>
-                <div>
-                  <span className="status-pill">{request.priority}</span>
-                  <small>{request.status}</small>
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
+      <section className="support-workspace">
+        <MapView
+          className="support-map"
+          incidents={incidents}
+          onIncidentSelect={handleSelectIncident}
+          selectedIncident={selectedIncident}
+          showPoiInNormal={false}
+          title="Bản đồ báo cáo"
+          variant="full"
+        />
 
-        <section className="panel">
-          <div className="section-heading">
-            <span className="eyebrow">Điều phối</span>
-            <h2>Bảng điều phối mẫu</h2>
-          </div>
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Đơn vị</th>
-                  <th>Khu vực</th>
-                  <th>Nhiệm vụ</th>
-                  <th>Dự kiến đến</th>
-                </tr>
-              </thead>
-              <tbody>
-                {dispatchRows.map((row) => (
-                  <tr key={row.unit}>
-                    <td>{row.unit}</td>
-                    <td>{row.area}</td>
-                    <td>{row.assignment}</td>
-                    <td>{row.eta}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
+        <aside className="support-side-panel">
+          <section className="panel support-list-panel">
+            <div className="section-heading support-panel-heading">
+              <div>
+                <span className="eyebrow">Báo cáo</span>
+                <h2>Danh sách mới nhất</h2>
+              </div>
+              <span className="support-count">{incidents.length}</span>
+            </div>
+
+            {errorMessage ? <p className="form-message">{errorMessage}</p> : null}
+
+            <div className="support-report-list">
+              {incidents.map((incident) => {
+                const incidentId = getIncidentId(incident);
+                const severity = getIncidentSeverity(incident);
+                const displayStatus = statusByIncident[incidentId] || getIncidentStatus(incident);
+
+                return (
+                  <button
+                    className={`support-report-item ${incidentId === selectedIncidentId ? "is-active" : ""}`}
+                    key={incidentId}
+                    type="button"
+                    onClick={() => handleSelectIncident(incident)}
+                  >
+                    <span className={`support-status-icon ${getSeverityClass(incident)}`} aria-hidden="true" />
+                    <span className="support-report-main">
+                      <strong>{getIncidentReporterName(incident)}</strong>
+                      <small>{getIncidentCategory(incident)}</small>
+                      <small>{getIncidentPhone(incident) || "Chưa có SĐT"}</small>
+                    </span>
+                    <span className="support-report-meta">
+                      <span className={`support-severity-badge ${getSeverityClass(incident)}`}>
+                        {severityLabels[severity]}
+                      </span>
+                      <small>{formatDateTime(getIncidentCreatedAt(incident))}</small>
+                      <small>{displayStatus}</small>
+                    </span>
+                  </button>
+                );
+              })}
+
+              {!incidents.length && !errorMessage ? (
+                <div className="support-empty-state">Chưa có báo cáo cần hỗ trợ.</div>
+              ) : null}
+            </div>
+          </section>
+
+          <section className="panel support-detail-panel">
+            <div className="section-heading">
+              <span className="eyebrow">Chi tiết</span>
+              <h2>{selectedIncident ? getIncidentTitle(selectedIncident) : "Chưa chọn báo cáo"}</h2>
+            </div>
+
+            {selectedIncident ? (
+              <>
+                <dl className="support-detail-grid">
+                  <div>
+                    <dt>Họ tên</dt>
+                    <dd>{getIncidentReporterName(selectedIncident)}</dd>
+                  </div>
+                  <div>
+                    <dt>SĐT</dt>
+                    <dd>{getIncidentPhone(selectedIncident) || "Chưa có"}</dd>
+                  </div>
+                  <div>
+                    <dt>Loại vụ việc</dt>
+                    <dd>{getIncidentCategory(selectedIncident)}</dd>
+                  </div>
+                  <div>
+                    <dt>Tọa độ</dt>
+                    <dd>{getCoordinateText(selectedIncident)}</dd>
+                  </div>
+                  <div>
+                    <dt>Thời gian</dt>
+                    <dd>{formatDateTime(getIncidentCreatedAt(selectedIncident))}</dd>
+                  </div>
+                  <div>
+                    <dt>Mức độ</dt>
+                    <dd>
+                      <span className={`support-severity-badge ${getSeverityClass(selectedIncident)}`}>
+                        {severityLabels[getIncidentSeverity(selectedIncident)]}
+                      </span>
+                    </dd>
+                  </div>
+                </dl>
+
+                <div className="support-description">
+                  <span>Mô tả</span>
+                  <p>{getIncidentDetail(selectedIncident) || "Không có mô tả."}</p>
+                </div>
+
+                <div className="support-photos">
+                  <div className="support-detail-subheading">
+                    <span>Ảnh hiện trường</span>
+                    <small>{getIncidentImageUrls(selectedIncident).length} ảnh</small>
+                  </div>
+
+                  {getIncidentImageUrls(selectedIncident).length ? (
+                    <div className="support-photo-strip" aria-label="Ảnh hiện trường">
+                      {getIncidentImageUrls(selectedIncident).map((imageUrl, index) => {
+                        const resolvedUrl = resolveImageUrl(imageUrl);
+
+                        return (
+                          <button
+                            className="support-photo-thumb"
+                            key={`${imageUrl}-${index}`}
+                            type="button"
+                            onClick={() => setPreviewImage(resolvedUrl)}
+                          >
+                            <img src={resolvedUrl} alt={`Ảnh hiện trường ${index + 1}`} />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="support-no-photos">Không có ảnh hiện trường</p>
+                  )}
+                </div>
+
+                <div className="support-actions" aria-label="Hành động xử lý">
+                  {statusActions.map((action) => (
+                    <button
+                      className={statusByIncident[getIncidentId(selectedIncident)] === action ? "btn btn-primary" : "btn btn-secondary"}
+                      key={action}
+                      type="button"
+                      onClick={() => handleStatusAction(action)}
+                    >
+                      {action}
+                    </button>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="support-empty-state">Chọn một báo cáo để xem vị trí, mô tả và ảnh hiện trường.</div>
+            )}
+          </section>
+        </aside>
       </section>
 
-      <MapView title="Bản đồ điều phối hỗ trợ" />
+      {previewImage ? (
+        <div className="support-image-modal" role="dialog" aria-modal="true" onClick={() => setPreviewImage(null)}>
+          <button className="support-modal-close" type="button" aria-label="Đóng ảnh" onClick={() => setPreviewImage(null)}>
+            Đóng
+          </button>
+          <img src={previewImage} alt="Ảnh hiện trường phóng to" />
+        </div>
+      ) : null}
     </DashboardLayout>
   );
 }
