@@ -227,7 +227,7 @@ a {
     width 220ms ease;
 }
 
-.sidebar-brand span {
+.sidebar-brand > span {
   flex: 0 0 auto;
   display: grid;
   place-items: center;
