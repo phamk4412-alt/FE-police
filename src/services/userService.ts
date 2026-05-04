@@ -5,6 +5,10 @@ export function getUserReports() {
   return apiFetch<Incident[]>("/api/user/report-history?limit=25");
 }
 
+export function getIncidents() {
+  return apiFetch<Incident[]>("/api/incidents?sort=created_desc");
+}
+
 export interface CreateIncidentPayload {
   Detail?: string;
   Level?: string;
