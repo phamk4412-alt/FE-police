@@ -61,9 +61,10 @@ const HCM_WIKIDATA_ID = "Q1854";
 const HCM_BOUNDARY_URLS = ["/maps/hcm-boundary.geojson", `${API_URL}/api/maps/hcm-boundary`];
 const DEFAULT_MAP_CENTER: [number, number] = [106.88, 10.9];
 const DEFAULT_MAP_ZOOM = 8.8;
-const CRIME_SOURCE_ID = "crime-incidents";
-const CRIME_HEAT_LAYER_ID = "crime-heatmap";
-const CRIME_POINT_LAYER_ID = "crime-points";
+const CRIME_SOURCE_ID = "crime-data";
+const CRIME_HEAT_LAYER_ID = "crime-heatmap-layer";
+const CRIME_POINT_LAYER_ID = "crime-point-layer";
+const INCIDENT_MARKER_LAYER_ID = "incident-marker-layer";
 const BUILDING_LAYER_ID = "3d-buildings";
 
 const fallbackFacilityMarkers: FacilityMarker[] = [
@@ -233,7 +234,9 @@ function createIncidentMarker(incident: Incident, isActive: boolean) {
   const severity = getIncidentSeverity(incident);
   const markerElement = document.createElement("button");
   markerElement.type = "button";
-  markerElement.className = `incident-map-marker incident-map-marker-${severity}${isActive ? " is-active" : ""}`;
+  markerElement.className = `${INCIDENT_MARKER_LAYER_ID} incident-map-marker incident-map-marker-${severity}${
+    isActive ? " is-active" : ""
+  }`;
   markerElement.setAttribute("aria-label", getIncidentTitle(incident));
   return markerElement;
 }
@@ -300,6 +303,7 @@ function addCrimeLayers(map: mapboxgl.Map, data: CrimeFeatureCollection) {
   if (!map.getLayer(CRIME_HEAT_LAYER_ID)) {
     map.addLayer({
       id: CRIME_HEAT_LAYER_ID,
+      layout: { visibility: "none" },
       maxzoom: 15,
       paint: {
         "heatmap-color": [
@@ -327,6 +331,7 @@ function addCrimeLayers(map: mapboxgl.Map, data: CrimeFeatureCollection) {
   if (!map.getLayer(CRIME_POINT_LAYER_ID)) {
     map.addLayer({
       id: CRIME_POINT_LAYER_ID,
+      layout: { visibility: "none" },
       minzoom: 10,
       paint: {
         "circle-color": [
@@ -407,6 +412,10 @@ function fetchSupportIncidents() {
   return apiFetch<Incident[]>("/api/incidents?sort=created_desc");
 }
 
+function fetchCrimeIncidents() {
+  return apiFetch<Incident[]>("/api/incidents?sort=created_desc");
+}
+
 function MapView({
   center = DEFAULT_MAP_CENTER,
   className = "",
@@ -433,6 +442,7 @@ function MapView({
   const popupRef = useRef<mapboxgl.Popup | null>(null);
   const [currentLocation, setCurrentLocation] = useState<[number, number] | null>(null);
   const [facilities, setFacilities] = useState<FacilityMarker[]>(fallbackFacilityMarkers);
+  const [crimeDataIncidents, setCrimeDataIncidents] = useState<Incident[]>([]);
   const [supportIncidents, setSupportIncidents] = useState<Incident[]>([]);
   const [mode, setMode] = useState<MapMode>(initialMode);
   const [crimePeriod, setCrimePeriod] = useState<CrimePeriod>("month");
@@ -440,7 +450,7 @@ function MapView({
   const [crimeView, setCrimeView] = useState<CrimeView>("heatmap");
 
   const isSupportMap = role === "support";
-  const crimeIncidents = isSupportMap ? [] : incidents;
+  const crimeIncidents = isSupportMap ? [] : incidents.length ? incidents : crimeDataIncidents;
   const markerIncidents = isSupportMap ? supportIncidents : [];
 
   const crimeTypes = useMemo(
@@ -500,6 +510,33 @@ function MapView({
       window.clearInterval(intervalId);
     };
   }, [isSupportMap, onIncidentsLoad]);
+
+  useEffect(() => {
+    if (isSupportMap || incidents.length) {
+      setCrimeDataIncidents([]);
+      return;
+    }
+
+    let isMounted = true;
+
+    function loadCrimeIncidents() {
+      fetchCrimeIncidents()
+        .then((items) => {
+          if (isMounted) {
+            setCrimeDataIncidents(items);
+          }
+        })
+        .catch(() => undefined);
+    }
+
+    loadCrimeIncidents();
+    const intervalId = window.setInterval(loadCrimeIncidents, 10000);
+
+    return () => {
+      isMounted = false;
+      window.clearInterval(intervalId);
+    };
+  }, [incidents.length, isSupportMap]);
 
   useEffect(() => {
     if (!mapContainerRef.current || !MAPBOX_TOKEN || mapRef.current) {
@@ -718,7 +755,9 @@ function MapView({
     addCrimeLayers(map, buildCrimeGeoJson(filteredIncidents));
     const source = map.getSource(CRIME_SOURCE_ID) as mapboxgl.GeoJSONSource | undefined;
     source?.setData(buildCrimeGeoJson(filteredIncidents));
-  }, [filteredIncidents, isSupportMap]);
+    setLayerVisibility(map, CRIME_HEAT_LAYER_ID, mode === "crime" && (crimeView === "heatmap" || crimeView === "point"));
+    setLayerVisibility(map, CRIME_POINT_LAYER_ID, mode === "crime");
+  }, [crimeView, filteredIncidents, isSupportMap, mode]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -727,8 +766,8 @@ function MapView({
       return;
     }
 
-    const showHeatmap = !isSupportMap && mode === "crime" && crimeView === "heatmap";
-    const showPoint = !isSupportMap && mode === "crime" && crimeView === "point";
+    const showHeatmap = !isSupportMap && mode === "crime" && (crimeView === "heatmap" || crimeView === "point");
+    const showPoint = !isSupportMap && mode === "crime";
 
     setLayerVisibility(map, CRIME_HEAT_LAYER_ID, showHeatmap);
     setLayerVisibility(map, CRIME_POINT_LAYER_ID, showPoint);
