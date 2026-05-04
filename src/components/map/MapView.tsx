@@ -89,45 +89,45 @@ const BUILDING_LAYER_ID = "3d-buildings";
 
 const fallbackFacilityMarkers: FacilityMarker[] = [
   {
-    address: "73 Yersin, phuong Cau Ong Lanh, Quan 1, TP.HCM",
+    address: "73 Yersin, phường Cầu Ông Lãnh, Quận 1, TP.HCM",
     coordinates: [106.700981, 10.776889],
     logo: policeStationLogo,
-    name: "Cong an Quan 1",
+    name: "Công an Quận 1",
     type: "police",
   },
   {
-    address: "359 Tran Hung Dao, Phuong 10, Quan 5, TP.HCM",
+    address: "359 Trần Hưng Đạo, Phường 10, Quận 5, TP.HCM",
     coordinates: [106.6728, 10.7536],
     logo: policeStationLogo,
-    name: "Cong an Quan 5",
+    name: "Công an Quận 5",
     type: "police",
   },
   {
-    address: "47 Thanh Thai, Phuong 14, Quan 10, TP.HCM",
+    address: "47 Thành Thái, Phường 14, Quận 10, TP.HCM",
     coordinates: [106.667, 10.7728],
     logo: policeStationLogo,
-    name: "Cong an Quan 10",
+    name: "Công an Quận 10",
     type: "police",
   },
   {
-    address: "201B Nguyen Chi Thanh, Phuong 12, Quan 5, TP.HCM",
+    address: "201B Nguyễn Chí Thanh, Phường 12, Quận 5, TP.HCM",
     coordinates: [106.681637, 10.755106],
     logo: hospitalLogo,
-    name: "Benh vien Cho Ray",
+    name: "Bệnh viện Chợ Rẫy",
     type: "hospital",
   },
   {
-    address: "14 Ly Tu Trong, phuong Ben Nghe, Quan 1, TP.HCM",
+    address: "14 Lý Tự Trọng, phường Bến Nghé, Quận 1, TP.HCM",
     coordinates: [106.700622, 10.777204],
     logo: hospitalLogo,
-    name: "Benh vien Nhi Dong 2",
+    name: "Bệnh viện Nhi Đồng 2",
     type: "hospital",
   },
   {
-    address: "1 No Trang Long, Phuong 7, Quan Binh Thanh, TP.HCM",
+    address: "1 Nơ Trang Long, Phường 7, Quận Bình Thạnh, TP.HCM",
     coordinates: [106.6943, 10.8103],
     logo: hospitalLogo,
-    name: "Benh vien Nhan dan Gia Dinh",
+    name: "Bệnh viện Nhân dân Gia Định",
     type: "hospital",
   },
 ];
@@ -166,10 +166,10 @@ function normalizeFacilityMarkers(elements: OverpassElement[]) {
       address:
         [tags["addr:housenumber"], tags["addr:street"], tags["addr:district"], tags["addr:city"]]
           .filter(Boolean)
-          .join(", ") || "Thanh pho Ho Chi Minh",
+          .join(", ") || "Thành phố Hồ Chí Minh",
       coordinates,
       logo: type === "hospital" ? hospitalLogo : policeStationLogo,
-      name: tags.name || (type === "hospital" ? "Benh vien" : "Cong an"),
+      name: tags.name || (type === "hospital" ? "Bệnh viện" : "Công an"),
       type,
     });
 
@@ -237,9 +237,32 @@ function createFacilityPopup({ address, name, type }: FacilityMarker) {
   popupContent.className = "facility-popup";
   popupContent.innerHTML = `<strong></strong><span></span><small></small>`;
   popupContent.querySelector("strong")!.textContent = name;
-  popupContent.querySelector("span")!.textContent = type === "hospital" ? "Benh vien" : "Cong an";
+  popupContent.querySelector("span")!.textContent = type === "hospital" ? "Bệnh viện" : "Công an";
   popupContent.querySelector("small")!.textContent = address;
   return popupContent;
+}
+
+function showPopupOnMarkerHover(marker: mapboxgl.Marker) {
+  const element = marker.getElement();
+
+  function openPopup() {
+    const popup = marker.getPopup();
+    if (popup && !popup.isOpen()) {
+      marker.togglePopup();
+    }
+  }
+
+  function closePopup() {
+    const popup = marker.getPopup();
+    if (popup?.isOpen()) {
+      popup.remove();
+    }
+  }
+
+  element.addEventListener("mouseenter", openPopup);
+  element.addEventListener("focus", openPopup);
+  element.addEventListener("mouseleave", closePopup);
+  element.addEventListener("blur", closePopup);
 }
 
 function createCurrentLocationMarker(label: string) {
@@ -251,7 +274,7 @@ function createCurrentLocationMarker(label: string) {
 }
 function normalizePoliceLocation(location: PoliceLocation) {
   const username = location.Username || location.username || "";
-  const displayName = location.DisplayName || location.displayName || username || "Canh sat";
+  const displayName = location.DisplayName || location.displayName || username || "Cảnh sát";
   const latitude = Number(location.Latitude ?? location.latitude);
   const longitude = Number(location.Longitude ?? location.longitude);
 
@@ -265,8 +288,8 @@ function normalizePoliceLocation(location: PoliceLocation) {
     latitude,
     longitude,
     district: location.District || location.district || "TP.HCM",
-    shiftId: location.ShiftId || location.shiftId || "Dang truc",
-    status: location.Status || location.status || "Dang trong ca",
+    shiftId: location.ShiftId || location.shiftId || "Đang trực",
+    status: location.Status || location.status || "Đang trong ca",
     updatedAt: location.UpdatedAt || location.updatedAt || new Date().toISOString(),
   };
 }
@@ -782,12 +805,15 @@ function MapView({
       return;
     }
 
-    facilityMapMarkersRef.current = limitFacilitiesForDisplay(facilities).map((facility) =>
-      new mapboxgl.Marker({ anchor: "bottom", element: createFacilityMarker(facility) })
+    facilityMapMarkersRef.current = limitFacilitiesForDisplay(facilities).map((facility) => {
+      const marker = new mapboxgl.Marker({ anchor: "bottom", element: createFacilityMarker(facility) })
         .setLngLat(facility.coordinates)
         .setPopup(new mapboxgl.Popup({ offset: 28 }).setDOMContent(createFacilityPopup(facility)))
-        .addTo(map),
-    );
+        .addTo(map);
+
+      showPopupOnMarkerHover(marker);
+      return marker;
+    });
   }, [facilities, isSupportMap, mode, showPoiInNormal]);
 
   useEffect(() => {
@@ -823,7 +849,7 @@ function MapView({
     }
 
     const username = user?.id || user?.primaryEmailAddress?.emailAddress || user?.username || "police-session";
-    const displayName = user?.fullName || user?.username || user?.primaryEmailAddress?.emailAddress || "Canh sat";
+    const displayName = user?.fullName || user?.username || user?.primaryEmailAddress?.emailAddress || "Cảnh sát";
     let lastSentAt = 0;
     let hasSharedLocation = false;
     let latestPosition: GeolocationPosition | null = null;
@@ -843,7 +869,7 @@ function MapView({
         Latitude: position.coords.latitude,
         Longitude: position.coords.longitude,
         ShiftId: `shift-${new Date().toISOString().slice(0, 10)}`,
-        Status: "Dang trong ca",
+        Status: "Đang trong ca",
         Username: username,
       })
         .then(() => fetchPoliceLocations().then(setPoliceLocations))
@@ -936,12 +962,13 @@ function MapView({
 
       const marker = new mapboxgl.Marker({
         anchor: "center",
-        element: createPoliceLocationMarker(`${location.displayName} dang trong ca`),
+        element: createPoliceLocationMarker(`${location.displayName} đang trong ca`),
       })
         .setLngLat([location.longitude, location.latitude])
         .setPopup(new mapboxgl.Popup({ offset: 20 }).setDOMContent(createPoliceLocationPopup(location)))
         .addTo(map);
 
+      showPopupOnMarkerHover(marker);
       policeLocationMarkersRef.current.set(location.username, marker);
     });
 

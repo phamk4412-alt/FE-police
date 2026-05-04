@@ -985,21 +985,21 @@ tbody tr:hover {
   display: grid;
   gap: 6px;
   min-width: 170px;
-  color: #0f172a;
+  color: #f8fafc;
 }
 
 .police-location-popup strong {
-  color: #2563eb;
+  color: #f8fafc;
   font-size: 1rem;
 }
 
 .police-location-popup span {
-  color: #16a34a;
+  color: #7dd3fc;
   font-weight: 800;
 }
 
 .police-location-popup small {
-  color: #64748b;
+  color: #cbd5e1;
 }
 .incident-map-marker {
   position: relative;
@@ -1082,23 +1082,23 @@ tbody tr:hover {
   display: grid;
   gap: 3px;
   max-width: 240px;
-  color: var(--text);
+  color: #f8fafc;
 }
 
 .facility-popup strong {
-  color: var(--ink);
+  color: #f8fafc;
   font-size: 0.92rem;
 }
 
 .facility-popup span {
-  color: var(--primary);
+  color: #fda4af;
   font-size: 0.78rem;
   font-weight: 800;
   text-transform: uppercase;
 }
 
 .facility-popup small {
-  color: var(--muted);
+  color: #cbd5e1;
   font-size: 0.82rem;
   line-height: 1.35;
 }
@@ -1560,21 +1560,21 @@ tbody tr:hover {
   display: grid;
   gap: 6px;
   min-width: 170px;
-  color: #0f172a;
+  color: #f8fafc;
 }
 
 .police-location-popup strong {
-  color: #2563eb;
+  color: #f8fafc;
   font-size: 1rem;
 }
 
 .police-location-popup span {
-  color: #16a34a;
+  color: #7dd3fc;
   font-weight: 800;
 }
 
 .police-location-popup small {
-  color: #64748b;
+  color: #cbd5e1;
 }
 @keyframes location-pulse {
   0% {
