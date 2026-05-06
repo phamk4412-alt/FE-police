@@ -1737,6 +1737,31 @@ tbody tr:hover {
   transform: translateY(-1px);
 }
 
+.support-report-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.support-report-row .support-report-item {
+  min-width: 0;
+}
+
+.delete-button {
+  min-height: 100%;
+  border-color: rgba(255, 70, 85, 0.42);
+  color: #ffffff;
+  background: rgba(255, 70, 85, 0.72);
+}
+
+.delete-button:hover,
+.delete-button:focus-visible {
+  border-color: rgba(255, 70, 85, 0.72);
+  background: var(--danger);
+  transform: translateY(-1px);
+}
+
 .support-report-main,
 .support-report-meta {
   display: grid;
@@ -1929,6 +1954,7 @@ tbody tr:hover {
 
 @media (max-width: 760px) {
   .support-report-item,
+  .support-report-row,
   .support-detail-grid,
   .support-actions {
     grid-template-columns: 1fr;

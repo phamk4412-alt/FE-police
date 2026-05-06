@@ -1,8 +1,9 @@
-import { useCallback, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import DashboardLayout from "../components/layout/DashboardLayout";
 import MapView from "../components/map/MapView";
 import { API_URL } from "../services/api";
 import type { Incident, IncidentSeverity } from "../types/incident";
+import { loadSupportCases, saveSupportCases } from "../utils/supportCasesStorage";
 import {
   getIncidentCategory,
   getIncidentCoordinates,
@@ -18,6 +19,8 @@ import {
 } from "../types/incident";
 
 const statusActions = ["Nhận xử lý", "Đang xử lý", "Hoàn thành"];
+
+const completedStatuses = ["completed", "done", "resolved", "Hoàn thành", "Đã hoàn thành"];
 
 const severityLabels: Record<IncidentSeverity, string> = {
   critical: "Khẩn cấp",
@@ -59,8 +62,28 @@ function getSeverityClass(incident: Incident) {
   return `support-severity-${getIncidentSeverity(incident)}`;
 }
 
+function isCompletedStatus(status: string) {
+  return completedStatuses.includes(status);
+}
+
+function getStoredStatus(action: string) {
+  return action === statusActions[2] ? "Hoàn thành" : action;
+}
+
+function getActionLabel(action: string) {
+  return action === statusActions[2] ? "Hoàn thành" : action;
+}
+
+function updateIncidentStatus(incident: Incident, status: string): Incident {
+  return {
+    ...incident,
+    Status: incident.Status ? status : incident.Status,
+    status,
+  };
+}
+
 function SupportDashboard() {
-  const [incidents, setIncidents] = useState<Incident[]>([]);
+  const [incidents, setIncidents] = useState<Incident[]>(loadSupportCases);
   const [selectedIncidentId, setSelectedIncidentId] = useState("");
   const [statusByIncident, setStatusByIncident] = useState<Record<string, string>>({});
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -69,11 +92,6 @@ function SupportDashboard() {
     () => incidents.find((incident) => getIncidentId(incident) === selectedIncidentId) || incidents[0] || null,
     [incidents, selectedIncidentId],
   );
-
-  const handleIncidentsLoad = useCallback((items: Incident[]) => {
-    setIncidents(items);
-    setSelectedIncidentId((currentId) => currentId || (items[0] ? getIncidentId(items[0]) : ""));
-  }, []);
 
   function handleSelectIncident(incident: Incident) {
     setSelectedIncidentId(getIncidentId(incident));
@@ -85,25 +103,42 @@ function SupportDashboard() {
     }
 
     const incidentId = getIncidentId(selectedIncident);
+    const nextStatus = getStoredStatus(action);
 
-    if (action === "Hoàn thành") {
-      setIncidents((current) => {
-        const next = current.filter((incident) => getIncidentId(incident) !== incidentId);
-        setSelectedIncidentId(next[0] ? getIncidentId(next[0]) : "");
-        return next;
-      });
-      setStatusByIncident((current) => {
-        const next = { ...current };
-        delete next[incidentId];
-        return next;
-      });
-      return;
-    }
+    setIncidents((current) => {
+      const next = current.map((incident) =>
+        getIncidentId(incident) === incidentId ? updateIncidentStatus(incident, nextStatus) : incident,
+      );
+      saveSupportCases(next);
+      return next;
+    });
 
     setStatusByIncident((current) => ({
       ...current,
-      [incidentId]: action,
+      [incidentId]: nextStatus,
     }));
+  }
+
+  function handleDeleteCase(id: string) {
+    const confirmed = window.confirm("Bạn có chắc muốn xóa vụ án đã hoàn thành này không?");
+
+    if (!confirmed) {
+      return;
+    }
+
+    const nextIncidents = incidents.filter((incident) => getIncidentId(incident) !== id);
+    setIncidents(nextIncidents);
+    saveSupportCases(nextIncidents);
+
+    setStatusByIncident((current) => {
+      const next = { ...current };
+      delete next[id];
+      return next;
+    });
+
+    if (selectedIncidentId === id || (selectedIncident && getIncidentId(selectedIncident) === id)) {
+      setSelectedIncidentId(nextIncidents[0] ? getIncidentId(nextIncidents[0]) : "");
+    }
   }
 
   return (
@@ -118,7 +153,6 @@ function SupportDashboard() {
         <MapView
           className="support-map"
           incidents={incidents}
-          onIncidentsLoad={handleIncidentsLoad}
           onIncidentSelect={handleSelectIncident}
           role="support"
           selectedIncident={selectedIncident}
@@ -140,11 +174,12 @@ function SupportDashboard() {
                 const incidentId = getIncidentId(incident);
                 const severity = getIncidentSeverity(incident);
                 const displayStatus = statusByIncident[incidentId] || getIncidentStatus(incident);
+                const canDelete = isCompletedStatus(displayStatus);
 
                 return (
+                  <div className="support-report-row" key={incidentId}>
                   <button
                     className={`support-report-item ${incidentId === selectedIncidentId ? "is-active" : ""}`}
-                    key={incidentId}
                     type="button"
                     onClick={() => handleSelectIncident(incident)}
                   >
@@ -162,6 +197,12 @@ function SupportDashboard() {
                       <small>{displayStatus}</small>
                     </span>
                   </button>
+                    {canDelete ? (
+                      <button className="btn delete-button" type="button" onClick={() => handleDeleteCase(incidentId)}>
+                        Xóa
+                      </button>
+                    ) : null}
+                  </div>
                 );
               })}
 
@@ -246,12 +287,16 @@ function SupportDashboard() {
                 <div className="support-actions" aria-label="Hành động xử lý">
                   {statusActions.map((action) => (
                     <button
-                      className={statusByIncident[getIncidentId(selectedIncident)] === action ? "btn btn-primary" : "btn btn-secondary"}
+                      className={
+                        statusByIncident[getIncidentId(selectedIncident)] === getStoredStatus(action)
+                          ? "btn btn-primary"
+                          : "btn btn-secondary"
+                      }
                       key={action}
                       type="button"
                       onClick={() => handleStatusAction(action)}
                     >
-                      {action}
+                      {getActionLabel(action)}
                     </button>
                   ))}
                 </div>

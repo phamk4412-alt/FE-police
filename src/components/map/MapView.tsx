@@ -634,7 +634,7 @@ function MapView({
   }, [defaultToCurrentLocation]);
 
   useEffect(() => {
-    if (!isSupportMap) {
+    if (!isSupportMap || !onIncidentsLoad) {
       onIncidentsLoad?.([]);
       return;
     }
