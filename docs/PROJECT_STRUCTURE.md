@@ -10,16 +10,19 @@ FE-police/
 │  ├─ assets/
 │  │  ├─ images/             Image assets used by screens and components
 │  │  ├─ logos/              Brand, hospital, police station, and partner logos
-│  │  └─ styles/             Shared style-only assets, if needed later
+│  │  └─ styles/             Global and shared style files
 │  ├─ components/
 │  │  ├─ common/             Reusable UI controls
 │  │  ├─ layout/             Header, sidebar, and dashboard shells
 │  │  └─ map/                Mapbox map UI and map-related presentation
-│  ├─ pages/                 Route-level screens
+│  ├─ pages/
+│  │  ├─ auth/               Login, registration, and role selection screens
+│  │  └─ dashboards/         Admin, police, support, and user dashboards
 │  ├─ routes/                Route definitions and redirect logic
 │  ├─ services/              API clients grouped by domain
 │  ├─ types/                 Shared TypeScript types
 │  └─ utils/                 Small pure helpers and local storage utilities
+├─ docs/                     Project documentation and developer notes
 ├─ .env.example              Example local environment variables
 ├─ vercel.json               Vercel build and environment configuration
 └─ vite.config.ts            Vite configuration
@@ -27,13 +30,14 @@ FE-police/
 
 ## Search guide
 
-- Need to change a screen: start in `src/pages`.
+- Need to change login/register/role selection: start in `src/pages/auth`.
+- Need to change a dashboard screen: start in `src/pages/dashboards`.
 - Need to change a shared button, input, layout, or map component: start in `src/components`.
 - Need to change backend calls: start in `src/services`.
 - Need to change role handling or constants: start in `src/utils`.
 - Need to change route access or redirects: start in `src/routes`.
 - Need to change shared data shapes: start in `src/types`.
-- Need to add images or logos: place them in `src/assets/images` or `src/assets/logos`.
+- Need to add images, logos, or global styles: place them in `src/assets/images`, `src/assets/logos`, or `src/assets/styles`.
 - Need static files served directly by Vite: place them in `public`.
 
 ## Naming rules

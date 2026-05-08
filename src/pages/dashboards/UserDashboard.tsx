@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from "react";
-import Button from "../components/common/Button";
-import DashboardLayout from "../components/layout/DashboardLayout";
-import MapView from "../components/map/MapView";
-import { createIncidentWithImages } from "../services/userService";
+import Button from "../../components/common/Button";
+import DashboardLayout from "../../components/layout/DashboardLayout";
+import MapView from "../../components/map/MapView";
+import { createIncidentWithImages } from "../../services/userService";
 
 const MAX_IMAGES = 3;
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;

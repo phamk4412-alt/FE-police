@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
-import DashboardLayout from "../components/layout/DashboardLayout";
-import MapView from "../components/map/MapView";
-import { getPoliceIncidents } from "../services/policeService";
-import type { DashboardStat } from "../types/common";
-import type { Incident } from "../types/incident";
+import DashboardLayout from "../../components/layout/DashboardLayout";
+import MapView from "../../components/map/MapView";
+import { getPoliceIncidents } from "../../services/policeService";
+import type { DashboardStat } from "../../types/common";
+import type { Incident } from "../../types/incident";
 import {
   getIncidentCreatedAt,
   getIncidentId,
   getIncidentLocation,
   getIncidentStatus,
   getIncidentTitle,
-} from "../types/incident";
+} from "../../types/incident";
 
 const stats: DashboardStat[] = [
   { label: "Vụ việc mới", value: 14, note: "Cần phản hồi ban đầu" },

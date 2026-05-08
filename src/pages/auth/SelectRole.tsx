@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useUser } from "@clerk/react";
-import Button from "../components/common/Button";
-import type { UserRole } from "../types/user";
-import { ROLE_HOME_PATHS, ROLE_LABELS } from "../utils/constants";
-import { getClerkUserRole } from "../utils/clerkRole";
+import Button from "../../components/common/Button";
+import { getClerkUserRole } from "../../utils/clerkRole";
+import { ROLE_HOME_PATHS, ROLE_LABELS } from "../../utils/constants";
+import type { UserRole } from "../../types/user";
 
 const roles: UserRole[] = ["admin", "police", "user", "support"];
 

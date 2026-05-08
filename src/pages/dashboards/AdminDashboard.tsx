@@ -1,5 +1,5 @@
-import DashboardLayout from "../components/layout/DashboardLayout";
-import type { DashboardStat } from "../types/common";
+import DashboardLayout from "../../components/layout/DashboardLayout";
+import type { DashboardStat } from "../../types/common";
 
 const stats: DashboardStat[] = [
   { label: "Tổng tài khoản", value: 128, note: "+12 trong tháng này" },

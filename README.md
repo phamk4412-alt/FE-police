@@ -8,7 +8,7 @@ The app uses Clerk React:
 
 - `@clerk/react`
 - `ClerkProvider` in `src/main.tsx`
-- Clerk sign-in UI in `src/pages/Login.tsx`
+- Clerk sign-in UI in `src/pages/auth/Login.tsx`
 - Role-based redirects through Clerk user metadata
 
 After sign-in, users are routed by role:
@@ -55,7 +55,7 @@ The repo is organized so each kind of code has a predictable home:
 - `src/assets` - images, logos, and style assets
 - `public` - static files served directly
 
-See `PROJECT_STRUCTURE.md` for the full search guide and naming rules.
+See `docs/PROJECT_STRUCTURE.md` for the full search guide and naming rules.
 
 ## Deploy
 

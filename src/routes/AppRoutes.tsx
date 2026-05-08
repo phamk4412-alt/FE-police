@@ -1,12 +1,12 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import ProtectedRoute from "../components/common/ProtectedRoute";
-import AdminDashboard from "../pages/AdminDashboard";
-import Login from "../pages/Login";
-import PoliceDashboard from "../pages/PoliceDashboard";
-import Register from "../pages/Register";
-import SelectRole from "../pages/SelectRole";
-import SupportDashboard from "../pages/SupportDashboard";
-import UserDashboard from "../pages/UserDashboard";
+import Login from "../pages/auth/Login";
+import Register from "../pages/auth/Register";
+import SelectRole from "../pages/auth/SelectRole";
+import AdminDashboard from "../pages/dashboards/AdminDashboard";
+import PoliceDashboard from "../pages/dashboards/PoliceDashboard";
+import SupportDashboard from "../pages/dashboards/SupportDashboard";
+import UserDashboard from "../pages/dashboards/UserDashboard";
 import EntryRedirect from "./EntryRedirect";
 
 function AppRoutes() {

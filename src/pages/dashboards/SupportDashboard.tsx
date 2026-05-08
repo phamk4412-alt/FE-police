@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
-import DashboardLayout from "../components/layout/DashboardLayout";
-import MapView from "../components/map/MapView";
-import { API_URL } from "../services/api";
-import type { Incident, IncidentSeverity } from "../types/incident";
-import { loadSupportCases, saveSupportCases } from "../utils/supportCasesStorage";
+import DashboardLayout from "../../components/layout/DashboardLayout";
+import MapView from "../../components/map/MapView";
+import { API_URL } from "../../services/api";
+import type { Incident, IncidentSeverity } from "../../types/incident";
+import { loadSupportCases, saveSupportCases } from "../../utils/supportCasesStorage";
 import {
   getIncidentCategory,
   getIncidentCoordinates,
@@ -16,7 +16,7 @@ import {
   getIncidentSeverity,
   getIncidentStatus,
   getIncidentTitle,
-} from "../types/incident";
+} from "../../types/incident";
 
 const statusActions = ["Nhận xử lý", "Đang xử lý", "Hoàn thành"];
 
