@@ -42,6 +42,21 @@ npm run dev
 npm run build
 ```
 
+## Project structure
+
+The repo is organized so each kind of code has a predictable home:
+
+- `src/pages` - route-level screens
+- `src/components` - reusable UI, layout, and map components
+- `src/services` - backend API access
+- `src/routes` - app routing and redirect logic
+- `src/types` - shared TypeScript types
+- `src/utils` - constants, role helpers, and local utilities
+- `src/assets` - images, logos, and style assets
+- `public` - static files served directly
+
+See `PROJECT_STRUCTURE.md` for the full search guide and naming rules.
+
 ## Deploy
 
 This repo is ready for Vercel:

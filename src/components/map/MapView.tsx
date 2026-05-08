@@ -2,8 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useUser } from "@clerk/react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import hospitalLogo from "../../assets/hospital-logo.svg";
-import policeStationLogo from "../../assets/police-station-logo.svg";
+import hospitalLogo from "../../assets/logos/hospital-logo.svg";
+import policeStationLogo from "../../assets/logos/police-station-logo.svg";
 import { API_URL, apiFetch } from "../../services/api";
 import type { Incident } from "../../types/incident";
 import {
