@@ -807,7 +807,7 @@ tbody tr:hover {
 
 .map-perspective-controls {
   position: absolute;
-  top: 60px;
+  top: 108px;
   right: 12px;
   z-index: 4;
   display: inline-flex;
@@ -1688,7 +1688,7 @@ tbody tr:hover {
   }
 
   .map-perspective-controls {
-    top: 56px;
+    top: 102px;
     right: 10px;
   }
 

@@ -712,7 +712,7 @@ function MapView({
   const [crimePeriod, setCrimePeriod] = useState<CrimePeriod>("month");
   const [crimeType, setCrimeType] = useState("all");
   const [crimeView, setCrimeView] = useState<CrimeView>("heatmap");
-  const [perspective, setPerspective] = useState<PerspectiveMode>("3d");
+  const [perspective, setPerspective] = useState<PerspectiveMode>("2d");
 
   const isSupportMap = role === "support";
   const crimeIncidents = isSupportMap ? [] : incidents.length ? incidents : crimeDataIncidents;
@@ -810,12 +810,12 @@ function MapView({
 
     const map = new mapboxgl.Map({
       antialias: true,
-      bearing: DEFAULT_3D_BEARING,
+      bearing: 0,
       center,
       container: mapContainerRef.current,
-      dragRotate: true,
-      pitch: DEFAULT_3D_PITCH,
-      pitchWithRotate: true,
+      dragRotate: false,
+      pitch: 0,
+      pitchWithRotate: false,
       style: "mapbox://styles/mapbox/light-v11",
       touchZoomRotate: true,
       zoom,
