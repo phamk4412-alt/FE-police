@@ -40,6 +40,7 @@ function UserDashboard() {
   const streamRef = useRef<MediaStream | null>(null);
   const [tab, setTab] = useState<"home" | "map">("home");
   const [category, setCategory] = useState("Trộm cắp");
+  const [customCategory, setCustomCategory] = useState("");
   const [description, setDescription] = useState("");
   const [lat, setLat] = useState<number | "">("");
   const [lng, setLng] = useState<number | "">("");
@@ -53,6 +54,9 @@ function UserDashboard() {
     () => images.map((image) => ({ name: image.name, url: URL.createObjectURL(image) })),
     [images],
   );
+  const isOtherCategory = category === "Khác";
+  const normalizedCustomCategory = customCategory.trim();
+  const titleCategory = isOtherCategory && normalizedCustomCategory ? normalizedCustomCategory : category;
 
   useEffect(() => {
     setCanUseLiveCamera(
@@ -222,8 +226,8 @@ function UserDashboard() {
     event.preventDefault();
     setFormMessage("");
 
-    if (!description.trim()) {
-      setFormMessage("Nhập mô tả ngắn để lực lượng xử lý nắm tình hình.");
+    if (isOtherCategory && !normalizedCustomCategory) {
+      setFormMessage("Nhap loai vu viec khi chon Khac.");
       return;
     }
 
@@ -235,9 +239,12 @@ function UserDashboard() {
     setIsSubmitting(true);
 
     const formData = new FormData();
-    formData.append("title", buildIncidentTitle(category, description));
+    formData.append("title", buildIncidentTitle(titleCategory, description));
     formData.append("detail", description.trim());
     formData.append("category", category);
+    if (isOtherCategory) {
+      formData.append("customCategory", normalizedCustomCategory);
+    }
     formData.append("latitude", String(lat));
     formData.append("longitude", String(lng));
     images.forEach((image) => {
@@ -248,6 +255,7 @@ function UserDashboard() {
       const result = await createIncidentWithImages(formData);
 
       setDescription("");
+      setCustomCategory("");
       setImages([]);
       setFormMessage(result?.Message || "Đã gửi báo cáo thành công.");
     } catch (error) {
@@ -289,7 +297,13 @@ function UserDashboard() {
                 <select
                   id="incident-type"
                   value={category}
-                  onChange={(event) => setCategory(event.target.value)}
+                  onChange={(event) => {
+                    const nextCategory = event.target.value;
+                    setCategory(nextCategory);
+                    if (nextCategory !== "Khác") {
+                      setCustomCategory("");
+                    }
+                  }}
                 >
                   <option>Trộm cắp</option>
                   <option>Gây rối trật tự</option>
@@ -298,6 +312,19 @@ function UserDashboard() {
                   <option>Khác</option>
                 </select>
               </label>
+
+              {isOtherCategory ? (
+                <label className="field" htmlFor="custom-category">
+                  <span>Nhap loai vu viec</span>
+                  <input
+                    id="custom-category"
+                    name="customCategory"
+                    value={customCategory}
+                    placeholder="Vi du: Mat tre em"
+                    onChange={(event) => setCustomCategory(event.target.value)}
+                  />
+                </label>
+              ) : null}
 
               <label className="field" htmlFor="description">
                 <span>Mô tả</span>
