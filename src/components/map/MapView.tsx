@@ -21,6 +21,7 @@ type CrimePeriod = "week" | "month" | "year";
 type CrimeView = "heatmap" | "point";
 type FacilityType = "hospital" | "police";
 type MapRole = "user" | "support" | "police";
+type PerspectiveMode = "2d" | "3d";
 type BoundaryGeoJson = GeoJSON.FeatureCollection<GeoJSON.Geometry, Record<string, unknown>>;
 type CrimeFeatureCollection = GeoJSON.FeatureCollection<GeoJSON.Point, Record<string, unknown>>;
 
@@ -81,11 +82,22 @@ const HCM_WIKIDATA_ID = "Q1854";
 const HCM_BOUNDARY_URLS = ["/maps/hcm-boundary.geojson", `${API_URL}/api/maps/hcm-boundary`];
 const DEFAULT_MAP_CENTER: [number, number] = [106.88, 10.9];
 const DEFAULT_MAP_ZOOM = 8.8;
+const DEFAULT_3D_BEARING = -30;
+const DEFAULT_3D_PITCH = 60;
 const CRIME_SOURCE_ID = "crime-data";
 const CRIME_HEAT_LAYER_ID = "crime-heatmap-layer";
 const CRIME_POINT_LAYER_ID = "crime-point-layer";
 const INCIDENT_MARKER_LAYER_ID = "incident-marker-layer";
 const BUILDING_LAYER_ID = "3d-buildings";
+const MAPBOX_TERRAIN_SOURCE_ID = "mapbox-dem";
+
+function getCameraForPerspective(perspective: PerspectiveMode) {
+  if (perspective === "2d") {
+    return { bearing: 0, pitch: 0 };
+  }
+
+  return { bearing: DEFAULT_3D_BEARING, pitch: DEFAULT_3D_PITCH };
+}
 
 const fallbackFacilityMarkers: FacilityMarker[] = [
   {
@@ -367,14 +379,70 @@ function add3DBuildings(map: mapboxgl.Map) {
     minzoom: 15,
     paint: {
       "fill-extrusion-base": ["coalesce", ["get", "min_height"], 0],
-      "fill-extrusion-color": "#aaaaaa",
+      "fill-extrusion-color": [
+        "interpolate",
+        ["linear"],
+        ["coalesce", ["get", "height"], 0],
+        0,
+        "#e6d7c3",
+        250,
+        "#d9c7b0",
+      ],
       "fill-extrusion-height": ["coalesce", ["get", "height"], 0],
-      "fill-extrusion-opacity": 0.6,
+      "fill-extrusion-opacity": 0.82,
     },
     source: "composite",
     "source-layer": "building",
     type: "fill-extrusion",
   });
+}
+
+function ensureTerrainSource(map: mapboxgl.Map) {
+  if (map.getSource(MAPBOX_TERRAIN_SOURCE_ID)) {
+    return;
+  }
+
+  map.addSource(MAPBOX_TERRAIN_SOURCE_ID, {
+    maxzoom: 14,
+    tileSize: 512,
+    type: "raster-dem",
+    url: "mapbox://mapbox.mapbox-terrain-dem-v1",
+  });
+}
+
+function applyMapLighting(map: mapboxgl.Map) {
+  map.setFog({
+    color: "#f8fbff",
+    "high-color": "#ffffff",
+    "horizon-blend": 0.02,
+    "space-color": "#eef6ff",
+    "star-intensity": 0,
+  });
+}
+
+function applyPerspectiveMode(map: mapboxgl.Map, perspective: PerspectiveMode) {
+  const is2D = perspective === "2d";
+
+  if (is2D) {
+    map.dragRotate.disable();
+    map.touchZoomRotate.disableRotation();
+    map.setTerrain(null);
+    map.easeTo({
+      bearing: 0,
+      duration: 600,
+      pitch: 0,
+    });
+  } else {
+    ensureTerrainSource(map);
+    map.dragRotate.enable();
+    map.touchZoomRotate.enableRotation();
+    map.setTerrain({ exaggeration: 1.15, source: MAPBOX_TERRAIN_SOURCE_ID });
+    map.easeTo({
+      bearing: DEFAULT_3D_BEARING,
+      duration: 700,
+      pitch: DEFAULT_3D_PITCH,
+    });
+  }
 }
 
 function addCrimeLayers(map: mapboxgl.Map, data: CrimeFeatureCollection) {
@@ -601,6 +669,7 @@ function MapView({
   const [crimePeriod, setCrimePeriod] = useState<CrimePeriod>("month");
   const [crimeType, setCrimeType] = useState("all");
   const [crimeView, setCrimeView] = useState<CrimeView>("heatmap");
+  const [perspective, setPerspective] = useState<PerspectiveMode>("3d");
 
   const isSupportMap = role === "support";
   const crimeIncidents = isSupportMap ? [] : incidents.length ? incidents : crimeDataIncidents;
@@ -698,11 +767,14 @@ function MapView({
 
     const map = new mapboxgl.Map({
       antialias: true,
-      bearing: -30,
+      bearing: DEFAULT_3D_BEARING,
       center,
       container: mapContainerRef.current,
-      pitch: 60,
-      style: "mapbox://styles/mapbox/dark-v11",
+      dragRotate: true,
+      pitch: DEFAULT_3D_PITCH,
+      pitchWithRotate: true,
+      style: "mapbox://styles/mapbox/light-v11",
+      touchZoomRotate: true,
       zoom,
     });
 
@@ -712,7 +784,10 @@ function MapView({
     let isMounted = true;
 
     map.on("load", () => {
+      applyMapLighting(map);
+      ensureTerrainSource(map);
       add3DBuildings(map);
+      applyPerspectiveMode(map, perspective);
 
       fetchHoChiMinhBoundary()
         .then((boundary) => {
@@ -760,6 +835,30 @@ function MapView({
       popupRef.current = null;
     };
   }, [center, isSupportMap, zoom]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+
+    if (!map) {
+      return;
+    }
+
+    const applyUpdates = () => {
+      applyMapLighting(map);
+      add3DBuildings(map);
+      applyPerspectiveMode(map, perspective);
+    };
+
+    if (map.isStyleLoaded()) {
+      applyUpdates();
+      return;
+    }
+
+    map.once("load", applyUpdates);
+    return () => {
+      map.off("load", applyUpdates);
+    };
+  }, [perspective]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -927,15 +1026,16 @@ function MapView({
 
     if (defaultToCurrentLocation && !hasCenteredOnCurrentLocationRef.current) {
       hasCenteredOnCurrentLocationRef.current = true;
+      const camera = getCameraForPerspective(perspective);
       map.easeTo({
-        bearing: -30,
+        bearing: camera.bearing,
         center: currentLocation,
         duration: 700,
-        pitch: 60,
+        pitch: camera.pitch,
         zoom: Math.max(zoom, 14),
       });
     }
-  }, [currentLocation, currentLocationLabel, defaultToCurrentLocation, zoom]);
+  }, [currentLocation, currentLocationLabel, defaultToCurrentLocation, perspective, zoom]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -1024,10 +1124,10 @@ function MapView({
     }
 
     map.easeTo({
-      bearing: -30,
+      bearing: getCameraForPerspective(perspective).bearing,
       center: coordinates,
       duration: 700,
-      pitch: 60,
+      pitch: getCameraForPerspective(perspective).pitch,
       zoom: Math.max(zoom, 15),
     });
 
@@ -1036,7 +1136,7 @@ function MapView({
       .setLngLat(coordinates)
       .setDOMContent(createIncidentPopup(incident))
       .addTo(map);
-  }, [isSupportMap, selectedIncident, zoom]);
+  }, [isSupportMap, perspective, selectedIncident, zoom]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -1107,7 +1207,30 @@ function MapView({
       </div>
 
       {MAPBOX_TOKEN ? (
-        <div aria-label={title} className="mapbox-container map-container" ref={mapContainerRef} role="region" />
+        <div className="map-stage">
+          <div
+            className="map-perspective-controls"
+            aria-label="Che do hien thi ban do"
+            role="group"
+          >
+            <button
+              className={perspective === "2d" ? "is-active" : ""}
+              type="button"
+              onClick={() => setPerspective("2d")}
+            >
+              2D
+            </button>
+            <button
+              className={perspective === "3d" ? "is-active" : ""}
+              type="button"
+              onClick={() => setPerspective("3d")}
+            >
+              3D
+            </button>
+          </div>
+
+          <div aria-label={title} className="mapbox-container map-container" ref={mapContainerRef} role="region" />
+        </div>
       ) : (
         <div className="map-token-warning">
           <strong>Thieu Mapbox token</strong>
@@ -1186,15 +1309,16 @@ function MapView({
             <button
               className="btn btn-ghost"
               type="button"
-              onClick={() =>
+              onClick={() => {
+                const camera = getCameraForPerspective(perspective);
                 mapRef.current?.easeTo({
-                  bearing: -30,
+                  bearing: camera.bearing,
                   center: currentLocation || center,
                   duration: 700,
-                  pitch: 60,
+                  pitch: camera.pitch,
                   zoom: currentLocation ? Math.max(zoom, 14) : zoom,
-                })
-              }
+                });
+              }}
             >
               Canh lai ban do
             </button>
