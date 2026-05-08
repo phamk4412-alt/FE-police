@@ -90,6 +90,16 @@ const CRIME_POINT_LAYER_ID = "crime-point-layer";
 const INCIDENT_MARKER_LAYER_ID = "incident-marker-layer";
 const BUILDING_LAYER_ID = "3d-buildings";
 const MAPBOX_TERRAIN_SOURCE_ID = "mapbox-dem";
+const MAPBOX_LIGHT_PALETTE = {
+  boundaryFill: "#ff4655",
+  boundaryLine: "#e11d48",
+  buildingHigh: "#d7dee8",
+  buildingLow: "#e7edf4",
+  park: "#dbead7",
+  road: "#cbd5e1",
+  roadMinor: "#e2e8f0",
+  water: "#dbeafe",
+};
 
 function getCameraForPerspective(perspective: PerspectiveMode) {
   if (perspective === "2d") {
@@ -355,14 +365,14 @@ function addBoundaryLayer(map: mapboxgl.Map, boundary: BoundaryGeoJson) {
   map.addSource("hcm-boundary", { data: boundary, type: "geojson" });
   map.addLayer({
     id: "hcm-boundary-fill",
-    paint: { "fill-color": "#ff4655", "fill-opacity": 0.1 },
+    paint: { "fill-color": MAPBOX_LIGHT_PALETTE.boundaryFill, "fill-opacity": 0.06 },
     source: "hcm-boundary",
     type: "fill",
   });
   map.addLayer({
     id: "hcm-boundary-line",
     layout: { "line-cap": "round", "line-join": "round" },
-    paint: { "line-color": "#ff9aa3", "line-opacity": 0.9, "line-width": 3 },
+    paint: { "line-color": MAPBOX_LIGHT_PALETTE.boundaryLine, "line-opacity": 0.95, "line-width": 3.2 },
     source: "hcm-boundary",
     type: "line",
   });
@@ -384,12 +394,12 @@ function add3DBuildings(map: mapboxgl.Map) {
         ["linear"],
         ["coalesce", ["get", "height"], 0],
         0,
-        "#e6d7c3",
+        MAPBOX_LIGHT_PALETTE.buildingLow,
         250,
-        "#d9c7b0",
+        MAPBOX_LIGHT_PALETTE.buildingHigh,
       ],
       "fill-extrusion-height": ["coalesce", ["get", "height"], 0],
-      "fill-extrusion-opacity": 0.82,
+      "fill-extrusion-opacity": 0.9,
     },
     source: "composite",
     "source-layer": "building",
@@ -420,13 +430,43 @@ function applyMapLighting(map: mapboxgl.Map) {
   });
 }
 
+function applyBaseMapPalette(map: mapboxgl.Map) {
+  const style = map.getStyle();
+  const layers = style.layers || [];
+
+  layers.forEach((layer) => {
+    const layerId = layer.id;
+    const sourceLayer = "source-layer" in layer ? layer["source-layer"] : undefined;
+
+    if (layer.type === "background") {
+      map.setPaintProperty(layerId, "background-color", "#f8fafc");
+    }
+
+    if (sourceLayer === "water" && layer.type === "fill") {
+      map.setPaintProperty(layerId, "fill-color", MAPBOX_LIGHT_PALETTE.water);
+    }
+
+    if (sourceLayer === "landuse" && layer.type === "fill" && /park|green|wood|grass/i.test(layerId)) {
+      map.setPaintProperty(layerId, "fill-color", MAPBOX_LIGHT_PALETTE.park);
+    }
+
+    if (sourceLayer === "road" && layer.type === "line") {
+      const isMajorRoad = /motorway|trunk|primary|secondary|major/i.test(layerId);
+      map.setPaintProperty(layerId, "line-color", isMajorRoad ? MAPBOX_LIGHT_PALETTE.road : MAPBOX_LIGHT_PALETTE.roadMinor);
+    }
+  });
+}
+
 function applyPerspectiveMode(map: mapboxgl.Map, perspective: PerspectiveMode) {
   const is2D = perspective === "2d";
 
   if (is2D) {
     map.dragRotate.disable();
     map.touchZoomRotate.disableRotation();
+    map.setMaxPitch(0);
+    setLayerVisibility(map, BUILDING_LAYER_ID, false);
     map.setTerrain(null);
+    map.setFog(null);
     map.easeTo({
       bearing: 0,
       duration: 600,
@@ -436,7 +476,10 @@ function applyPerspectiveMode(map: mapboxgl.Map, perspective: PerspectiveMode) {
     ensureTerrainSource(map);
     map.dragRotate.enable();
     map.touchZoomRotate.enableRotation();
+    map.setMaxPitch(85);
+    setLayerVisibility(map, BUILDING_LAYER_ID, true);
     map.setTerrain({ exaggeration: 1.15, source: MAPBOX_TERRAIN_SOURCE_ID });
+    applyMapLighting(map);
     map.easeTo({
       bearing: DEFAULT_3D_BEARING,
       duration: 700,
@@ -784,6 +827,7 @@ function MapView({
     let isMounted = true;
 
     map.on("load", () => {
+      applyBaseMapPalette(map);
       applyMapLighting(map);
       ensureTerrainSource(map);
       add3DBuildings(map);
@@ -844,6 +888,7 @@ function MapView({
     }
 
     const applyUpdates = () => {
+      applyBaseMapPalette(map);
       applyMapLighting(map);
       add3DBuildings(map);
       applyPerspectiveMode(map, perspective);
