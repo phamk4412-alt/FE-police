@@ -1057,17 +1057,21 @@ tbody tr:hover {
 
 .sidebar-nav a.is-active,
 .sidebar-nav a.active {
-  border-color: rgba(255, 70, 85, 0.34);
+  border-color: rgba(236, 232, 225, 0.86);
+  border-left-color: var(--primary);
   color: #ffffff;
-  background: rgba(255, 70, 85, 0.14);
-  box-shadow: inset 3px 0 0 var(--primary);
+  background: rgba(255, 70, 85, 0.13);
+  box-shadow:
+    inset 4px 0 0 var(--primary),
+    0 0 0 1px rgba(255, 70, 85, 0.18),
+    0 10px 24px rgba(0, 0, 0, 0.18);
 }
 
 .sidebar-nav a.is-active .sidebar-nav-icon,
 .sidebar-nav a.active .sidebar-nav-icon {
-  border-color: rgba(255, 70, 85, 0.34);
+  border-color: rgba(255, 70, 85, 0.42);
   color: #ffffff;
-  background: rgba(255, 70, 85, 0.18);
+  background: rgba(255, 70, 85, 0.28);
 }
 
 .admin-topbar {

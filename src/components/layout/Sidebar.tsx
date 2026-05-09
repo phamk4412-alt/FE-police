@@ -15,12 +15,13 @@ function Sidebar({ isCollapsed, onToggle, role }: SidebarProps) {
   const navigate = useNavigate();
   const { signOut } = useClerk();
   const { user } = useUser();
-  const [activeAdminItem, setActiveAdminItem] = useState("dashboard");
+  const [activeAdminItem, setActiveAdminItem] = useState("");
+  const [activeRoleItem, setActiveRoleItem] = useState("");
   const hasMap = ROLES_WITH_MAP.includes(role);
   const adminMenu = [
     { id: "dashboard", href: "/admin", icon: "chart", label: "Bảng điều khiển" },
-    { id: "accounts", href: "#accounts", icon: "users", label: "Quản lý tài khoản" },
     { id: "statistics", href: "#statistics", icon: "activity", label: "Thống kê" },
+    { id: "accounts", href: "#accounts", icon: "users", label: "Quản lý tài khoản" },
     { id: "activity-log", href: "#activity-log", icon: "clock", label: "Nhật ký hoạt động" },
     { id: "settings", href: "#settings", icon: "settings", label: "Cài đặt" },
   ] as const;
@@ -89,31 +90,73 @@ function Sidebar({ isCollapsed, onToggle, role }: SidebarProps) {
           )
         ) : (
           <>
-            <NavLink to={ROLE_HOME_PATHS[role]} title="Bảng điều khiển">
+            <a
+              className={activeRoleItem === "dashboard" ? "is-active" : ""}
+              href={ROLE_HOME_PATHS[role]}
+              title="Bảng điều khiển"
+              onClick={(event) => {
+                event.preventDefault();
+                setActiveRoleItem("dashboard");
+                navigate(ROLE_HOME_PATHS[role]);
+              }}
+            >
               <span className="sidebar-nav-icon" aria-hidden="true">
-                D
+                <AdminIcon name="chart" />
               </span>
               <span className="sidebar-nav-label">Bảng điều khiển</span>
-            </NavLink>
-            <a href="#incidents" title="Báo cáo / Vụ việc">
-              <span className="sidebar-nav-icon" aria-hidden="true">
-                !
-              </span>
-              <span className="sidebar-nav-label">Báo cáo / Vụ việc</span>
             </a>
-            {hasMap ? (
-              <a href="#map" title="Bản đồ">
-                <span className="sidebar-nav-icon" aria-hidden="true">
-                  M
-                </span>
-                <span className="sidebar-nav-label">Bản đồ</span>
-              </a>
-            ) : null}
-            <a href="#account" title="Tài khoản">
+            {role === "police" && hasMap ? (
+              <>
+                <a
+                  className={activeRoleItem === "map" ? "is-active" : ""}
+                  href="#map"
+                  title="Bản đồ"
+                  onClick={() => setActiveRoleItem("map")}
+                >
+                  <span className="sidebar-nav-icon" aria-hidden="true">
+                    M
+                  </span>
+                  <span className="sidebar-nav-label">Bản đồ</span>
+                </a>
+                <a
+                  className={activeRoleItem === "incidents" ? "is-active" : ""}
+                  href="#incidents"
+                  title="Báo cáo / Vụ việc"
+                  onClick={() => setActiveRoleItem("incidents")}
+                >
+                  <span className="sidebar-nav-icon" aria-hidden="true">
+                    !
+                  </span>
+                  <span className="sidebar-nav-label">Báo cáo / Vụ việc</span>
+                </a>
+              </>
+            ) : (
+              <>
+                {hasMap ? (
+                  <a
+                    className={activeRoleItem === "map" ? "is-active" : ""}
+                    href="#map"
+                    title="Bản đồ"
+                    onClick={() => setActiveRoleItem("map")}
+                  >
+                    <span className="sidebar-nav-icon" aria-hidden="true">
+                      M
+                    </span>
+                    <span className="sidebar-nav-label">Bản đồ</span>
+                  </a>
+                ) : null}
+              </>
+            )}
+            <a
+              className={activeRoleItem === "settings" ? "is-active" : ""}
+              href="#settings"
+              title="Cài đặt"
+              onClick={() => setActiveRoleItem("settings")}
+            >
               <span className="sidebar-nav-icon" aria-hidden="true">
-                A
+                <AdminIcon name="settings" />
               </span>
-              <span className="sidebar-nav-label">Tài khoản</span>
+              <span className="sidebar-nav-label">Cài đặt</span>
             </a>
           </>
         )}
