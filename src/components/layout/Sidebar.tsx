@@ -1,6 +1,6 @@
 import { useClerk, useUser } from "@clerk/react";
 import { useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import AdminIcon from "../admin/AdminIcons";
 import type { UserRole } from "../../types/user";
 import { ROLE_HOME_PATHS, ROLES_WITH_MAP } from "../../utils/constants";
@@ -74,18 +74,22 @@ function Sidebar({ isCollapsed, onToggle, role }: SidebarProps) {
                 <span className="sidebar-nav-label">{item.label}</span>
               </a>
             ) : (
-              <NavLink
+              <a
                 className={activeAdminItem === item.id ? "is-active" : ""}
-                to={item.href}
+                href={item.href}
                 key={item.id}
                 title={item.label}
-                onClick={() => setActiveAdminItem(item.id)}
+                onClick={(event) => {
+                  event.preventDefault();
+                  setActiveAdminItem(item.id);
+                  navigate(item.href);
+                }}
               >
                 <span className="sidebar-nav-icon" aria-hidden="true">
                   <AdminIcon name={item.icon} />
                 </span>
                 <span className="sidebar-nav-label">{item.label}</span>
-              </NavLink>
+              </a>
             ),
           )
         ) : (
