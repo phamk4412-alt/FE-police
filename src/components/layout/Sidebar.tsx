@@ -1,5 +1,7 @@
 import { useClerk, useUser } from "@clerk/react";
+import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
+import AdminIcon from "../admin/AdminIcons";
 import type { UserRole } from "../../types/user";
 import { ROLE_HOME_PATHS, ROLES_WITH_MAP } from "../../utils/constants";
 
@@ -13,7 +15,15 @@ function Sidebar({ isCollapsed, onToggle, role }: SidebarProps) {
   const navigate = useNavigate();
   const { signOut } = useClerk();
   const { user } = useUser();
+  const [activeAdminItem, setActiveAdminItem] = useState("dashboard");
   const hasMap = ROLES_WITH_MAP.includes(role);
+  const adminMenu = [
+    { id: "dashboard", href: "/admin", icon: "chart", label: "Bảng điều khiển" },
+    { id: "accounts", href: "#accounts", icon: "users", label: "Quản lý tài khoản" },
+    { id: "statistics", href: "#statistics", icon: "activity", label: "Thống kê" },
+    { id: "activity-log", href: "#activity-log", icon: "clock", label: "Nhật ký hoạt động" },
+    { id: "settings", href: "#settings", icon: "settings", label: "Cài đặt" },
+  ] as const;
 
   function handleLogout() {
     const username = user?.id || user?.primaryEmailAddress?.emailAddress || user?.username;
@@ -47,32 +57,66 @@ function Sidebar({ isCollapsed, onToggle, role }: SidebarProps) {
       </div>
 
       <nav className="sidebar-nav" aria-label="Điều hướng bảng điều khiển">
-        <NavLink to={ROLE_HOME_PATHS[role]} title="Bảng điều khiển">
-          <span className="sidebar-nav-icon" aria-hidden="true">
-            D
-          </span>
-          <span className="sidebar-nav-label">Bảng điều khiển</span>
-        </NavLink>
-        <a href="#incidents" title="Báo cáo / Vụ việc">
-          <span className="sidebar-nav-icon" aria-hidden="true">
-            !
-          </span>
-          <span className="sidebar-nav-label">Báo cáo / Vụ việc</span>
-        </a>
-        {hasMap ? (
-          <a href="#map" title="Bản đồ">
-            <span className="sidebar-nav-icon" aria-hidden="true">
-              M
-            </span>
-            <span className="sidebar-nav-label">Bản đồ</span>
-          </a>
-        ) : null}
-        <a href="#account" title="Tài khoản">
-          <span className="sidebar-nav-icon" aria-hidden="true">
-            A
-          </span>
-          <span className="sidebar-nav-label">Tài khoản</span>
-        </a>
+        {role === "admin" ? (
+          adminMenu.map((item) =>
+            item.href.startsWith("#") ? (
+              <a
+                className={activeAdminItem === item.id ? "is-active" : ""}
+                href={item.href}
+                key={item.id}
+                title={item.label}
+                onClick={() => setActiveAdminItem(item.id)}
+              >
+                <span className="sidebar-nav-icon" aria-hidden="true">
+                  <AdminIcon name={item.icon} />
+                </span>
+                <span className="sidebar-nav-label">{item.label}</span>
+              </a>
+            ) : (
+              <NavLink
+                className={activeAdminItem === item.id ? "is-active" : ""}
+                to={item.href}
+                key={item.id}
+                title={item.label}
+                onClick={() => setActiveAdminItem(item.id)}
+              >
+                <span className="sidebar-nav-icon" aria-hidden="true">
+                  <AdminIcon name={item.icon} />
+                </span>
+                <span className="sidebar-nav-label">{item.label}</span>
+              </NavLink>
+            ),
+          )
+        ) : (
+          <>
+            <NavLink to={ROLE_HOME_PATHS[role]} title="Bảng điều khiển">
+              <span className="sidebar-nav-icon" aria-hidden="true">
+                D
+              </span>
+              <span className="sidebar-nav-label">Bảng điều khiển</span>
+            </NavLink>
+            <a href="#incidents" title="Báo cáo / Vụ việc">
+              <span className="sidebar-nav-icon" aria-hidden="true">
+                !
+              </span>
+              <span className="sidebar-nav-label">Báo cáo / Vụ việc</span>
+            </a>
+            {hasMap ? (
+              <a href="#map" title="Bản đồ">
+                <span className="sidebar-nav-icon" aria-hidden="true">
+                  M
+                </span>
+                <span className="sidebar-nav-label">Bản đồ</span>
+              </a>
+            ) : null}
+            <a href="#account" title="Tài khoản">
+              <span className="sidebar-nav-icon" aria-hidden="true">
+                A
+              </span>
+              <span className="sidebar-nav-label">Tài khoản</span>
+            </a>
+          </>
+        )}
       </nav>
 
       <button className="sidebar-logout" type="button" onClick={handleLogout}>
