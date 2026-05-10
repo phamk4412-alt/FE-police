@@ -585,6 +585,37 @@ textarea:focus {
   background: rgba(8, 17, 26, 0.98);
 }
 
+.cl-rootBox input,
+.cl-cardBox input,
+.cl-card input,
+.cl-modalContent input,
+.cl-userProfile-root input,
+input[class*="cl-formFieldInput"] {
+  border-color: #d1d5db !important;
+  color: #111827 !important;
+  background: #ffffff !important;
+}
+
+.cl-rootBox input::placeholder,
+.cl-cardBox input::placeholder,
+.cl-card input::placeholder,
+.cl-modalContent input::placeholder,
+.cl-userProfile-root input::placeholder,
+input[class*="cl-formFieldInput"]::placeholder {
+  color: #6b7280 !important;
+}
+
+.cl-rootBox input:focus,
+.cl-cardBox input:focus,
+.cl-card input:focus,
+.cl-modalContent input:focus,
+.cl-userProfile-root input:focus,
+input[class*="cl-formFieldInput"]:focus {
+  border-color: #111827 !important;
+  box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.14) !important;
+  background: #ffffff !important;
+}
+
 .btn {
   min-height: 44px;
   border: 1px solid transparent;
