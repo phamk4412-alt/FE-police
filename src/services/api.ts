@@ -23,8 +23,22 @@ export async function apiFetch<T>(
     let message = `API error: ${res.status}`;
 
     try {
-      const errorBody = (await res.json()) as { message?: string; Message?: string };
-      message = errorBody.message || errorBody.Message || message;
+      const errorBody = (await res.json()) as {
+        detail?: string;
+        Detail?: string;
+        message?: string;
+        Message?: string;
+        title?: string;
+        Title?: string;
+      };
+      message =
+        errorBody.message ||
+        errorBody.Message ||
+        errorBody.detail ||
+        errorBody.Detail ||
+        errorBody.title ||
+        errorBody.Title ||
+        message;
     } catch {
       message = res.statusText ? `API error: ${res.status} ${res.statusText}` : message;
     }
