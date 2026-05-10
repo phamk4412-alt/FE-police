@@ -1,69 +1,162 @@
+import { useEffect, useMemo, useState } from "react";
+import AccountCharts from "../../components/admin/AccountCharts";
+import AccountDetailModal from "../../components/admin/AccountDetailModal";
+import AccountFilters from "../../components/admin/AccountFilters";
+import AccountStatsCards from "../../components/admin/AccountStatsCards";
+import AccountTable from "../../components/admin/AccountTable";
+import { roleLabels, statusLabels } from "../../components/admin/adminAccountMeta";
 import DashboardLayout from "../../components/layout/DashboardLayout";
-import type { DashboardStat } from "../../types/common";
-
-const stats: DashboardStat[] = [
-  { label: "Tổng tài khoản", value: 128, note: "+12 trong tháng này" },
-  { label: "Tổng báo cáo", value: 342, note: "58 báo cáo chờ duyệt" },
-  { label: "Vụ việc đang xử lý", value: 27, note: "Trên 5 quận/huyện" },
-  { label: "Nhật ký hệ thống", value: 915, note: "24 giờ gần nhất" },
-];
-
-const accounts = [
-  { id: 1, username: "quan_tri", role: "Quản trị viên", status: "Đang hoạt động" },
-  { id: 2, username: "canh_sat_truc", role: "Cảnh sát", status: "Đang trực" },
-  { id: 3, username: "to_ho_tro", role: "Hỗ trợ", status: "Đang hoạt động" },
-  { id: 4, username: "nguoi_dan", role: "Người dân", status: "Đã xác minh" },
-];
+import {
+  deleteUser,
+  getUsers,
+  updateUserRole,
+  updateUserStatus,
+} from "../../services/adminUserService";
+import type { AccountSortKey, AdminUserRole, AdminUserStatus, UserAccount } from "../../types/adminUser";
 
 function AdminDashboard() {
+  const [users, setUsers] = useState<UserAccount[]>([]);
+  const [search, setSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState<AdminUserRole | "all">("all");
+  const [statusFilter, setStatusFilter] = useState<AdminUserStatus | "all">("all");
+  const [sortBy, setSortBy] = useState<AccountSortKey>("createdAt");
+  const [selectedUser, setSelectedUser] = useState<UserAccount | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    getUsers()
+      .then((data) => {
+        if (isMounted) {
+          setUsers(data);
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const filteredUsers = useMemo(() => {
+    const normalizedSearch = search.trim().toLowerCase();
+
+    return users
+      .filter((user) => {
+        const searchable = [
+          user.name,
+          user.email,
+          user.role,
+          user.status,
+          roleLabels[user.role],
+          statusLabels[user.status],
+        ]
+          .join(" ")
+          .toLowerCase();
+        const matchesSearch = !normalizedSearch || searchable.includes(normalizedSearch);
+        const matchesRole = roleFilter === "all" || user.role === roleFilter;
+        const matchesStatus = statusFilter === "all" || user.status === statusFilter;
+
+        return matchesSearch && matchesRole && matchesStatus;
+      })
+      .sort((first, second) => {
+        if (sortBy === "name") {
+          return first.name.localeCompare(second.name, "vi");
+        }
+
+        return new Date(second.createdAt).getTime() - new Date(first.createdAt).getTime();
+      });
+  }, [roleFilter, search, sortBy, statusFilter, users]);
+
+  async function handleRoleChange(userId: string, role: AdminUserRole) {
+    await updateUserRole(userId, role);
+    setUsers((current) => current.map((user) => (user.id === userId ? { ...user, role } : user)));
+    setSelectedUser((current) => (current?.id === userId ? { ...current, role } : current));
+  }
+
+  async function handleStatusToggle(user: UserAccount) {
+    const nextStatus: AdminUserStatus = user.status === "locked" ? "active" : "locked";
+
+    await updateUserStatus(user.id, nextStatus);
+    setUsers((current) =>
+      current.map((account) => (account.id === user.id ? { ...account, status: nextStatus } : account)),
+    );
+    setSelectedUser((current) => (current?.id === user.id ? { ...current, status: nextStatus } : current));
+  }
+
+  async function handleDelete(userId: string) {
+    await deleteUser(userId);
+    setUsers((current) => current.filter((user) => user.id !== userId));
+    setSelectedUser((current) => (current?.id === userId ? null : current));
+  }
+
   return (
     <DashboardLayout role="admin">
-      <section className="page-title">
-        <p className="eyebrow">Bảng điều khiển quản trị</p>
-        <h2>Tổng quan hệ thống</h2>
-        <span>Quản lý tài khoản, báo cáo, nhật ký kiểm tra và trạng thái vận hành.</span>
-      </section>
+      <section className="admin-dashboard">
+        <div className="admin-page-heading">
+          <span>Admin Dashboard</span>
+          <h2>Quản lý tài khoản và phân quyền hệ thống</h2>
+          <p>Theo dõi trạng thái tài khoản, vai trò truy cập và tăng trưởng người dùng từ một màn hình tập trung.</p>
+        </div>
 
-      <section className="stats-grid">
-        {stats.map((stat) => (
-          <article className="stat-card" key={stat.label}>
-            <span>{stat.label}</span>
-            <strong>{stat.value}</strong>
-            <small>{stat.note}</small>
+        <AccountStatsCards users={users} />
+        <AccountCharts users={users} />
+
+        <AccountFilters
+          role={roleFilter}
+          search={search}
+          sort={sortBy}
+          status={statusFilter}
+          onRoleChange={setRoleFilter}
+          onSearchChange={setSearch}
+          onSortChange={setSortBy}
+          onStatusChange={setStatusFilter}
+        />
+
+        {isLoading ? (
+          <section className="admin-panel admin-empty-state">Đang tải dữ liệu tài khoản...</section>
+        ) : (
+          <AccountTable
+            users={filteredUsers}
+            onDelete={handleDelete}
+            onRoleChange={handleRoleChange}
+            onStatusToggle={handleStatusToggle}
+            onView={setSelectedUser}
+          />
+        )}
+
+        <section className="admin-secondary-grid">
+          <article className="admin-panel" id="activity-log">
+            <div className="admin-section-heading">
+              <span>Nhật ký hoạt động</span>
+              <h2>Sự kiện quản trị gần đây</h2>
+            </div>
+            <div className="admin-log-list">
+              <p>Admin cập nhật phân quyền tài khoản cảnh sát trực.</p>
+              <p>Hệ thống ghi nhận 2 tài khoản chờ xác minh.</p>
+              <p>Chính sách khóa tài khoản được đồng bộ ở giao diện quản trị.</p>
+            </div>
           </article>
-        ))}
+          <article className="admin-panel" id="settings">
+            <div className="admin-section-heading">
+              <span>Cài đặt</span>
+              <h2>Cấu hình quản trị</h2>
+            </div>
+            <div className="admin-settings-list">
+              <span>Xác minh 2 lớp: Đang bật</span>
+              <span>Cảnh báo khóa tài khoản: Đang bật</span>
+              <span>Đồng bộ vai trò backend: Sẵn sàng tích hợp</span>
+            </div>
+          </article>
+        </section>
       </section>
 
-      <section className="panel" id="incidents">
-        <div className="section-heading">
-          <span className="eyebrow">Dữ liệu mẫu</span>
-          <h2>Tài khoản hệ thống gần đây</h2>
-        </div>
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Mã</th>
-                <th>Tên đăng nhập</th>
-                <th>Vai trò</th>
-                <th>Trạng thái</th>
-              </tr>
-            </thead>
-            <tbody>
-              {accounts.map((account) => (
-                <tr key={account.id}>
-                  <td>{account.id}</td>
-                  <td>{account.username}</td>
-                  <td>{account.role}</td>
-                  <td>
-                    <span className="status-pill">{account.status}</span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+      <AccountDetailModal user={selectedUser} onClose={() => setSelectedUser(null)} />
     </DashboardLayout>
   );
 }

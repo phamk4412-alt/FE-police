@@ -1,4 +1,5 @@
-import { Show, UserButton } from "@clerk/react";
+import { Show, UserButton, useUser } from "@clerk/react";
+import AdminIcon from "../admin/AdminIcons";
 import type { UserRole } from "../../types/user";
 import { APP_NAME, ROLE_LABELS } from "../../utils/constants";
 
@@ -9,6 +10,32 @@ interface HeaderProps {
 }
 
 function Header({ activeUserTab, onUserTabChange, role }: HeaderProps) {
+  const { user } = useUser();
+  const adminName = user?.fullName || user?.username || "Admin";
+
+  if (role === "admin") {
+    return (
+      <header className="dashboard-header admin-topbar">
+        <label className="admin-topbar-search">
+          <AdminIcon name="search" />
+          <input type="search" placeholder="Tìm kiếm tài khoản, vai trò, trạng thái..." />
+        </label>
+        <div className="dashboard-header-actions admin-topbar-actions">
+          <button className="admin-notification-button" type="button" aria-label="Thông báo">
+            <AdminIcon name="bell" />
+            <span aria-hidden="true" />
+          </button>
+          <div className="admin-profile-chip">
+            <Show when="signed-in">
+              <UserButton />
+            </Show>
+            <span>{adminName}</span>
+          </div>
+        </div>
+      </header>
+    );
+  }
+
   return (
     <header className="dashboard-header">
       <div>
