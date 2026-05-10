@@ -27,7 +27,6 @@ function Register() {
 
       <section className="login-card clerk-login-card">
         <div className="section-heading">
-          <span className="eyebrow">Clerk</span>
           <h2>Tạo tài khoản</h2>
         </div>
 

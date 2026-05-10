@@ -25,7 +25,6 @@ function Login() {
 
       <section className="login-card clerk-login-card">
         <div className="section-heading">
-          <span className="eyebrow">Clerk</span>
           <h2>Đăng nhập</h2>
         </div>
 

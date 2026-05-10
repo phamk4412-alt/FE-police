@@ -1,42 +1,68 @@
-import { adminUsers } from "../data/adminUsers";
 import type { AdminUserRole, AdminUserStatus, UserAccount } from "../types/adminUser";
+import { apiFetch } from "./api";
 
-const delay = 180;
+type ClerkAccountResponse = {
+  Id?: string;
+  Name?: string;
+  Email?: string;
+  Role?: AdminUserRole;
+  Status?: AdminUserStatus;
+  CreatedAt?: string;
+  LastLogin?: string | null;
+  RelatedCases?: number | null;
+  SubmittedReports?: number | null;
+  Note?: string | null;
+  id?: string;
+  name?: string;
+  email?: string;
+  role?: AdminUserRole;
+  status?: AdminUserStatus;
+  createdAt?: string;
+  lastLogin?: string | null;
+  relatedCases?: number | null;
+  submittedReports?: number | null;
+  note?: string | null;
+};
 
-function cloneUsers(users: UserAccount[]) {
-  return users.map((user) => ({ ...user }));
+function mapClerkAccount(account: ClerkAccountResponse): UserAccount {
+  return {
+    id: account.id || account.Id || "",
+    name: account.name || account.Name || "Chua co ten",
+    email: account.email || account.Email || "",
+    role: account.role || account.Role || "user",
+    status: account.status || account.Status || "active",
+    createdAt: account.createdAt || account.CreatedAt || new Date().toISOString(),
+    lastLogin: account.lastLogin || account.LastLogin || "",
+    relatedCases: account.relatedCases ?? account.RelatedCases ?? undefined,
+    submittedReports: account.submittedReports ?? account.SubmittedReports ?? undefined,
+    note: account.note ?? account.Note ?? undefined,
+  };
 }
 
-function resolveMock<T>(value: T): Promise<T> {
-  return new Promise((resolve) => {
-    window.setTimeout(() => resolve(value), delay);
+export async function getUsers(): Promise<UserAccount[]> {
+  const users = await apiFetch<ClerkAccountResponse[]>("/api/admin/clerk/accounts");
+  return users.map(mapClerkAccount);
+}
+
+export async function updateUserRole(userId: string, role: AdminUserRole): Promise<UserAccount> {
+  const user = await apiFetch<ClerkAccountResponse>(`/api/admin/clerk/accounts/${userId}/role`, {
+    method: "PATCH",
+    body: JSON.stringify({ role }),
   });
+  return mapClerkAccount(user);
 }
 
-export function getUsers(): Promise<UserAccount[]> {
-  return resolveMock(cloneUsers(adminUsers));
+export async function updateUserStatus(userId: string, status: AdminUserStatus): Promise<UserAccount> {
+  const user = await apiFetch<ClerkAccountResponse>(`/api/admin/clerk/accounts/${userId}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+  });
+  return mapClerkAccount(user);
 }
 
-export function updateUserRole(userId: string, role: AdminUserRole): Promise<UserAccount> {
-  const user = adminUsers.find((account) => account.id === userId);
-
-  if (!user) {
-    return Promise.reject(new Error("Khong tim thay tai khoan."));
-  }
-
-  return resolveMock({ ...user, role });
-}
-
-export function updateUserStatus(userId: string, status: AdminUserStatus): Promise<UserAccount> {
-  const user = adminUsers.find((account) => account.id === userId);
-
-  if (!user) {
-    return Promise.reject(new Error("Khong tim thay tai khoan."));
-  }
-
-  return resolveMock({ ...user, status });
-}
-
-export function deleteUser(userId: string): Promise<{ id: string }> {
-  return resolveMock({ id: userId });
+export async function deleteUser(userId: string): Promise<{ id: string }> {
+  await apiFetch<void>(`/api/admin/clerk/accounts/${userId}`, {
+    method: "DELETE",
+  });
+  return { id: userId };
 }

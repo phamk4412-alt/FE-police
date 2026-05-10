@@ -47,12 +47,7 @@ function SelectRole() {
   return (
     <main className="login-page">
       <section className="login-hero">
-        <p className="eyebrow">Clerk Authentication</p>
         <h1>Chọn vai trò tài khoản</h1>
-        <p>
-          Vai trò này quyết định dashboard được mở sau khi đăng nhập. Với hệ
-          thống thật, admin nên quản lý role trong Clerk Dashboard hoặc backend.
-        </p>
       </section>
 
       <section className="login-card">

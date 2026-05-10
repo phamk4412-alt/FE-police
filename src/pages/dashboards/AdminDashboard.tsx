@@ -22,6 +22,7 @@ function AdminDashboard() {
   const [sortBy, setSortBy] = useState<AccountSortKey>("createdAt");
   const [selectedUser, setSelectedUser] = useState<UserAccount | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
     let isMounted = true;
@@ -30,6 +31,12 @@ function AdminDashboard() {
       .then((data) => {
         if (isMounted) {
           setUsers(data);
+          setLoadError("");
+        }
+      })
+      .catch((error: unknown) => {
+        if (isMounted) {
+          setLoadError(error instanceof Error ? error.message : "Khong tai duoc tai khoan Clerk.");
         }
       })
       .finally(() => {
@@ -74,19 +81,19 @@ function AdminDashboard() {
   }, [roleFilter, search, sortBy, statusFilter, users]);
 
   async function handleRoleChange(userId: string, role: AdminUserRole) {
-    await updateUserRole(userId, role);
-    setUsers((current) => current.map((user) => (user.id === userId ? { ...user, role } : user)));
-    setSelectedUser((current) => (current?.id === userId ? { ...current, role } : current));
+    const updatedUser = await updateUserRole(userId, role);
+    setUsers((current) => current.map((user) => (user.id === userId ? updatedUser : user)));
+    setSelectedUser((current) => (current?.id === userId ? updatedUser : current));
   }
 
   async function handleStatusToggle(user: UserAccount) {
     const nextStatus: AdminUserStatus = user.status === "locked" ? "active" : "locked";
 
-    await updateUserStatus(user.id, nextStatus);
+    const updatedUser = await updateUserStatus(user.id, nextStatus);
     setUsers((current) =>
-      current.map((account) => (account.id === user.id ? { ...account, status: nextStatus } : account)),
+      current.map((account) => (account.id === user.id ? updatedUser : account)),
     );
-    setSelectedUser((current) => (current?.id === user.id ? { ...current, status: nextStatus } : current));
+    setSelectedUser((current) => (current?.id === user.id ? updatedUser : current));
   }
 
   async function handleDelete(userId: string) {
@@ -120,6 +127,8 @@ function AdminDashboard() {
 
         {isLoading ? (
           <section className="admin-panel admin-empty-state">Đang tải dữ liệu tài khoản...</section>
+        ) : loadError ? (
+          <section className="admin-panel admin-empty-state">{loadError}</section>
         ) : (
           <AccountTable
             users={filteredUsers}
