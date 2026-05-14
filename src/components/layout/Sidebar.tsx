@@ -95,44 +95,21 @@ function Sidebar({ isCollapsed, onToggle, role }: SidebarProps) {
           )
         ) : (
           <>
-            <a
-              className={
-                role === "support"
-                  ? location.pathname === "/support"
-                    ? "is-active"
-                    : ""
-                  : activeRoleItem === "dashboard"
-                    ? "is-active"
-                    : ""
-              }
-              href={ROLE_HOME_PATHS[role]}
-              title={role === "support" ? "Thường trực" : "Bảng điều khiển"}
-              onClick={(event) => {
-                event.preventDefault();
-                setActiveRoleItem("dashboard");
-                navigate(ROLE_HOME_PATHS[role]);
-              }}
-            >
-              <span className="sidebar-nav-icon" aria-hidden="true">
-                <AdminIcon name="chart" />
-              </span>
-              <span className="sidebar-nav-label">{role === "support" ? "Thường trực" : "Bảng điều khiển"}</span>
-            </a>
-            {role === "support" ? (
+            {role !== "support" ? (
               <a
-                className={location.pathname.startsWith("/support/news") ? "is-active" : ""}
-                href="/support/news"
-                title="Tin tức"
+                className={activeRoleItem === "dashboard" ? "is-active" : ""}
+                href={ROLE_HOME_PATHS[role]}
+                title="Bảng điều khiển"
                 onClick={(event) => {
                   event.preventDefault();
-                  setActiveRoleItem("news");
-                  navigate("/support/news");
+                  setActiveRoleItem("dashboard");
+                  navigate(ROLE_HOME_PATHS[role]);
                 }}
               >
                 <span className="sidebar-nav-icon" aria-hidden="true">
-                  N
+                  <AdminIcon name="chart" />
                 </span>
-                <span className="sidebar-nav-label">Tin tức</span>
+                <span className="sidebar-nav-label">Bảng điều khiển</span>
               </a>
             ) : null}
             {role === "police" && hasMap ? (
@@ -164,7 +141,15 @@ function Sidebar({ isCollapsed, onToggle, role }: SidebarProps) {
               <>
                 {hasMap ? (
                   <a
-                    className={activeRoleItem === "map" ? "is-active" : ""}
+                    className={
+                      role === "support"
+                        ? location.pathname === "/support"
+                          ? "is-active"
+                          : ""
+                        : activeRoleItem === "map"
+                          ? "is-active"
+                          : ""
+                    }
                     href="#map"
                     title="Bản đồ"
                     onClick={(event) => {

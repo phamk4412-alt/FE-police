@@ -4,13 +4,22 @@ import Header from "./Header";
 import Sidebar from "./Sidebar";
 
 interface DashboardLayoutProps {
+  activeSupportTab?: "duty" | "news";
   activeUserTab?: "home" | "map" | "news";
   children: ReactNode;
+  onSupportTabChange?: (tab: "duty" | "news") => void;
   onUserTabChange?: (tab: "home" | "map" | "news") => void;
   role: UserRole;
 }
 
-function DashboardLayout({ activeUserTab, children, onUserTabChange, role }: DashboardLayoutProps) {
+function DashboardLayout({
+  activeSupportTab,
+  activeUserTab,
+  children,
+  onSupportTabChange,
+  onUserTabChange,
+  role,
+}: DashboardLayoutProps) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   return (
@@ -21,7 +30,13 @@ function DashboardLayout({ activeUserTab, children, onUserTabChange, role }: Das
         role={role}
       />
       <div className="dashboard-main">
-        <Header activeUserTab={activeUserTab} onUserTabChange={onUserTabChange} role={role} />
+        <Header
+          activeSupportTab={activeSupportTab}
+          activeUserTab={activeUserTab}
+          onSupportTabChange={onSupportTabChange}
+          onUserTabChange={onUserTabChange}
+          role={role}
+        />
         <main className="dashboard-content">{children}</main>
       </div>
     </div>

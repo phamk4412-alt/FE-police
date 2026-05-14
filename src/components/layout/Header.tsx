@@ -5,11 +5,13 @@ import { APP_NAME, ROLE_LABELS } from "../../utils/constants";
 
 interface HeaderProps {
   activeUserTab?: "home" | "map" | "news";
+  activeSupportTab?: "duty" | "news";
+  onSupportTabChange?: (tab: "duty" | "news") => void;
   onUserTabChange?: (tab: "home" | "map" | "news") => void;
   role: UserRole;
 }
 
-function Header({ activeUserTab, onUserTabChange, role }: HeaderProps) {
+function Header({ activeSupportTab, activeUserTab, onSupportTabChange, onUserTabChange, role }: HeaderProps) {
   const { user } = useUser();
   const adminName = user?.fullName || user?.username || "Admin";
 
@@ -63,6 +65,24 @@ function Header({ activeUserTab, onUserTabChange, role }: HeaderProps) {
               className={activeUserTab === "news" ? "is-active" : ""}
               type="button"
               onClick={() => onUserTabChange("news")}
+            >
+              Tin Tức
+            </button>
+          </nav>
+        ) : null}
+        {role === "support" && activeSupportTab && onSupportTabChange ? (
+          <nav className="header-tabs" aria-label="Chuyển trang hỗ trợ">
+            <button
+              className={activeSupportTab === "duty" ? "is-active" : ""}
+              type="button"
+              onClick={() => onSupportTabChange("duty")}
+            >
+              Thường Trực
+            </button>
+            <button
+              className={activeSupportTab === "news" ? "is-active" : ""}
+              type="button"
+              onClick={() => onSupportTabChange("news")}
             >
               Tin Tức
             </button>
