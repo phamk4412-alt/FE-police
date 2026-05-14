@@ -15,6 +15,7 @@ const emptyForm: NewsPayload = {
   content: "",
   featuredOrder: null,
   isFeatured: false,
+  status: "draft",
   summary: "",
   thumbnailUrl: "",
   title: "",
@@ -30,6 +31,11 @@ function getTitle(article: NewsArticle) {
 
 function getStatus(article: NewsArticle) {
   return article.status || article.Status || "draft";
+}
+
+function getFormStatus(article: NewsArticle): NewsPayload["status"] {
+  const status = getStatus(article);
+  return status === "published" || status === "hidden" ? status : "draft";
 }
 
 function getFeaturedOrder(article: NewsArticle) {
@@ -63,6 +69,7 @@ function buildFormFromArticle(article: NewsArticle): NewsPayload {
     content: article.content || article.Content || "",
     featuredOrder: getFeaturedOrder(article),
     isFeatured: Boolean(article.isFeatured || article.IsFeatured),
+    status: getFormStatus(article),
     summary: article.summary || article.Summary || article.description || article.Description || "",
     thumbnailUrl: article.thumbnailUrl || article.ThumbnailUrl || article.imageUrl || article.ImageUrl || "",
     title: getTitle(article),
@@ -248,6 +255,19 @@ function SupportNewsManager() {
               />
             </label>
           </div>
+
+          <label className="field" htmlFor="news-status">
+            <span>Trạng thái</span>
+            <select
+              id="news-status"
+              value={form.status}
+              onChange={(event) => updateField("status", event.target.value as NewsPayload["status"])}
+            >
+              <option value="draft">draft</option>
+              <option value="published">published</option>
+              <option value="hidden">hidden</option>
+            </select>
+          </label>
 
           <div className="support-news-featured-controls">
             <label className="support-news-checkbox">

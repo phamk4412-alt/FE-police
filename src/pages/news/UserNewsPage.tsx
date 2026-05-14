@@ -100,6 +100,40 @@ function NewsSkeleton() {
   );
 }
 
+function NewsLeadPlaceholder({ isLoading }: { isLoading: boolean }) {
+  return (
+    <article className={`news-lead-story news-placeholder-card ${isLoading ? "is-loading" : ""}`}>
+      <span className="news-placeholder-image" />
+      <span className="news-kicker">{isLoading ? "Đang tải" : "Tin nổi bật"}</span>
+      <h3>{isLoading ? "Đang tải tin nổi bật..." : "Chưa có tin nổi bật"}</h3>
+      <p>{isLoading ? "Hệ thống đang lấy dữ liệu mới nhất." : "Tin nổi bật sẽ xuất hiện tại đây khi được xuất bản."}</p>
+      <time>{isLoading ? "Vui lòng chờ" : "Chưa có thời gian đăng"}</time>
+    </article>
+  );
+}
+
+function NewsSmallPlaceholder({ index, isLoading }: { index: number; isLoading: boolean }) {
+  return (
+    <article className={`news-secondary-story news-placeholder-card ${isLoading ? "is-loading" : ""}`}>
+      <span className="news-placeholder-image" />
+      <strong>{isLoading ? "Đang tải tin..." : `Khung tin nổi bật ${index}`}</strong>
+      <time>{isLoading ? "Đang cập nhật" : "Chưa có dữ liệu"}</time>
+    </article>
+  );
+}
+
+function LatestPlaceholder({ index, isLoading }: { index: number; isLoading: boolean }) {
+  return (
+    <article className={`news-latest-item news-placeholder-card ${isLoading ? "is-loading" : ""}`}>
+      <span className="news-latest-dot" aria-hidden="true" />
+      <span className="news-latest-copy">
+        <strong>{isLoading ? "Đang tải bản tin..." : `Vị trí tin thời gian qua ${index}`}</strong>
+        <small>{isLoading ? "Đang cập nhật" : "Chưa có tin tức."}</small>
+      </span>
+    </article>
+  );
+}
+
 interface UserNewsPageProps {
   articleId?: string;
 }
@@ -124,29 +158,33 @@ function UserNewsPage({ articleId }: UserNewsPageProps) {
         setError("");
       }
 
-      try {
-        const [newsResult, featuredResult, eventResult] = await Promise.all([
-          getNews(),
-          getFeaturedNews(),
-          getUpcomingEvents(),
-        ]);
+      const [newsResult, featuredResult, eventResult] = await Promise.allSettled([
+        getNews(),
+        getFeaturedNews(),
+        getUpcomingEvents(),
+      ]);
 
-        if (!isMounted) {
-          return;
-        }
-
-        setArticles(newsResult);
-        setFeatured(featuredResult);
-        setEvents(eventResult);
-      } catch (fetchError) {
-        if (isMounted) {
-          setError(fetchError instanceof Error ? fetchError.message : "Không thể tải tin tức.");
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
+      if (!isMounted) {
+        return;
       }
+
+      if (newsResult.status === "fulfilled") {
+        setArticles(newsResult.value);
+      }
+
+      if (featuredResult.status === "fulfilled") {
+        setFeatured(featuredResult.value);
+      }
+
+      if (eventResult.status === "fulfilled") {
+        setEvents(eventResult.value);
+      }
+
+      if (newsResult.status === "rejected" || featuredResult.status === "rejected") {
+        setError("Không thể tải đầy đủ tin tức. Bố cục vẫn được giữ để theo dõi sự kiện.");
+      }
+
+      setIsLoading(false);
     }
 
     void loadNews();
@@ -222,6 +260,15 @@ function UserNewsPage({ articleId }: UserNewsPageProps) {
     [events],
   );
 
+  const alertItems = useMemo(() => {
+    const source = otherArticles.length ? otherArticles : sortedArticles;
+    return source.slice(0, 4).map((article) => ({
+      category: getCategory(article),
+      title: getTitle(article),
+      time: formatDateTime(getPublishedAt(article)),
+    }));
+  }, [otherArticles, sortedArticles]);
+
   if (articleId) {
     const loadedDetail = detail && getArticleId(detail) === articleId ? detail : null;
     const article = loadedDetail || sortedArticles.find((item) => getArticleId(item) === articleId);
@@ -272,74 +319,119 @@ function UserNewsPage({ articleId }: UserNewsPageProps) {
         <span>Cập nhật nhanh các tin đáng chú ý trong ngày.</span>
       </div>
 
-      {isLoading ? <NewsSkeleton /> : null}
       {error ? <div className="news-empty-state">{error}</div> : null}
-      {!isLoading && !error && !sortedArticles.length ? <div className="news-empty-state">Chưa có tin tức.</div> : null}
 
-      {!isLoading && !error && sortedArticles.length ? (
-        <div className="newspaper-layout">
-          <aside className="news-latest-column">
-            <div className="news-column-heading">
-              <span>Tin thời gian qua</span>
-            </div>
-            <div className="news-latest-list">
-              {otherArticles.map((article) => (
-                <Link className="news-latest-item" to={`/user/news/${getArticleId(article)}`} key={getArticleId(article)}>
-                  <img src={getArticleImage(article)} alt={getTitle(article)} />
-                  <span>
-                    <strong>{getTitle(article)}</strong>
-                    <small>{getCategory(article)} · {formatDateTime(getPublishedAt(article))}</small>
-                  </span>
-                </Link>
-              ))}
-              {!otherArticles.length ? <div className="news-empty-state compact">Chưa có tin khác.</div> : null}
-            </div>
-          </aside>
+      <div className="newspaper-layout">
+        <aside className="news-latest-column">
+          <div className="news-column-heading">
+            <span>Tin thời gian qua</span>
+          </div>
+          <div className="news-latest-list">
+            {otherArticles.length
+              ? otherArticles.map((article) => (
+                  <Link className="news-latest-item" to={`/user/news/${getArticleId(article)}`} key={getArticleId(article)}>
+                    <span className="news-latest-dot" aria-hidden="true" />
+                    <span className="news-latest-copy">
+                      <strong>{getTitle(article)}</strong>
+                      <small>
+                        <time>{formatDateTime(getPublishedAt(article))}</time>
+                        <em>{getCategory(article)}</em>
+                      </small>
+                    </span>
+                  </Link>
+                ))
+              : Array.from({ length: 6 }).map((_, index) => (
+                  <LatestPlaceholder index={index + 1} isLoading={isLoading} key={index} />
+                ))}
+          </div>
+        </aside>
 
-          <section className="news-featured-column">
-            <div className="news-column-heading">
-              <span>Tin nổi bật</span>
-            </div>
-            {featuredArticles[0] ? (
-              <Link className="news-lead-story" to={`/user/news/${getArticleId(featuredArticles[0])}`}>
-                <img src={getArticleImage(featuredArticles[0])} alt={getTitle(featuredArticles[0])} />
-                <span className="news-kicker">{getCategory(featuredArticles[0])}</span>
-                <h3>{getTitle(featuredArticles[0])}</h3>
-                <p>{getSummary(featuredArticles[0])}</p>
-                <time>{formatDateTime(getPublishedAt(featuredArticles[0]))}</time>
-              </Link>
-            ) : null}
-            <div className="news-secondary-grid">
-              {featuredArticles.slice(1, 4).map((article) => (
+        <section className="news-featured-column">
+          <div className="news-column-heading">
+            <span>Tin nổi bật</span>
+          </div>
+          {featuredArticles[0] ? (
+            <Link className="news-lead-story" to={`/user/news/${getArticleId(featuredArticles[0])}`}>
+              <img src={getArticleImage(featuredArticles[0])} alt={getTitle(featuredArticles[0])} />
+              <span className="news-kicker">{getCategory(featuredArticles[0])}</span>
+              <h3>{getTitle(featuredArticles[0])}</h3>
+              <p>{getSummary(featuredArticles[0])}</p>
+              <time>{formatDateTime(getPublishedAt(featuredArticles[0]))}</time>
+            </Link>
+          ) : (
+            <NewsLeadPlaceholder isLoading={isLoading} />
+          )}
+          <div className="news-secondary-grid">
+            {Array.from({ length: 3 }).map((_, index) => {
+              const article = featuredArticles[index + 1];
+
+              return article ? (
                 <Link className="news-secondary-story" to={`/user/news/${getArticleId(article)}`} key={getArticleId(article)}>
                   <img src={getArticleImage(article)} alt={getTitle(article)} />
                   <strong>{getTitle(article)}</strong>
                   <time>{formatDateTime(getPublishedAt(article))}</time>
                 </Link>
-              ))}
-            </div>
-          </section>
+              ) : (
+                <NewsSmallPlaceholder index={index + 2} isLoading={isLoading} key={index} />
+              );
+            })}
+          </div>
+        </section>
 
-          <aside className="news-events-column">
+        <aside className="news-events-column">
+          <div className="news-side-section news-event-section">
             <div className="news-column-heading">
               <span>Sự kiện Việt Nam</span>
             </div>
             <div className="national-event-list">
-              {sortedEvents.map((event) => (
-                <article className="national-event-card" key={`${getEventName(event)}-${getEventDate(event)}`}>
-                  <span>{getDaysRemaining(event)}</span>
-                  <div>
-                    <strong>{getEventName(event)}</strong>
-                    <small>{formatDateTime(getEventDate(event)).replace(" lúc 00:00", "")}</small>
-                    <em>Còn {getDaysRemaining(event)} ngày</em>
-                  </div>
-                </article>
-              ))}
-              {!sortedEvents.length ? <div className="news-empty-state compact">Chưa có sự kiện sắp tới.</div> : null}
+              {sortedEvents.length
+                ? sortedEvents.slice(0, 2).map((event) => (
+                    <article className="national-event-card" key={`${getEventName(event)}-${getEventDate(event)}`}>
+                      <span>{getDaysRemaining(event)}</span>
+                      <div>
+                        <strong>{getEventName(event)}</strong>
+                        <small>{formatDateTime(getEventDate(event)).replace(" lúc 00:00", "")}</small>
+                        <em>Còn {getDaysRemaining(event)} ngày</em>
+                      </div>
+                    </article>
+                  ))
+                : Array.from({ length: 2 }).map((_, index) => (
+                    <article className={`national-event-card news-placeholder-card ${isLoading ? "is-loading" : ""}`} key={index}>
+                      <span>--</span>
+                      <div>
+                        <strong>{isLoading ? "Đang tải sự kiện..." : "Chưa có sự kiện"}</strong>
+                        <small>{isLoading ? "Đang cập nhật ngày diễn ra" : "API chưa trả dữ liệu."}</small>
+                        <em>{isLoading ? "Đang tính countdown" : "Còn -- ngày"}</em>
+                      </div>
+                    </article>
+                  ))}
             </div>
-          </aside>
-        </div>
-      ) : null}
+          </div>
+
+          <div className="news-side-section news-alert-section">
+            <div className="news-column-heading">
+              <span>Thông báo / Cảnh báo</span>
+            </div>
+            <div className="news-alert-list">
+              {alertItems.length
+                ? alertItems.map((item, index) => (
+                    <article className="news-alert-card" key={`${item.title}-${index}`}>
+                      <span>{item.category}</span>
+                      <strong>{item.title}</strong>
+                      <small>{item.time}</small>
+                    </article>
+                  ))
+                : Array.from({ length: 4 }).map((_, index) => (
+                    <article className={`news-alert-card news-placeholder-card ${isLoading ? "is-loading" : ""}`} key={index}>
+                      <span>{isLoading ? "Đang tải" : "Thông báo"}</span>
+                      <strong>{isLoading ? "Đang tải cảnh báo..." : "Chưa có thông báo mới"}</strong>
+                      <small>{isLoading ? "Đang cập nhật" : "Theo dõi tại đây khi có dữ liệu."}</small>
+                  </article>
+                ))}
+            </div>
+          </div>
+        </aside>
+      </div>
     </section>
   );
 }

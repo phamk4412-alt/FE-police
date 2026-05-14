@@ -50,6 +50,7 @@ export interface NewsPayload {
   content: string;
   thumbnailUrl: string;
   category: string;
+  status: "draft" | "published" | "hidden";
   isFeatured: boolean;
   featuredOrder: number | null;
 }
