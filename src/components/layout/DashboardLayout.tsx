@@ -4,9 +4,9 @@ import Header from "./Header";
 import Sidebar from "./Sidebar";
 
 interface DashboardLayoutProps {
-  activeUserTab?: "home" | "map";
+  activeUserTab?: "home" | "map" | "news";
   children: ReactNode;
-  onUserTabChange?: (tab: "home" | "map") => void;
+  onUserTabChange?: (tab: "home" | "map" | "news") => void;
   role: UserRole;
 }
 

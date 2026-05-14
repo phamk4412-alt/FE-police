@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import Button from "../../components/common/Button";
 import DashboardLayout from "../../components/layout/DashboardLayout";
 import MapView from "../../components/map/MapView";
+import UserNewsPage from "../news/UserNewsPage";
 import { createIncidentWithImages } from "../../services/userService";
 
 const MAX_IMAGES = 3;
@@ -33,6 +35,8 @@ function buildIncidentTitle(category: string, description: string) {
 }
 
 function UserDashboard() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const cameraInputRef = useRef<HTMLInputElement | null>(null);
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -57,6 +61,23 @@ function UserDashboard() {
   const isOtherCategory = category === "Khác";
   const normalizedCustomCategory = customCategory.trim();
   const titleCategory = isOtherCategory && normalizedCustomCategory ? normalizedCustomCategory : category;
+  const newsMatch = location.pathname.match(/^\/user\/news\/?([^/]*)?/);
+  const isNewsRoute = location.pathname.startsWith("/user/news");
+  const activeUserTab = isNewsRoute ? "news" : tab;
+  const newsArticleId = newsMatch?.[1] ? decodeURIComponent(newsMatch[1]) : undefined;
+
+  function handleUserTabChange(nextTab: "home" | "map" | "news") {
+    if (nextTab === "news") {
+      navigate("/user/news");
+      return;
+    }
+
+    if (isNewsRoute) {
+      navigate("/user");
+    }
+
+    setTab(nextTab);
+  }
 
   useEffect(() => {
     setCanUseLiveCamera(
@@ -266,8 +287,10 @@ function UserDashboard() {
   }
 
   return (
-    <DashboardLayout activeUserTab={tab} onUserTabChange={setTab} role="user">
-      {tab === "home" ? (
+    <DashboardLayout activeUserTab={activeUserTab} onUserTabChange={handleUserTabChange} role="user">
+      {isNewsRoute ? (
+        <UserNewsPage articleId={newsArticleId} />
+      ) : tab === "home" ? (
         <>
           <section className="page-title citizen-title">
             <p className="eyebrow">Người dân</p>

@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import DashboardLayout from "../../components/layout/DashboardLayout";
 import MapView from "../../components/map/MapView";
+import SupportNewsManager from "../news/SupportNewsManager";
 import { API_URL } from "../../services/api";
 import type { Incident, IncidentSeverity } from "../../types/incident";
 import { loadSupportCases, saveSupportCases } from "../../utils/supportCasesStorage";
@@ -83,6 +85,7 @@ function updateIncidentStatus(incident: Incident, status: string): Incident {
 }
 
 function SupportDashboard() {
+  const location = useLocation();
   const [incidents, setIncidents] = useState<Incident[]>(loadSupportCases);
   const [selectedIncidentId, setSelectedIncidentId] = useState("");
   const [statusByIncident, setStatusByIncident] = useState<Record<string, string>>({});
@@ -143,6 +146,10 @@ function SupportDashboard() {
 
   return (
     <DashboardLayout role="support">
+      {location.pathname.startsWith("/support/news") ? (
+        <SupportNewsManager />
+      ) : (
+      <>
       <section className="page-title support-title">
         <p className="eyebrow">Hỗ trợ hiện trường</p>
         <h2>Tiếp nhận và xử lý báo cáo</h2>
@@ -316,6 +323,8 @@ function SupportDashboard() {
           <img src={previewImage} alt="Ảnh hiện trường phóng to" />
         </div>
       ) : null}
+      </>
+      )}
     </DashboardLayout>
   );
 }
