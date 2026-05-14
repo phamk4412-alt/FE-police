@@ -1,6 +1,6 @@
 import { useClerk, useUser } from "@clerk/react";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import AdminIcon from "../admin/AdminIcons";
 import type { UserRole } from "../../types/user";
 import { ROLE_HOME_PATHS, ROLES_WITH_MAP } from "../../utils/constants";
@@ -13,6 +13,7 @@ interface SidebarProps {
 
 function Sidebar({ isCollapsed, onToggle, role }: SidebarProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { signOut } = useClerk();
   const { user } = useUser();
   const [activeAdminItem, setActiveAdminItem] = useState("");
@@ -94,21 +95,23 @@ function Sidebar({ isCollapsed, onToggle, role }: SidebarProps) {
           )
         ) : (
           <>
-            <a
-              className={activeRoleItem === "dashboard" ? "is-active" : ""}
-              href={ROLE_HOME_PATHS[role]}
-              title="Bảng điều khiển"
-              onClick={(event) => {
-                event.preventDefault();
-                setActiveRoleItem("dashboard");
-                navigate(ROLE_HOME_PATHS[role]);
-              }}
-            >
-              <span className="sidebar-nav-icon" aria-hidden="true">
-                <AdminIcon name="chart" />
-              </span>
-              <span className="sidebar-nav-label">Bảng điều khiển</span>
-            </a>
+            {role !== "support" ? (
+              <a
+                className={activeRoleItem === "dashboard" ? "is-active" : ""}
+                href={ROLE_HOME_PATHS[role]}
+                title="Bảng điều khiển"
+                onClick={(event) => {
+                  event.preventDefault();
+                  setActiveRoleItem("dashboard");
+                  navigate(ROLE_HOME_PATHS[role]);
+                }}
+              >
+                <span className="sidebar-nav-icon" aria-hidden="true">
+                  <AdminIcon name="chart" />
+                </span>
+                <span className="sidebar-nav-label">Bảng điều khiển</span>
+              </a>
+            ) : null}
             {role === "police" && hasMap ? (
               <>
                 <a
@@ -138,10 +141,24 @@ function Sidebar({ isCollapsed, onToggle, role }: SidebarProps) {
               <>
                 {hasMap ? (
                   <a
-                    className={activeRoleItem === "map" ? "is-active" : ""}
+                    className={
+                      role === "support"
+                        ? location.pathname === "/support"
+                          ? "is-active"
+                          : ""
+                        : activeRoleItem === "map"
+                          ? "is-active"
+                          : ""
+                    }
                     href="#map"
                     title="Bản đồ"
-                    onClick={() => setActiveRoleItem("map")}
+                    onClick={(event) => {
+                      if (role === "support") {
+                        event.preventDefault();
+                        navigate("/support");
+                      }
+                      setActiveRoleItem("map");
+                    }}
                   >
                     <span className="sidebar-nav-icon" aria-hidden="true">
                       M

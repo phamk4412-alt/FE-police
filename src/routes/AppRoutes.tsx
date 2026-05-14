@@ -33,7 +33,7 @@ function AppRoutes() {
           }
         />
         <Route
-          path="/user"
+          path="/user/*"
           element={
             <ProtectedRoute allowedRoles={["user"]}>
               <UserDashboard />
@@ -41,15 +41,7 @@ function AppRoutes() {
           }
         />
         <Route
-          path="/news"
-          element={
-            <ProtectedRoute allowedRoles={["user"]}>
-              <UserDashboard initialTab="news" />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/support"
+          path="/support/*"
           element={
             <ProtectedRoute allowedRoles={["support"]}>
               <SupportDashboard />

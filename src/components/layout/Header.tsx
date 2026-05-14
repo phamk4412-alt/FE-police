@@ -5,11 +5,13 @@ import { APP_NAME, ROLE_LABELS } from "../../utils/constants";
 
 interface HeaderProps {
   activeUserTab?: "home" | "map" | "news";
+  activeSupportTab?: "duty" | "news";
+  onSupportTabChange?: (tab: "duty" | "news") => void;
   onUserTabChange?: (tab: "home" | "map" | "news") => void;
   role: UserRole;
 }
 
-function Header({ activeUserTab, onUserTabChange, role }: HeaderProps) {
+function Header({ activeSupportTab, activeUserTab, onSupportTabChange, onUserTabChange, role }: HeaderProps) {
   const { user } = useUser();
   const adminName = user?.fullName || user?.username || "Admin";
 
@@ -18,10 +20,10 @@ function Header({ activeUserTab, onUserTabChange, role }: HeaderProps) {
       <header className="dashboard-header admin-topbar">
         <label className="admin-topbar-search">
           <AdminIcon name="search" />
-          <input type="search" placeholder="Tìm kiếm tài khoản, vai trò, trạng thái..." />
+          <input type="search" placeholder="Tim kiem tai khoan, vai tro, trang thai..." />
         </label>
         <div className="dashboard-header-actions admin-topbar-actions">
-          <button className="admin-notification-button" type="button" aria-label="Thông báo">
+          <button className="admin-notification-button" type="button" aria-label="Thong bao">
             <AdminIcon name="bell" />
             <span aria-hidden="true" />
           </button>
@@ -39,32 +41,50 @@ function Header({ activeUserTab, onUserTabChange, role }: HeaderProps) {
   return (
     <header className="dashboard-header">
       <div>
-        <p className="eyebrow">Dự án Cảnh sát</p>
+        <p className="eyebrow">Du an Canh sat</p>
         <h1>{APP_NAME}</h1>
       </div>
       <div className="dashboard-header-actions">
         {role === "user" && activeUserTab && onUserTabChange ? (
-          <nav className="header-tabs" aria-label="Chuyển trang người dân">
+          <nav className="header-tabs" aria-label="Chuyen trang nguoi dan">
             <button
               className={activeUserTab === "home" ? "is-active" : ""}
               type="button"
               onClick={() => onUserTabChange("home")}
             >
-              Trang Chủ
+              Trang Chu
             </button>
             <button
               className={activeUserTab === "map" ? "is-active" : ""}
               type="button"
               onClick={() => onUserTabChange("map")}
             >
-              Bản Đồ
+              Ban Do
             </button>
             <button
               className={activeUserTab === "news" ? "is-active" : ""}
               type="button"
               onClick={() => onUserTabChange("news")}
             >
-              Tin tức
+              Tin Tuc
+            </button>
+          </nav>
+        ) : null}
+        {role === "support" && activeSupportTab && onSupportTabChange ? (
+          <nav className="header-tabs" aria-label="Chuyen trang ho tro">
+            <button
+              className={activeSupportTab === "duty" ? "is-active" : ""}
+              type="button"
+              onClick={() => onSupportTabChange("duty")}
+            >
+              Thuong Truc
+            </button>
+            <button
+              className={activeSupportTab === "news" ? "is-active" : ""}
+              type="button"
+              onClick={() => onSupportTabChange("news")}
+            >
+              Tin Tuc
             </button>
           </nav>
         ) : null}
