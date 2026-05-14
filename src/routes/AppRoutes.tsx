@@ -41,6 +41,14 @@ function AppRoutes() {
           }
         />
         <Route
+          path="/news"
+          element={
+            <ProtectedRoute allowedRoles={["user"]}>
+              <UserDashboard initialTab="news" />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/support"
           element={
             <ProtectedRoute allowedRoles={["support"]}>

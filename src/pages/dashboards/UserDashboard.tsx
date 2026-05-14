@@ -32,13 +32,19 @@ function buildIncidentTitle(category: string, description: string) {
   return summary ? `${category} - ${summary}` : category;
 }
 
-function UserDashboard() {
+type UserDashboardTab = "home" | "map" | "news";
+
+interface UserDashboardProps {
+  initialTab?: UserDashboardTab;
+}
+
+function UserDashboard({ initialTab = "home" }: UserDashboardProps) {
   const cameraInputRef = useRef<HTMLInputElement | null>(null);
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const [tab, setTab] = useState<"home" | "map">("home");
+  const [tab, setTab] = useState<UserDashboardTab>(initialTab);
   const [category, setCategory] = useState("Trộm cắp");
   const [customCategory, setCustomCategory] = useState("");
   const [description, setDescription] = useState("");
@@ -444,7 +450,7 @@ function UserDashboard() {
             </article>
           </section>
         </>
-      ) : (
+      ) : tab === "map" ? (
         <>
           <section className="page-title citizen-title">
             <p className="eyebrow">Bản đồ TP.HCM</p>
@@ -462,6 +468,33 @@ function UserDashboard() {
               title="Bản đồ an ninh 3D"
               variant="full"
             />
+          </section>
+        </>
+      ) : (
+        <>
+          <section className="page-title citizen-title">
+            <p className="eyebrow">Tin tức</p>
+            <h2>Tin tức và cảnh báo an ninh</h2>
+            <span>Cập nhật nhanh các cảnh báo cần lưu ý trong khu vực.</span>
+          </section>
+
+          <section className="panel news-panel">
+            <article>
+              <strong>Trộm cắp - Quận 5</strong>
+              <span>Người dân nên khóa cổ xe, không để tài sản có giá trị trong cốp xe và chủ động báo tin khi thấy dấu hiệu bất thường.</span>
+            </article>
+            <article>
+              <strong>Tai nạn giao thông - Quận 1</strong>
+              <span>Một số tuyến trung tâm có thể ùn ứ trong giờ cao điểm. Hãy chọn lộ trình thay thế và giữ khoảng cách an toàn.</span>
+            </article>
+            <article>
+              <strong>Cảnh báo lừa đảo trực tuyến</strong>
+              <span>Không cung cấp mã OTP, thông tin ngân hàng hoặc chuyển tiền theo yêu cầu từ các cuộc gọi mạo danh cơ quan chức năng.</span>
+            </article>
+            <article>
+              <strong>Gây rối trật tự - Bình Thạnh</strong>
+              <span>Khi phát hiện tụ tập gây mất an ninh, hãy giữ khoảng cách, ghi nhận vị trí và gửi báo cáo qua hệ thống.</span>
+            </article>
           </section>
         </>
       )}

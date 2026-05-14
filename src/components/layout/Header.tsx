@@ -4,8 +4,8 @@ import type { UserRole } from "../../types/user";
 import { APP_NAME, ROLE_LABELS } from "../../utils/constants";
 
 interface HeaderProps {
-  activeUserTab?: "home" | "map";
-  onUserTabChange?: (tab: "home" | "map") => void;
+  activeUserTab?: "home" | "map" | "news";
+  onUserTabChange?: (tab: "home" | "map" | "news") => void;
   role: UserRole;
 }
 
@@ -58,6 +58,13 @@ function Header({ activeUserTab, onUserTabChange, role }: HeaderProps) {
               onClick={() => onUserTabChange("map")}
             >
               Bản Đồ
+            </button>
+            <button
+              className={activeUserTab === "news" ? "is-active" : ""}
+              type="button"
+              onClick={() => onUserTabChange("news")}
+            >
+              Tin tức
             </button>
           </nav>
         ) : null}
