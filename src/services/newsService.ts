@@ -38,7 +38,19 @@ export async function getUpcomingEvents() {
 }
 
 export async function getSupportNews() {
-  return unwrapList(await apiFetch<NewsArticle[] | { data?: NewsArticle[]; Data?: NewsArticle[]; items?: NewsArticle[]; Items?: NewsArticle[] }>("/api/support/news"));
+  try {
+    return unwrapList(
+      await apiFetch<
+        NewsArticle[] | { data?: NewsArticle[]; Data?: NewsArticle[]; items?: NewsArticle[]; Items?: NewsArticle[] }
+      >("/api/support/news"),
+    );
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("401")) {
+      return getNews();
+    }
+
+    throw error;
+  }
 }
 
 export function createSupportNews(payload: NewsPayload) {

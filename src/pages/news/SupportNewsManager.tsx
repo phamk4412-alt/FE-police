@@ -1,6 +1,4 @@
-import { useClerk } from "@clerk/react";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   createSupportNews,
   deleteSupportNews,
@@ -99,7 +97,7 @@ function getFriendlyError(error: unknown) {
   const lower = message.toLowerCase();
 
   if (message.includes("401")) {
-    return "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
+    return "API tin tức chưa xác thực được quyền hỗ trợ. Bạn vẫn đang đăng nhập, vui lòng thử lại sau.";
   }
 
   if (message.includes("403")) {
@@ -117,10 +115,6 @@ function getFriendlyError(error: unknown) {
   return "Không thể hoàn tất thao tác. Vui lòng thử lại.";
 }
 
-function shouldRedirectToLogin(error: unknown) {
-  return toTechnicalMessage(error).includes("401");
-}
-
 function buildFormFromArticle(article: NewsArticle): NewsPayload {
   return {
     category: getCategory(article),
@@ -135,8 +129,6 @@ function buildFormFromArticle(article: NewsArticle): NewsPayload {
 }
 
 function SupportNewsManager() {
-  const { signOut } = useClerk();
-  const navigate = useNavigate();
   const [articles, setArticles] = useState<NewsArticle[]>([]);
   const [form, setForm] = useState<NewsPayload>(emptyForm);
   const [editingId, setEditingId] = useState("");
@@ -186,12 +178,6 @@ function SupportNewsManager() {
   function handleApiError(error: unknown) {
     console.error("Support news API error", error);
     showToast(getFriendlyError(error), "error");
-
-    if (shouldRedirectToLogin(error)) {
-      window.setTimeout(() => {
-        void signOut(() => navigate("/login", { replace: true }));
-      }, 1200);
-    }
   }
 
   function reloadNews() {
