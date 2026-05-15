@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useUser } from "@clerk/react";
 import Button from "../../components/common/Button";
+import VietnameseDecor from "../../components/common/VietnameseDecor";
 import { getClerkUserRole } from "../../utils/clerkRole";
 import { ROLE_HOME_PATHS, ROLE_LABELS } from "../../utils/constants";
 import type { UserRole } from "../../types/user";
@@ -46,6 +47,7 @@ function SelectRole() {
 
   return (
     <main className="login-page">
+      <VietnameseDecor variant="auth" />
       <section className="login-hero">
         <h1>Chọn vai trò tài khoản</h1>
       </section>

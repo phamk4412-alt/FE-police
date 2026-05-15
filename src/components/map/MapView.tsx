@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useUser } from "@clerk/react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
@@ -7,10 +7,12 @@ import policeStationLogo from "../../assets/logos/police-station-logo.svg";
 import { API_URL, apiFetch } from "../../services/api";
 import type { Incident } from "../../types/incident";
 import {
+  getIncidentCategory,
   getIncidentCoordinates,
   getIncidentCreatedAt,
   getIncidentId,
   getIncidentLocation,
+  getIncidentReporterName,
   getIncidentSeverity,
   getIncidentStatus,
   getIncidentTitle,
@@ -24,6 +26,7 @@ type MapRole = "user" | "support" | "police";
 type PerspectiveMode = "2d" | "3d";
 type BoundaryGeoJson = GeoJSON.FeatureCollection<GeoJSON.Geometry, Record<string, unknown>>;
 type CrimeFeatureCollection = GeoJSON.FeatureCollection<GeoJSON.Point, Record<string, unknown>>;
+type RouteFeatureCollection = GeoJSON.FeatureCollection<GeoJSON.LineString | GeoJSON.Point, Record<string, unknown>>;
 
 interface MapViewProps {
   center?: [number, number];
@@ -70,6 +73,17 @@ interface FacilityMarker {
   type: FacilityType;
 }
 
+interface DirectionsRoute {
+  destination: [number, number];
+  geometry: GeoJSON.LineString;
+  origin: [number, number];
+}
+
+type DirectionsTarget = {
+  coordinates: [number, number];
+  label?: string;
+};
+
 interface OverpassElement {
   center?: { lat: number; lon: number };
   lat?: number;
@@ -88,6 +102,9 @@ const CRIME_SOURCE_ID = "crime-data";
 const CRIME_HEAT_LAYER_ID = "crime-heatmap-layer";
 const CRIME_POINT_LAYER_ID = "crime-point-layer";
 const INCIDENT_MARKER_LAYER_ID = "incident-marker-layer";
+const DIRECTIONS_SOURCE_ID = "active-directions-route";
+const DIRECTIONS_LINE_LAYER_ID = "active-directions-route-line";
+const DIRECTIONS_POINT_LAYER_ID = "active-directions-route-points";
 const BUILDING_LAYER_ID = "3d-buildings";
 const MAPBOX_TERRAIN_SOURCE_ID = "mapbox-dem";
 const MAPBOX_LIGHT_PALETTE = {
@@ -254,13 +271,111 @@ function createFacilityMarker({ logo, name, type }: FacilityMarker) {
   return markerElement;
 }
 
-function createFacilityPopup({ address, name, type }: FacilityMarker) {
+function getFacilityTypeLabel(type: FacilityType) {
+  return type === "hospital" ? "Bệnh viện" : "Công An";
+}
+
+function calculateDistanceMeters(from: [number, number], to: [number, number]) {
+  const earthRadiusMeters = 6371000;
+  const fromLat = (from[1] * Math.PI) / 180;
+  const toLat = (to[1] * Math.PI) / 180;
+  const deltaLat = ((to[1] - from[1]) * Math.PI) / 180;
+  const deltaLng = ((to[0] - from[0]) * Math.PI) / 180;
+  const a =
+    Math.sin(deltaLat / 2) ** 2 +
+    Math.cos(fromLat) * Math.cos(toLat) * Math.sin(deltaLng / 2) ** 2;
+  return earthRadiusMeters * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function formatDistance(distanceMeters?: number) {
+  if (typeof distanceMeters !== "number" || !Number.isFinite(distanceMeters)) {
+    return "Chưa có vị trí hiện tại";
+  }
+
+  return distanceMeters >= 1000 ? `${(distanceMeters / 1000).toFixed(1)} km` : `${Math.round(distanceMeters)} m`;
+}
+
+function formatPopupDateTime(value: string) {
+  if (!value) {
+    return "Chưa rõ";
+  }
+
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("vi-VN", {
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(date);
+}
+
+function appendPopupRow(container: HTMLElement, label: string, value: string) {
+  const row = document.createElement("div");
+  const labelElement = document.createElement("span");
+  const valueElement = document.createElement("strong");
+  labelElement.textContent = label;
+  valueElement.textContent = value || "Chưa rõ";
+  row.append(labelElement, valueElement);
+  container.appendChild(row);
+}
+
+function appendSeverityPopupRow(container: HTMLElement, severity: ReturnType<typeof getIncidentSeverity>) {
+  const row = document.createElement("div");
+  row.className = "incident-popup-severity-row";
+  const labelElement = document.createElement("span");
+  const valueElement = document.createElement("strong");
+  labelElement.textContent = "Mức độ";
+  valueElement.className = `incident-popup-severity-badge incident-popup-severity-${severity}`;
+  valueElement.textContent = getSeverityLabel(severity);
+  row.append(labelElement, valueElement);
+  container.appendChild(row);
+}
+
+function createFacilityPopup(
+  facility: FacilityMarker,
+  distanceMeters?: number,
+  onDirections?: (facility: FacilityMarker) => void,
+) {
+  const { address, name, type } = facility;
   const popupContent = document.createElement("div");
-  popupContent.className = "facility-popup";
-  popupContent.innerHTML = `<strong></strong><span></span><small></small>`;
-  popupContent.querySelector("strong")!.textContent = name;
-  popupContent.querySelector("span")!.textContent = type === "hospital" ? "Bệnh viện" : "Công an";
-  popupContent.querySelector("small")!.textContent = address;
+  popupContent.className = `facility-popup facility-popup-${type}`;
+
+  const title = document.createElement("strong");
+  title.className = "facility-popup-title";
+  title.textContent = name;
+
+  const body = document.createElement("div");
+  body.className = "map-popup-body";
+  const details = document.createElement("div");
+  details.className = "facility-popup-details";
+  appendPopupRow(details, "Loại", getFacilityTypeLabel(type));
+  appendPopupRow(details, "Địa chỉ", address);
+  appendPopupRow(details, "Khoảng cách", formatDistance(distanceMeters));
+  body.appendChild(details);
+
+  popupContent.append(title, body);
+
+  if (onDirections) {
+    const footer = document.createElement("div");
+    footer.className = "map-popup-footer";
+    const button = document.createElement("button");
+    button.className = "facility-directions-button";
+    button.type = "button";
+    button.textContent = "Chỉ đường";
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      onDirections(facility);
+    });
+    footer.appendChild(button);
+    popupContent.appendChild(footer);
+  }
+
   return popupContent;
 }
 
@@ -345,15 +460,60 @@ function createIncidentMarker(incident: Incident, isActive: boolean) {
   return markerElement;
 }
 
-function createIncidentPopup(incident: Incident) {
+function getSeverityLabel(severity: ReturnType<typeof getIncidentSeverity>) {
+  const labels = {
+    critical: "Khẩn cấp",
+    low: "Thấp",
+    medium: "Trung bình",
+  };
+  return labels[severity] || severity;
+}
+
+function createIncidentPopup(
+  incident: Incident,
+  onDirections?: (incident: Incident) => void,
+  options: { includeReporter?: boolean } = {},
+) {
+  const severity = getIncidentSeverity(incident);
   const popupContent = document.createElement("div");
-  popupContent.className = "incident-map-popup";
-  popupContent.innerHTML = `<strong></strong><span></span><small></small>`;
-  popupContent.querySelector("strong")!.textContent = getIncidentTitle(incident);
-  popupContent.querySelector("span")!.textContent = getIncidentStatus(incident);
-  popupContent.querySelector("small")!.textContent = [getIncidentLocation(incident), getIncidentCreatedAt(incident)]
-    .filter(Boolean)
-    .join(" - ");
+  popupContent.className = `incident-map-popup incident-map-popup-${severity}`;
+
+  const title = document.createElement("strong");
+  title.className = "incident-map-popup-title";
+  title.textContent = getIncidentTitle(incident);
+
+  const body = document.createElement("div");
+  body.className = "map-popup-body";
+  const details = document.createElement("div");
+  details.className = "incident-map-popup-details";
+  if (options.includeReporter !== false) {
+    appendPopupRow(details, "Người gửi", getIncidentReporterName(incident));
+  }
+  appendPopupRow(details, "Loại", getIncidentCategory(incident));
+  appendPopupRow(details, "Thời gian", formatPopupDateTime(getIncidentCreatedAt(incident)));
+  appendSeverityPopupRow(details, severity);
+  appendPopupRow(details, "Địa chỉ", getIncidentLocation(incident));
+  appendPopupRow(details, "Trạng thái", getIncidentStatus(incident));
+  body.appendChild(details);
+
+  popupContent.append(title, body);
+
+  if (onDirections) {
+    const footer = document.createElement("div");
+    footer.className = "map-popup-footer";
+    const button = document.createElement("button");
+    button.className = "incident-directions-button";
+    button.type = "button";
+    button.textContent = "Chỉ đường";
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      onDirections(incident);
+    });
+    footer.appendChild(button);
+    popupContent.appendChild(footer);
+  }
+
   return popupContent;
 }
 
@@ -630,6 +790,123 @@ function fetchPoliceLocations() {
   return apiFetch<PoliceLocation[]>("/api/police/locations");
 }
 
+function getBrowserLocation() {
+  return new Promise<[number, number]>((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error("Geolocation is not available"));
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => resolve([position.coords.longitude, position.coords.latitude]),
+      reject,
+      { enableHighAccuracy: true, maximumAge: 30000, timeout: 10000 },
+    );
+  });
+}
+
+async function fetchDirectionsRoute(origin: [number, number], destination: [number, number]) {
+  if (!MAPBOX_TOKEN) {
+    throw new Error("Missing Mapbox token");
+  }
+
+  const coordinates = `${origin[0]},${origin[1]};${destination[0]},${destination[1]}`;
+  const url = new URL(`https://api.mapbox.com/directions/v5/mapbox/driving/${coordinates}`);
+  url.searchParams.set("access_token", MAPBOX_TOKEN);
+  url.searchParams.set("geometries", "geojson");
+  url.searchParams.set("overview", "full");
+  url.searchParams.set("steps", "false");
+
+  const response = await fetch(url.toString());
+  if (!response.ok) {
+    throw new Error(`Mapbox Directions error: ${response.status}`);
+  }
+
+  const data = (await response.json()) as { routes?: Array<{ geometry?: GeoJSON.LineString }> };
+  const geometry = data.routes?.[0]?.geometry;
+  if (!geometry?.coordinates?.length) {
+    throw new Error("No route returned");
+  }
+
+  return geometry;
+}
+
+function buildDirectionsGeoJson(route: DirectionsRoute): RouteFeatureCollection {
+  return {
+    features: [
+      { geometry: route.geometry, properties: { kind: "route" }, type: "Feature" },
+      { geometry: { coordinates: route.origin, type: "Point" }, properties: { kind: "origin" }, type: "Feature" },
+      { geometry: { coordinates: route.destination, type: "Point" }, properties: { kind: "destination" }, type: "Feature" },
+    ],
+    type: "FeatureCollection",
+  };
+}
+
+function ensureDirectionsLayers(map: mapboxgl.Map, route: DirectionsRoute) {
+  if (!map.getSource(DIRECTIONS_SOURCE_ID)) {
+    map.addSource(DIRECTIONS_SOURCE_ID, { data: buildDirectionsGeoJson(route), type: "geojson" });
+  }
+
+  const source = map.getSource(DIRECTIONS_SOURCE_ID) as mapboxgl.GeoJSONSource | undefined;
+  source?.setData(buildDirectionsGeoJson(route));
+
+  if (!map.getLayer(DIRECTIONS_LINE_LAYER_ID)) {
+    map.addLayer({
+      filter: ["==", ["get", "kind"], "route"],
+      id: DIRECTIONS_LINE_LAYER_ID,
+      layout: { "line-cap": "round", "line-join": "round" },
+      paint: { "line-color": "#2563eb", "line-opacity": 0.95, "line-width": 6 },
+      source: DIRECTIONS_SOURCE_ID,
+      type: "line",
+    });
+  }
+
+  if (!map.getLayer(DIRECTIONS_POINT_LAYER_ID)) {
+    map.addLayer({
+      filter: ["in", ["get", "kind"], ["literal", ["origin", "destination"]]],
+      id: DIRECTIONS_POINT_LAYER_ID,
+      paint: {
+        "circle-color": ["match", ["get", "kind"], "origin", "#38bdf8", "destination", "#ff4655", "#ffffff"],
+        "circle-radius": 7,
+        "circle-stroke-color": "#ffffff",
+        "circle-stroke-width": 3,
+      },
+      source: DIRECTIONS_SOURCE_ID,
+      type: "circle",
+    });
+  }
+}
+
+function clearDirectionsLayers(map: mapboxgl.Map) {
+  if (map.getLayer(DIRECTIONS_POINT_LAYER_ID)) {
+    map.removeLayer(DIRECTIONS_POINT_LAYER_ID);
+  }
+  if (map.getLayer(DIRECTIONS_LINE_LAYER_ID)) {
+    map.removeLayer(DIRECTIONS_LINE_LAYER_ID);
+  }
+  if (map.getSource(DIRECTIONS_SOURCE_ID)) {
+    map.removeSource(DIRECTIONS_SOURCE_ID);
+  }
+}
+
+function fitRouteBounds(map: mapboxgl.Map, route: DirectionsRoute) {
+  const bounds = new mapboxgl.LngLatBounds(route.origin, route.origin);
+  route.geometry.coordinates.forEach((coordinate) => bounds.extend(coordinate as [number, number]));
+  bounds.extend(route.destination);
+  map.fitBounds(bounds, { duration: 900, padding: 96 });
+}
+
+function calculateBearing(from: [number, number], to: [number, number]) {
+  const fromLng = (from[0] * Math.PI) / 180;
+  const fromLat = (from[1] * Math.PI) / 180;
+  const toLng = (to[0] * Math.PI) / 180;
+  const toLat = (to[1] * Math.PI) / 180;
+  const deltaLng = toLng - fromLng;
+  const y = Math.sin(deltaLng) * Math.cos(toLat);
+  const x = Math.cos(fromLat) * Math.sin(toLat) - Math.sin(fromLat) * Math.cos(toLat) * Math.cos(deltaLng);
+  return (Math.atan2(y, x) * 180) / Math.PI;
+}
+
 function updatePoliceLocation(payload: {
   DisplayName: string;
   Latitude: number;
@@ -696,9 +973,12 @@ function MapView({
 }: MapViewProps) {
   const { user } = useUser();
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const miniMapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
+  const miniMapRef = useRef<mapboxgl.Map | null>(null);
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
   const currentLocationMarkerRef = useRef<mapboxgl.Marker | null>(null);
+  const routeLastLocationRef = useRef<[number, number] | null>(null);
   const hasCenteredOnCurrentLocationRef = useRef(false);
   const facilityMapMarkersRef = useRef<mapboxgl.Marker[]>([]);
   const incidentMapMarkersRef = useRef<mapboxgl.Marker[]>([]);
@@ -713,10 +993,28 @@ function MapView({
   const [crimeType, setCrimeType] = useState("all");
   const [crimeView, setCrimeView] = useState<CrimeView>("heatmap");
   const [perspective, setPerspective] = useState<PerspectiveMode>("2d");
+  const [activeRoute, setActiveRoute] = useState<DirectionsRoute | null>(null);
+  const [routeHeading, setRouteHeading] = useState(0);
+  const [routeMessage, setRouteMessage] = useState("");
+  const [showPoliceFacilitiesLayer, setShowPoliceFacilitiesLayer] = useState(true);
+  const [showPoliceReportsLayer, setShowPoliceReportsLayer] = useState(true);
 
   const isSupportMap = role === "support";
-  const crimeIncidents = isSupportMap ? [] : incidents.length ? incidents : crimeDataIncidents;
-  const markerIncidents = isSupportMap ? incidents : [];
+  const canUseDirections = !isSupportMap && mode === "normal" && (role === "police" || (role === "user" && showModeControls));
+  const crimeIncidents = useMemo(
+    () => (isSupportMap ? [] : incidents.length ? incidents : crimeDataIncidents),
+    [crimeDataIncidents, incidents, isSupportMap],
+  );
+  const markerIncidents = useMemo(
+    () => (isSupportMap || (role === "police" && mode === "normal" && showPoliceReportsLayer) ? incidents : []),
+    [incidents, isSupportMap, mode, role, showPoliceReportsLayer],
+  );
+  const displayedFacilities = useMemo(() => limitFacilitiesForDisplay(facilities), [facilities]);
+  const showFacilityLayer =
+    !isSupportMap &&
+    mode === "normal" &&
+    showPoiInNormal &&
+    (role !== "police" || showPoliceFacilitiesLayer);
 
   const crimeTypes = useMemo(
     () => Array.from(new Set(crimeIncidents.map(getIncidentType).filter(Boolean))),
@@ -731,6 +1029,93 @@ function MapView({
           (crimeType === "all" || getIncidentType(incident) === crimeType),
       ),
     [crimeIncidents, crimePeriod, crimeType],
+  );
+
+  const startDirections = useCallback(async (target: DirectionsTarget) => {
+    if (!canUseDirections) {
+      return;
+    }
+
+    try {
+      setRouteMessage("Đang lấy tuyến đường...");
+      const origin = currentLocation || (await getBrowserLocation());
+      setCurrentLocation(origin);
+      const geometry = await fetchDirectionsRoute(origin, target.coordinates);
+      setActiveRoute({ destination: target.coordinates, geometry, origin });
+      setRouteMessage("");
+    } catch {
+      setRouteMessage("Không thể lấy chỉ đường từ vị trí hiện tại.");
+    }
+  }, [canUseDirections, currentLocation]);
+
+  const startFacilityDirections = useCallback(
+    (facility: FacilityMarker) => {
+      void startDirections({ coordinates: facility.coordinates, label: facility.name });
+    },
+    [startDirections],
+  );
+
+  const startIncidentDirections = useCallback(
+    (incident: Incident) => {
+      const coordinates = getIncidentCoordinates(incident);
+      if (coordinates) {
+        void startDirections({ coordinates, label: getIncidentTitle(incident) });
+      }
+    },
+    [startDirections],
+  );
+
+  const clearDirections = useCallback(() => {
+    setActiveRoute(null);
+    setRouteMessage("");
+    routeLastLocationRef.current = null;
+    const map = mapRef.current;
+    if (map) {
+      clearDirectionsLayers(map);
+    }
+  }, []);
+
+  const focusNearestFacility = useCallback(
+    async (type: FacilityType) => {
+      const map = mapRef.current;
+      if (!map) {
+        return;
+      }
+
+      try {
+        const origin = currentLocation || (await getBrowserLocation());
+        setCurrentLocation(origin);
+        const candidates = displayedFacilities
+          .map((facility, index) => ({
+            distance: calculateDistanceMeters(origin, facility.coordinates),
+            facility,
+            index,
+          }))
+          .filter((item) => item.facility.type === type)
+          .sort((first, second) => first.distance - second.distance);
+        const nearest = candidates[0];
+
+        if (!nearest) {
+          setRouteMessage("Không tìm thấy điểm phù hợp trên bản đồ.");
+          return;
+        }
+
+        const camera = getCameraForPerspective(perspective);
+        map.easeTo({
+          bearing: camera.bearing,
+          center: nearest.facility.coordinates,
+          duration: 700,
+          pitch: camera.pitch,
+          zoom: Math.max(zoom, 15),
+        });
+        window.setTimeout(() => {
+          facilityMapMarkersRef.current[nearest.index]?.togglePopup();
+        }, 250);
+      } catch {
+        setRouteMessage("Không thể lấy vị trí hiện tại để tìm điểm gần nhất.");
+      }
+    },
+    [currentLocation, displayedFacilities, perspective, zoom],
   );
 
   useEffect(() => {
@@ -869,8 +1254,10 @@ function MapView({
       incidentMapMarkersRef.current.forEach((marker) => marker.remove());
       policeLocationMarkersRef.current.forEach((marker) => marker.remove());
       popupRef.current?.remove();
+      miniMapRef.current?.remove();
       map.remove();
       mapRef.current = null;
+      miniMapRef.current = null;
       currentLocationMarkerRef.current = null;
       hasCenteredOnCurrentLocationRef.current = false;
       facilityMapMarkersRef.current = [];
@@ -941,21 +1328,33 @@ function MapView({
 
     facilityMapMarkersRef.current.forEach((marker) => marker.remove());
 
-    if (isSupportMap || mode !== "normal" || !showPoiInNormal) {
+    if (!showFacilityLayer) {
       facilityMapMarkersRef.current = [];
       return;
     }
 
-    facilityMapMarkersRef.current = limitFacilitiesForDisplay(facilities).map((facility) => {
-      const marker = new mapboxgl.Marker({ anchor: "bottom", element: createFacilityMarker(facility) })
+    facilityMapMarkersRef.current = displayedFacilities.map((facility) => {
+      const markerElement = createFacilityMarker(facility);
+      const distanceMeters = currentLocation ? calculateDistanceMeters(currentLocation, facility.coordinates) : undefined;
+      const popup = new mapboxgl.Popup({
+        className: `map-dark-popup facility-popup-shell facility-popup-shell-${facility.type}`,
+        closeButton: canUseDirections,
+        maxWidth: "380px",
+        offset: 28,
+      }).setDOMContent(
+        createFacilityPopup(facility, distanceMeters, canUseDirections ? startFacilityDirections : undefined),
+      );
+      const marker = new mapboxgl.Marker({ anchor: "bottom", element: markerElement })
         .setLngLat(facility.coordinates)
-        .setPopup(new mapboxgl.Popup({ offset: 28 }).setDOMContent(createFacilityPopup(facility)))
+        .setPopup(popup)
         .addTo(map);
 
-      showPopupOnMarkerHover(marker);
+      if (!canUseDirections) {
+        showPopupOnMarkerHover(marker);
+      }
       return marker;
     });
-  }, [facilities, isSupportMap, mode, showPoiInNormal]);
+  }, [canUseDirections, currentLocation, displayedFacilities, showFacilityLayer, startFacilityDirections]);
 
   useEffect(() => {
     if (role !== "police") {
@@ -1130,7 +1529,7 @@ function MapView({
 
     incidentMapMarkersRef.current.forEach((marker) => marker.remove());
 
-    if (!isSupportMap) {
+    if (!isSupportMap && !(role === "police" && mode === "normal" && showPoliceReportsLayer)) {
       incidentMapMarkersRef.current = [];
       return;
     }
@@ -1148,16 +1547,26 @@ function MapView({
         element: createIncidentMarker(incident, getIncidentId(incident) === selectedId),
       })
         .setLngLat(coordinates)
-        .setPopup(new mapboxgl.Popup({ offset: 28 }).setDOMContent(createIncidentPopup(incident)))
+        .setPopup(
+          new mapboxgl.Popup({
+            className: `map-dark-popup incident-popup-shell incident-popup-shell-${getIncidentSeverity(incident)}`,
+            maxWidth: "390px",
+            offset: 28,
+          }).setDOMContent(
+            createIncidentPopup(incident, role === "police" && canUseDirections ? startIncidentDirections : undefined),
+          ),
+        )
         .addTo(map);
 
       marker.getElement().addEventListener("click", () => {
-        onIncidentSelect?.(incident);
+        if (isSupportMap) {
+          onIncidentSelect?.(incident);
+        }
       });
 
       return [marker];
     });
-  }, [isSupportMap, markerIncidents, onIncidentSelect, selectedIncident]);
+  }, [canUseDirections, isSupportMap, markerIncidents, mode, onIncidentSelect, role, selectedIncident, showPoliceReportsLayer, startIncidentDirections]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -1177,7 +1586,11 @@ function MapView({
     });
 
     popupRef.current?.remove();
-    popupRef.current = new mapboxgl.Popup({ offset: 28 })
+    popupRef.current = new mapboxgl.Popup({
+      className: `map-dark-popup incident-popup-shell incident-popup-shell-${getIncidentSeverity(incident)}`,
+      maxWidth: "390px",
+      offset: 28,
+    })
       .setLngLat(coordinates)
       .setDOMContent(createIncidentPopup(incident))
       .addTo(map);
@@ -1214,6 +1627,106 @@ function MapView({
       return;
     }
 
+    if (!canUseDirections || !activeRoute) {
+      clearDirectionsLayers(map);
+      return;
+    }
+
+    const drawRoute = () => {
+      ensureDirectionsLayers(map, activeRoute);
+      fitRouteBounds(map, activeRoute);
+    };
+
+    if (map.isStyleLoaded()) {
+      drawRoute();
+      return;
+    }
+
+    map.once("load", drawRoute);
+    return () => {
+      map.off("load", drawRoute);
+    };
+  }, [activeRoute, canUseDirections]);
+
+  useEffect(() => {
+    if (!activeRoute || !canUseDirections || !navigator.geolocation) {
+      return;
+    }
+
+    const watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        const nextLocation: [number, number] = [position.coords.longitude, position.coords.latitude];
+        const previousLocation = routeLastLocationRef.current;
+        setCurrentLocation(nextLocation);
+        if (typeof position.coords.heading === "number" && Number.isFinite(position.coords.heading)) {
+          setRouteHeading(position.coords.heading);
+        } else if (previousLocation) {
+          setRouteHeading(calculateBearing(previousLocation, nextLocation));
+        }
+        routeLastLocationRef.current = nextLocation;
+      },
+      () => undefined,
+      { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 },
+    );
+
+    return () => {
+      navigator.geolocation.clearWatch(watchId);
+    };
+  }, [activeRoute, canUseDirections]);
+
+  useEffect(() => {
+    if (!activeRoute || !canUseDirections || !miniMapContainerRef.current || !MAPBOX_TOKEN) {
+      miniMapRef.current?.remove();
+      miniMapRef.current = null;
+      return;
+    }
+
+    mapboxgl.accessToken = MAPBOX_TOKEN;
+    const miniMap =
+      miniMapRef.current ||
+      new mapboxgl.Map({
+        attributionControl: false,
+        bearing: routeHeading,
+        center: currentLocation || activeRoute.origin,
+        container: miniMapContainerRef.current,
+        interactive: false,
+        pitch: 0,
+        style: "mapbox://styles/mapbox/light-v11",
+        zoom: 15,
+      });
+
+    miniMapRef.current = miniMap;
+
+    const updateMiniMap = () => {
+      applyBaseMapPalette(miniMap);
+      ensureDirectionsLayers(miniMap, activeRoute);
+      miniMap.easeTo({
+        bearing: routeHeading,
+        center: currentLocation || activeRoute.origin,
+        duration: 450,
+        pitch: 0,
+        zoom: 15,
+      });
+    };
+
+    if (miniMap.isStyleLoaded()) {
+      updateMiniMap();
+      return;
+    }
+
+    miniMap.once("load", updateMiniMap);
+    return () => {
+      miniMap.off("load", updateMiniMap);
+    };
+  }, [activeRoute, canUseDirections, currentLocation, routeHeading]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+
+    if (!map) {
+      return;
+    }
+
     function handleClick(event: mapboxgl.MapMouseEvent) {
       if (isSupportMap || mode !== "crime" || !mapRef.current) {
         return;
@@ -1230,9 +1743,13 @@ function MapView({
       }
 
       popupRef.current?.remove();
-      popupRef.current = new mapboxgl.Popup({ offset: 16 })
+      popupRef.current = new mapboxgl.Popup({
+        className: `map-dark-popup incident-popup-shell incident-popup-shell-${getIncidentSeverity(incident)}`,
+        maxWidth: "390px",
+        offset: 16,
+      })
         .setLngLat(event.lngLat)
-        .setDOMContent(createIncidentPopup(incident))
+        .setDOMContent(createIncidentPopup(incident, undefined, { includeReporter: false }))
         .addTo(mapRef.current);
     }
 
@@ -1274,7 +1791,46 @@ function MapView({
             </button>
           </div>
 
+          {role === "user" && showModeControls && mode === "normal" ? (
+            <div className="map-quick-search-controls" aria-label="Tìm nhanh điểm hỗ trợ gần nhất">
+              <button type="button" onClick={() => void focusNearestFacility("police")}>
+                Tìm C/A
+              </button>
+              <button type="button" onClick={() => void focusNearestFacility("hospital")}>
+                Tìm B/V
+              </button>
+            </div>
+          ) : null}
+
+          {role === "police" && mode === "normal" ? (
+            <div className="police-layer-controls" aria-label="Bật tắt lớp bản đồ">
+              <button
+                className={showPoliceFacilitiesLayer ? "is-active" : ""}
+                type="button"
+                onClick={() => setShowPoliceFacilitiesLayer((current) => !current)}
+              >
+                Công An / Bệnh Viện
+              </button>
+              <button
+                className={showPoliceReportsLayer ? "is-active" : ""}
+                type="button"
+                onClick={() => setShowPoliceReportsLayer((current) => !current)}
+              >
+                Vụ án / báo cáo
+              </button>
+            </div>
+          ) : null}
+
           <div aria-label={title} className="mapbox-container map-container" ref={mapContainerRef} role="region" />
+          {canUseDirections && activeRoute ? (
+            <div className="directions-mini-map" aria-label="Bản đồ chỉ đường thu nhỏ">
+              <div className="directions-mini-map-canvas" ref={miniMapContainerRef} />
+              <button className="directions-clear-button" type="button" onClick={clearDirections}>
+                Đóng
+              </button>
+            </div>
+          ) : null}
+          {canUseDirections && routeMessage ? <div className="directions-status">{routeMessage}</div> : null}
         </div>
       ) : (
         <div className="map-token-warning">
@@ -1296,7 +1852,10 @@ function MapView({
             <button
               className={mode === "crime" ? "is-active" : ""}
               type="button"
-              onClick={() => setMode("crime")}
+              onClick={() => {
+                clearDirections();
+                setMode("crime");
+              }}
             >
               Vu an
             </button>

@@ -1,5 +1,6 @@
 import { SignUp, useUser } from "@clerk/react";
 import { Navigate } from "react-router-dom";
+import VietnameseDecor from "../../components/common/VietnameseDecor";
 import { getClerkUserRole } from "../../utils/clerkRole";
 import { APP_NAME, ROLE_HOME_PATHS } from "../../utils/constants";
 
@@ -17,6 +18,7 @@ function Register() {
 
   return (
     <main className="login-page">
+      <VietnameseDecor variant="auth" />
       <section className="login-hero">
         <p className="eyebrow">Dự án Cảnh sát</p>
         <h1>{APP_NAME}</h1>

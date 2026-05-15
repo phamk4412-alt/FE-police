@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   getFeaturedNews,
@@ -11,6 +11,16 @@ import type { NationalEvent, NewsArticle } from "../../types/news";
 
 const fallbackImage =
   "https://images.unsplash.com/photo-1495020689067-958852a7765e?auto=format&fit=crop&w=1200&q=80";
+
+const eventImages: Record<string, string> = {
+  "Ngày Giáng sinh": "/event-images/giang-sinh.png",
+  "Ngày Giải phóng miền Nam, thống nhất đất nước": "/event-images/giai-phong-mien-nam.png",
+  "Ngày Quốc khánh nước Cộng hòa Xã hội Chủ nghĩa Việt Nam": "/event-images/quoc-khanh-vn.png",
+  "Ngày Quốc tế Lao động": "/event-images/quoc-te-lao-dong.png",
+  "Giỗ Tổ Hùng Vương": "/event-images/gio-to-hung-vuong.png",
+  "Tết Dương Lịch": "/event-images/tet-duong-lich.png",
+  "Tết Nguyên Đán": "/event-images/tet-nguyen-dan.png",
+};
 
 function getArticleId(article: NewsArticle) {
   return String(article.id ?? article.Id ?? "");
@@ -70,6 +80,69 @@ function getEventDate(event: NationalEvent) {
   return event.eventDate || event.EventDate || "";
 }
 
+function getEventId(event: NationalEvent) {
+  return String(event.id ?? event.Id ?? `${getEventName(event)}-${getEventDate(event)}`);
+}
+
+function normalizeEventName(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
+function getEventImage(event: NationalEvent) {
+  const name = getEventName(event);
+  const exactImage = eventImages[name];
+  if (exactImage) {
+    return exactImage;
+  }
+
+  const normalizedName = normalizeEventName(name);
+  const matchedEntry = Object.entries(eventImages).find(([eventName]) =>
+    normalizedName.includes(normalizeEventName(eventName)) || normalizeEventName(eventName).includes(normalizedName),
+  );
+  return matchedEntry?.[1] || "/event-images/quoc-khanh-vn.png";
+}
+
+function getEventDescription(event: NationalEvent) {
+  const source = event as Record<string, unknown>;
+  const description = source.description || source.Description || source.summary || source.Summary;
+  return typeof description === "string" ? description : "";
+}
+
+function getEventCardStyle(event: NationalEvent): CSSProperties {
+  return { "--event-image": `url("${getEventImage(event)}")` } as CSSProperties;
+}
+
+function getEventVisualClass(event: NationalEvent) {
+  const name = getEventName(event).toLowerCase();
+  if (name.includes("noel") || name.includes("giáng sinh") || name.includes("christmas")) {
+    return "is-christmas";
+  }
+  if (name.includes("tết") || name.includes("nguyên đán") || name.includes("lunar")) {
+    return "is-tet";
+  }
+  if (name.includes("quốc khánh") || name.includes("2/9") || name.includes("độc lập")) {
+    return "is-national-day";
+  }
+  if (name.includes("trung thu") || name.includes("mid-autumn") || name.includes("trăng")) {
+    return "is-mid-autumn";
+  }
+
+  return "is-cultural";
+}
+
+function toStartOfDay(value: string | Date) {
+  const date = typeof value === "string" ? new Date(value) : new Date(value);
+  if (!Number.isFinite(date.getTime())) {
+    return null;
+  }
+
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
 function getDaysRemaining(event: NationalEvent) {
   if (typeof event.daysRemaining === "number") {
     return event.daysRemaining;
@@ -79,15 +152,52 @@ function getDaysRemaining(event: NationalEvent) {
     return event.DaysRemaining;
   }
 
-  const date = new Date(getEventDate(event));
-  if (!Number.isFinite(date.getTime())) {
+  const date = toStartOfDay(getEventDate(event));
+  if (!date) {
     return 0;
   }
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  date.setHours(0, 0, 0, 0);
+  const today = toStartOfDay(new Date()) as Date;
   return Math.max(0, Math.ceil((date.getTime() - today.getTime()) / 86400000));
+}
+
+function isEventToday(event: NationalEvent) {
+  const date = toStartOfDay(getEventDate(event));
+  const today = toStartOfDay(new Date());
+  return Boolean(date && today && date.getTime() === today.getTime());
+}
+
+function isUpcomingEvent(event: NationalEvent) {
+  const date = toStartOfDay(getEventDate(event));
+  const today = toStartOfDay(new Date());
+  return Boolean(date && today && date.getTime() > today.getTime());
+}
+
+function formatEventDate(value: string) {
+  if (!value) {
+    return "Chưa có ngày diễn ra";
+  }
+
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(date);
+}
+
+function formatCurrentClock(value: Date) {
+  return new Intl.DateTimeFormat("vi-VN", {
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(value);
 }
 
 function NewsSkeleton() {
@@ -147,6 +257,7 @@ function UserNewsPage({ articleId }: UserNewsPageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
   const [error, setError] = useState("");
+  const [currentClock, setCurrentClock] = useState(() => new Date());
 
   useEffect(() => {
     let isMounted = true;
@@ -256,18 +367,26 @@ function UserNewsPage({ articleId }: UserNewsPageProps) {
   }, [featuredArticles, sortedArticles]);
 
   const sortedEvents = useMemo(
-    () => [...events].sort((first, second) => getDaysRemaining(first) - getDaysRemaining(second)),
+    () =>
+      [...events].sort((first, second) => {
+        const firstDate = toStartOfDay(getEventDate(first));
+        const secondDate = toStartOfDay(getEventDate(second));
+        return (firstDate?.getTime() || 0) - (secondDate?.getTime() || 0);
+      }),
     [events],
   );
 
-  const alertItems = useMemo(() => {
-    const source = otherArticles.length ? otherArticles : sortedArticles;
-    return source.slice(0, 4).map((article) => ({
-      category: getCategory(article),
-      title: getTitle(article),
-      time: formatDateTime(getPublishedAt(article)),
-    }));
-  }, [otherArticles, sortedArticles]);
+  const todayEvents = useMemo(() => sortedEvents.filter(isEventToday), [sortedEvents]);
+
+  const upcomingEvents = useMemo(
+    () => sortedEvents.filter(isUpcomingEvent).slice(0, 3),
+    [sortedEvents],
+  );
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => setCurrentClock(new Date()), 30000);
+    return () => window.clearInterval(intervalId);
+  }, []);
 
   if (articleId) {
     const loadedDetail = detail && getArticleId(detail) === articleId ? detail : null;
@@ -344,6 +463,11 @@ function UserNewsPage({ articleId }: UserNewsPageProps) {
                   <LatestPlaceholder index={index + 1} isLoading={isLoading} key={index} />
                 ))}
           </div>
+          <div className="news-left-filler">
+            <span>Nhịp tin trong ngày</span>
+            <strong>{sortedArticles.length}</strong>
+            <small>{featuredArticles.length} tin nổi bật, {otherArticles.length} tin mới đang theo dõi.</small>
+          </div>
         </aside>
 
         <section className="news-featured-column">
@@ -379,57 +503,86 @@ function UserNewsPage({ articleId }: UserNewsPageProps) {
         </section>
 
         <aside className="news-events-column">
+          <div className="news-side-section news-clock-section">
+            <span>Thời gian hiện tại</span>
+            <strong>{formatCurrentClock(currentClock)}</strong>
+          </div>
+
           <div className="news-side-section news-event-section">
             <div className="news-column-heading">
               <span>Sự kiện Việt Nam</span>
             </div>
-            <div className="national-event-list">
-              {sortedEvents.length
-                ? sortedEvents.slice(0, 2).map((event) => (
-                    <article className="national-event-card" key={`${getEventName(event)}-${getEventDate(event)}`}>
-                      <span>{getDaysRemaining(event)}</span>
-                      <div>
+            <div className="national-event-groups">
+              <section className="national-event-group">
+                <div className="national-event-group-heading">
+                  <span>Hôm nay</span>
+                </div>
+                {todayEvents.length ? (
+                  todayEvents.map((event) => (
+                    <article
+                      className={`national-event-card is-today ${getEventVisualClass(event)}`}
+                      key={getEventId(event)}
+                      style={getEventCardStyle(event)}
+                    >
+                      <div className="national-event-content">
+                        <span className="national-event-countdown">Hôm nay</span>
                         <strong>{getEventName(event)}</strong>
-                        <small>{formatDateTime(getEventDate(event)).replace(" lúc 00:00", "")}</small>
-                        <em>Còn {getDaysRemaining(event)} ngày</em>
+                        <small>{formatEventDate(getEventDate(event))}</small>
+                        {getEventDescription(event) ? <p>{getEventDescription(event)}</p> : null}
+                        <em>Hôm nay</em>
                       </div>
                     </article>
                   ))
-                : Array.from({ length: 2 }).map((_, index) => (
-                    <article className={`national-event-card news-placeholder-card ${isLoading ? "is-loading" : ""}`} key={index}>
-                      <span>--</span>
-                      <div>
-                        <strong>{isLoading ? "Đang tải sự kiện..." : "Chưa có sự kiện"}</strong>
-                        <small>{isLoading ? "Đang cập nhật ngày diễn ra" : "API chưa trả dữ liệu."}</small>
-                        <em>{isLoading ? "Đang tính countdown" : "Còn -- ngày"}</em>
-                      </div>
-                    </article>
-                  ))}
+                ) : (
+                  <div className={`national-event-empty ${isLoading ? "is-loading news-placeholder-card" : ""}`}>
+                    <strong>{isLoading ? "Đang tải sự kiện..." : "Hôm nay không có sự kiện quan trọng"}</strong>
+                    <small>{isLoading ? "Đang kiểm tra lịch sự kiện Việt Nam" : "Các sự kiện gần nhất nằm ở nhóm Sắp tới."}</small>
+                  </div>
+                )}
+              </section>
+
+              <section className="national-event-group">
+                <div className="national-event-group-heading">
+                  <span>Sắp tới</span>
+                </div>
+                <div className="national-event-list">
+                  {upcomingEvents.length
+                    ? upcomingEvents.map((event) => {
+                        const daysRemaining = getDaysRemaining(event);
+
+                        return (
+                          <article
+                            className={`national-event-card ${getEventVisualClass(event)}`}
+                            key={getEventId(event)}
+                            style={getEventCardStyle(event)}
+                          >
+                            <div className="national-event-content">
+                              <span className="national-event-countdown">
+                                {daysRemaining === 0 ? "0 ngày" : `${daysRemaining} ngày`}
+                              </span>
+                              <strong>{getEventName(event)}</strong>
+                              <small>{formatEventDate(getEventDate(event))}</small>
+                              {getEventDescription(event) ? <p>{getEventDescription(event)}</p> : null}
+                              <em>{daysRemaining === 0 ? "Hôm nay" : `Còn ${daysRemaining} ngày`}</em>
+                            </div>
+                          </article>
+                        );
+                      })
+                    : Array.from({ length: isLoading ? 2 : 1 }).map((_, index) => (
+                        <article className={`national-event-card news-placeholder-card ${isLoading ? "is-loading" : ""}`} key={index}>
+                          <div className="national-event-content">
+                            <span className="national-event-countdown">--</span>
+                            <strong>{isLoading ? "Đang tải sự kiện..." : "Chưa có sự kiện sắp tới"}</strong>
+                            <small>{isLoading ? "Đang cập nhật ngày diễn ra" : "API chưa trả dữ liệu sự kiện."}</small>
+                            <em>{isLoading ? "Đang tính countdown" : "Còn -- ngày"}</em>
+                          </div>
+                        </article>
+                      ))}
+                </div>
+              </section>
             </div>
           </div>
 
-          <div className="news-side-section news-alert-section">
-            <div className="news-column-heading">
-              <span>Thông báo / Cảnh báo</span>
-            </div>
-            <div className="news-alert-list">
-              {alertItems.length
-                ? alertItems.map((item, index) => (
-                    <article className="news-alert-card" key={`${item.title}-${index}`}>
-                      <span>{item.category}</span>
-                      <strong>{item.title}</strong>
-                      <small>{item.time}</small>
-                    </article>
-                  ))
-                : Array.from({ length: 4 }).map((_, index) => (
-                    <article className={`news-alert-card news-placeholder-card ${isLoading ? "is-loading" : ""}`} key={index}>
-                      <span>{isLoading ? "Đang tải" : "Thông báo"}</span>
-                      <strong>{isLoading ? "Đang tải cảnh báo..." : "Chưa có thông báo mới"}</strong>
-                      <small>{isLoading ? "Đang cập nhật" : "Theo dõi tại đây khi có dữ liệu."}</small>
-                  </article>
-                ))}
-            </div>
-          </div>
         </aside>
       </div>
     </section>

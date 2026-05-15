@@ -1,22 +1,35 @@
 import { useEffect, useState } from "react";
+import DashboardStatCards, { type DashboardStatCardItem } from "../../components/common/DashboardStatCards";
 import DashboardLayout from "../../components/layout/DashboardLayout";
 import MapView from "../../components/map/MapView";
 import { getPoliceIncidents } from "../../services/policeService";
-import type { DashboardStat } from "../../types/common";
 import type { Incident } from "../../types/incident";
 import {
   getIncidentCreatedAt,
   getIncidentId,
   getIncidentLocation,
+  getIncidentSeverity,
   getIncidentStatus,
   getIncidentTitle,
 } from "../../types/incident";
 
-const stats: DashboardStat[] = [
-  { label: "Vụ việc mới", value: 14, note: "Cần phản hồi ban đầu" },
-  { label: "Vụ việc đang xử lý", value: 9, note: "Đã phân công tuần tra" },
-  { label: "Khu vực nóng", value: 4, note: "Mật độ cảnh báo cao" },
+const stats: DashboardStatCardItem[] = [
+  { icon: "bell", label: "Vụ việc mới", note: "Cần phản hồi ban đầu", tone: "red", value: 14 },
+  { icon: "activity", label: "Đang xử lý", note: "Đã phân công tuần tra", tone: "orange", value: 9 },
+  { icon: "mapPin", label: "Khu vực nóng", note: "Mật độ cảnh báo cao", tone: "purple", value: 4 },
 ];
+
+function formatIncidentTime(value: string) {
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("vi-VN", {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(date);
+}
 
 function PoliceDashboard() {
   const [incidents, setIncidents] = useState<Incident[]>([]);
@@ -51,15 +64,7 @@ function PoliceDashboard() {
         <span>Theo dõi vụ việc mới, hồ sơ đang xử lý và khu vực ưu tiên trên bản đồ.</span>
       </section>
 
-      <section className="stats-grid">
-        {stats.map((stat) => (
-          <article className="stat-card" key={stat.label}>
-            <span>{stat.label}</span>
-            <strong>{stat.value}</strong>
-            <small>{stat.note}</small>
-          </article>
-        ))}
-      </section>
+      <DashboardStatCards ariaLabel="Thống kê nhanh cảnh sát" stats={stats} />
 
       <MapView
         currentLocationLabel="Vị trí hiện tại của cảnh sát"
@@ -76,14 +81,14 @@ function PoliceDashboard() {
         </div>
         <div className="incident-list">
           {incidents.map((incident) => (
-            <article className="incident-item" key={getIncidentId(incident)}>
+            <article className={`incident-item incident-item-${getIncidentSeverity(incident)}`} key={getIncidentId(incident)}>
               <div>
                 <strong>{getIncidentTitle(incident)}</strong>
                 <span>{getIncidentLocation(incident)}</span>
               </div>
               <div>
                 <span className="status-pill">{getIncidentStatus(incident)}</span>
-                <small>{getIncidentCreatedAt(incident)}</small>
+                <small>{formatIncidentTime(getIncidentCreatedAt(incident))}</small>
               </div>
             </article>
           ))}

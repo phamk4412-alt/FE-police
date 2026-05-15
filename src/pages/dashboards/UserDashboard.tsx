@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Button from "../../components/common/Button";
+import AdminIcon, { type AdminIconName } from "../../components/admin/AdminIcons";
 import DashboardLayout from "../../components/layout/DashboardLayout";
 import MapView from "../../components/map/MapView";
 import UserNewsPage from "../news/UserNewsPage";
@@ -10,6 +11,18 @@ const MAX_IMAGES = 3;
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const DEFAULT_HCM_LOCATION = { lat: 10.7769, lng: 106.7009 };
+
+const emergencyNumbers: Array<{
+  icon: AdminIconName;
+  label: string;
+  note: string;
+  number: string;
+  tone: "police" | "medical" | "fire";
+}> = [
+  { icon: "police", label: "Công an", note: "An ninh trật tự", number: "113", tone: "police" },
+  { icon: "ambulance", label: "Cấp cứu", note: "Y tế khẩn cấp", number: "115", tone: "medical" },
+  { icon: "flame", label: "Cứu hỏa", note: "Cháy nổ, cứu nạn", number: "114", tone: "fire" },
+];
 
 function getLocationText(lat: number | "", lng: number | "") {
   return typeof lat === "number" && typeof lng === "number"
@@ -67,6 +80,13 @@ function UserDashboard() {
   const isNewsRoute = location.pathname.startsWith("/user/news");
   const activeUserTab = isNewsRoute ? "news" : tab;
   const newsArticleId = newsMatch?.[1] ? decodeURIComponent(newsMatch[1]) : undefined;
+  const decorVariant = isNewsRoute
+    ? newsArticleId
+      ? "user-news-detail"
+      : "user-news"
+    : tab === "map"
+      ? "user-map"
+      : "user-home";
 
   function handleUserTabChange(nextTab: "home" | "map" | "news") {
     if (nextTab === "news") {
@@ -79,6 +99,10 @@ function UserDashboard() {
     }
 
     setTab(nextTab);
+  }
+
+  function handleEmergencyDial(number: string) {
+    window.location.href = `tel:${number}`;
   }
 
   useEffect(() => {
@@ -289,7 +313,12 @@ function UserDashboard() {
   }
 
   return (
-    <DashboardLayout activeUserTab={activeUserTab} onUserTabChange={handleUserTabChange} role="user">
+    <DashboardLayout
+      activeUserTab={activeUserTab}
+      decorVariant={decorVariant}
+      onUserTabChange={handleUserTabChange}
+      role="user"
+    >
       {isNewsRoute ? (
         <UserNewsPage articleId={newsArticleId} />
       ) : tab === "home" ? (
@@ -443,18 +472,21 @@ function UserDashboard() {
           <section className="home-bottom-grid">
             <article className="panel emergency-card">
               <span className="eyebrow">Số khẩn cấp</span>
-              <div>
-                <strong>113</strong>
-                <span>Công an</span>
-              </div>
-              <div>
-                <strong>115</strong>
-                <span>Cấp cứu</span>
-              </div>
-              <div>
-                <strong>114</strong>
-                <span>Cứu hỏa</span>
-              </div>
+              {emergencyNumbers.map((item) => (
+                <a
+                  className={`emergency-number-card emergency-tone-${item.tone}`}
+                  href={`tel:${item.number}`}
+                  key={item.number}
+                  onClick={() => handleEmergencyDial(item.number)}
+                >
+                  <span className="emergency-icon">
+                    <AdminIcon name={item.icon} />
+                  </span>
+                  <span>{item.label}</span>
+                  <strong>{item.number}</strong>
+                  <small>{item.note}</small>
+                </a>
+              ))}
             </article>
 
             <article className="panel location-card">
