@@ -4386,10 +4386,10 @@ tbody tr:hover {
 
 .national-event-card.is-upcoming {
   min-height: 218px;
-  align-items: end;
+  align-items: start;
   padding: 20px;
   background:
-    linear-gradient(90deg, rgba(4, 10, 18, 0.92), rgba(8, 17, 26, 0.66) 54%, rgba(8, 17, 26, 0.22)),
+    linear-gradient(90deg, rgba(4, 10, 18, 0.9), rgba(8, 17, 26, 0.66) 58%, rgba(8, 17, 26, 0.42) 100%),
     linear-gradient(180deg, rgba(8, 17, 26, 0.08), rgba(8, 17, 26, 0.82)),
     var(--event-image, linear-gradient(135deg, #7f1d1d, #0f172a)),
     var(--surface-elevated);
@@ -4399,8 +4399,8 @@ tbody tr:hover {
 
 .national-event-card.is-upcoming::before {
   background:
-    linear-gradient(90deg, rgba(4, 10, 18, 0.58), rgba(4, 10, 18, 0.2) 68%, transparent),
-    linear-gradient(180deg, transparent, rgba(4, 10, 18, 0.5));
+    linear-gradient(90deg, rgba(4, 10, 18, 0.5), rgba(4, 10, 18, 0.22) 72%, rgba(4, 10, 18, 0.14) 100%),
+    linear-gradient(180deg, rgba(4, 10, 18, 0.22), rgba(4, 10, 18, 0.34));
 }
 
 .national-event-content {
@@ -4414,8 +4414,9 @@ tbody tr:hover {
 }
 
 .national-event-card.is-upcoming .national-event-content {
-  width: min(100%, 420px);
+  width: min(100%, 520px);
   max-width: 100%;
+  align-self: start;
   gap: 8px;
 }
 
@@ -4627,7 +4628,7 @@ tbody tr:hover {
     min-height: 205px;
     padding: 18px 16px;
     background:
-      linear-gradient(90deg, rgba(4, 10, 18, 0.78), rgba(8, 17, 26, 0.42) 74%, rgba(8, 17, 26, 0.16)),
+      linear-gradient(90deg, rgba(4, 10, 18, 0.82), rgba(8, 17, 26, 0.5) 72%, rgba(8, 17, 26, 0.28) 100%),
       linear-gradient(180deg, rgba(8, 17, 26, 0.08), rgba(8, 17, 26, 0.78)),
       var(--event-image, linear-gradient(135deg, #7f1d1d, #0f172a)),
       var(--surface-elevated);
