@@ -1339,7 +1339,7 @@ function MapView({
       const popup = new mapboxgl.Popup({
         className: `map-dark-popup facility-popup-shell facility-popup-shell-${facility.type}`,
         closeButton: canUseDirections,
-        maxWidth: "380px",
+        maxWidth: "320px",
         offset: 28,
       }).setDOMContent(
         createFacilityPopup(facility, distanceMeters, canUseDirections ? startFacilityDirections : undefined),
@@ -1550,7 +1550,7 @@ function MapView({
         .setPopup(
           new mapboxgl.Popup({
             className: `map-dark-popup incident-popup-shell incident-popup-shell-${getIncidentSeverity(incident)}`,
-            maxWidth: "390px",
+            maxWidth: "320px",
             offset: 28,
           }).setDOMContent(
             createIncidentPopup(incident, role === "police" && canUseDirections ? startIncidentDirections : undefined),
@@ -1588,7 +1588,7 @@ function MapView({
     popupRef.current?.remove();
     popupRef.current = new mapboxgl.Popup({
       className: `map-dark-popup incident-popup-shell incident-popup-shell-${getIncidentSeverity(incident)}`,
-      maxWidth: "390px",
+      maxWidth: "320px",
       offset: 28,
     })
       .setLngLat(coordinates)
@@ -1745,7 +1745,7 @@ function MapView({
       popupRef.current?.remove();
       popupRef.current = new mapboxgl.Popup({
         className: `map-dark-popup incident-popup-shell incident-popup-shell-${getIncidentSeverity(incident)}`,
-        maxWidth: "390px",
+        maxWidth: "320px",
         offset: 16,
       })
         .setLngLat(event.lngLat)

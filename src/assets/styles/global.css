@@ -1174,10 +1174,10 @@ tbody tr:hover {
   right: 14px;
   bottom: 14px;
   z-index: 5;
-  width: min(360px, 28vw);
-  min-width: 240px;
+  width: min(270px, 20vw);
+  min-width: 190px;
   aspect-ratio: 1 / 1;
-  border: 3px solid rgba(255, 70, 85, 0.9);
+  border: 2px solid rgba(255, 70, 85, 0.9);
   border-radius: 8px;
   overflow: hidden;
   background: #f8fafc;
@@ -1193,13 +1193,13 @@ tbody tr:hover {
   position: absolute;
   top: 8px;
   right: 8px;
-  min-height: 30px;
+  min-height: 28px;
   border: 0;
   border-radius: 999px;
-  padding: 6px 10px;
+  padding: 5px 9px;
   color: #ffffff;
   background: rgba(15, 23, 42, 0.82);
-  font-size: 0.76rem;
+  font-size: 0.72rem;
   font-weight: 900;
   cursor: pointer;
 }
@@ -2165,18 +2165,18 @@ tbody tr:hover {
 .incident-map-popup,
 .facility-popup {
   display: grid;
-  gap: 14px;
-  width: min(340px, calc(100vw - 72px));
-  min-width: min(300px, calc(100vw - 72px));
+  gap: 9px;
+  width: min(290px, calc(100vw - 72px));
+  min-width: min(250px, calc(100vw - 72px));
   max-width: 100%;
   color: #f8fafc;
-  overflow: visible;
+  overflow: hidden;
 }
 
 .incident-map-popup-title,
 .facility-popup-title {
   color: #ffffff;
-  font-size: 1.08rem;
+  font-size: 0.98rem;
   font-weight: 950;
   line-height: 1.2;
   padding-right: 26px;
@@ -2186,37 +2186,37 @@ tbody tr:hover {
 .map-popup-body {
   display: grid;
   min-width: 0;
-  gap: 10px;
+  gap: 7px;
 }
 
 .map-popup-footer {
   display: grid;
   min-width: 0;
-  margin-top: 4px;
-  padding-top: 6px;
-  padding-bottom: 2px;
+  margin-top: 2px;
+  padding-top: 4px;
+  padding-bottom: 1px;
 }
 
 .incident-map-popup-details,
 .facility-popup-details {
   display: grid;
   min-width: 0;
-  gap: 9px;
+  gap: 6px;
 }
 
 .incident-map-popup-details div,
 .facility-popup-details div {
   display: grid;
   min-width: 0;
-  gap: 5px;
+  gap: 3px;
   border-top: 1px solid rgba(125, 211, 252, 0.12);
-  padding-top: 9px;
+  padding-top: 6px;
 }
 
 .incident-map-popup-details span,
 .facility-popup-details span {
   color: #8aa1b5;
-  font-size: 0.72rem;
+  font-size: 0.66rem;
   font-weight: 900;
   letter-spacing: 0;
   text-transform: uppercase;
@@ -2225,9 +2225,9 @@ tbody tr:hover {
 .incident-map-popup-details strong,
 .facility-popup-details strong {
   color: #f8fbff;
-  font-size: 0.88rem;
+  font-size: 0.8rem;
   font-weight: 850;
-  line-height: 1.45;
+  line-height: 1.32;
   white-space: normal;
   overflow-wrap: anywhere;
   word-break: break-word;
@@ -2260,19 +2260,19 @@ tbody tr:hover {
 
 .incident-popup-severity-row {
   align-items: start;
-  gap: 7px !important;
+  gap: 4px !important;
 }
 
 .incident-popup-severity-badge {
   display: inline-flex;
   width: fit-content;
-  min-height: 27px;
+  min-height: 22px;
   align-items: center;
   border: 1px solid transparent;
   border-radius: 999px;
-  padding: 6px 12px;
+  padding: 4px 10px;
   color: #ffffff;
-  font-size: 0.76rem;
+  font-size: 0.68rem;
   font-weight: 950;
   line-height: 1;
   text-transform: uppercase;
@@ -2302,14 +2302,14 @@ tbody tr:hover {
 .facility-directions-button,
 .incident-directions-button {
   width: 100%;
-  min-height: 42px;
+  min-height: 34px;
   border: 1px solid rgba(125, 211, 252, 0.26);
   border-radius: 10px;
   margin: 0;
-  padding: 10px 15px;
+  padding: 8px 12px;
   color: #ffffff;
   background: linear-gradient(135deg, #2563eb, #0891b2);
-  font-size: 0.8rem;
+  font-size: 0.76rem;
   font-weight: 900;
   cursor: pointer;
 }
@@ -2325,8 +2325,8 @@ tbody tr:hover {
 
 .map-dark-popup .mapboxgl-popup-content {
   border: 1px solid rgba(56, 189, 248, 0.2) !important;
-  border-radius: 16px !important;
-  padding: 20px 20px 22px !important;
+  border-radius: 12px !important;
+  padding: 14px 14px 16px !important;
   color: #f8fafc !important;
   background:
     linear-gradient(145deg, rgba(10, 20, 33, 0.98), rgba(15, 31, 45, 0.98)),
@@ -2334,7 +2334,9 @@ tbody tr:hover {
   box-shadow:
     0 22px 54px rgba(2, 6, 12, 0.58),
     0 0 30px rgba(56, 189, 248, 0.12) !important;
-  overflow: visible !important;
+  max-height: min(420px, calc(100vh - 190px));
+  overflow-y: auto !important;
+  scrollbar-width: thin;
 }
 
 .mapboxgl-popup-content {
@@ -3291,8 +3293,8 @@ tbody tr:hover {
   .directions-mini-map {
     right: 10px;
     bottom: 10px;
-    width: min(220px, 48vw);
-    min-width: 170px;
+    width: min(180px, 42vw);
+    min-width: 140px;
   }
 
   .map-perspective-controls {
