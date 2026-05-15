@@ -1011,6 +1011,10 @@ function MapView({
   const [showPoliceReportsLayer, setShowPoliceReportsLayer] = useState(true);
 
   const isSupportMap = role === "support";
+  const currentPoliceUsername = useMemo(
+    () => user?.id || user?.primaryEmailAddress?.emailAddress || user?.username || "police-session",
+    [user?.id, user?.primaryEmailAddress?.emailAddress, user?.username],
+  );
   const canUseDirections = !isSupportMap && mode === "normal" && (role === "police" || (role === "user" && showModeControls));
   const crimeIncidents = useMemo(
     () => (isSupportMap ? [] : incidents.length ? incidents : crimeDataIncidents),
@@ -1399,7 +1403,7 @@ function MapView({
       return;
     }
 
-    const username = user?.id || user?.primaryEmailAddress?.emailAddress || user?.username || "police-session";
+    const username = currentPoliceUsername;
     const displayName = user?.fullName || user?.username || user?.primaryEmailAddress?.emailAddress || "Cảnh sát";
     let lastSentAt = 0;
     let hasSharedLocation = false;
@@ -1463,7 +1467,7 @@ function MapView({
         void endPoliceShift(username).catch(() => undefined);
       }
     };
-  }, [role, user?.fullName, user?.id, user?.primaryEmailAddress?.emailAddress, user?.username]);
+  }, [currentPoliceUsername, role, user?.fullName, user?.primaryEmailAddress?.emailAddress, user?.username]);
   useEffect(() => {
     const map = mapRef.current;
 
@@ -1509,6 +1513,12 @@ function MapView({
         return;
       }
 
+      if (location.username === currentPoliceUsername) {
+        policeLocationMarkersRef.current.get(location.username)?.remove();
+        policeLocationMarkersRef.current.delete(location.username);
+        return;
+      }
+
       nextUsernames.add(location.username);
       policeLocationMarkersRef.current.get(location.username)?.remove();
 
@@ -1530,7 +1540,7 @@ function MapView({
         policeLocationMarkersRef.current.delete(username);
       }
     });
-  }, [policeLocations, role]);
+  }, [currentPoliceUsername, policeLocations, role]);
   useEffect(() => {
     const map = mapRef.current;
 

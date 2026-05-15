@@ -1442,11 +1442,9 @@ tbody tr:hover {
 }
 
 .current-location-marker-police::after {
-  inset: 50% auto auto 50%;
-  width: 24px;
-  height: 24px;
-  border-color: rgba(56, 189, 248, 0.26);
-  transform: translate(-50%, -50%);
+  display: none;
+  content: none;
+  animation: none;
 }
 
 .police-location-marker {
