@@ -295,6 +295,25 @@ function formatDistance(distanceMeters?: number) {
   return distanceMeters >= 1000 ? `${(distanceMeters / 1000).toFixed(1)} km` : `${Math.round(distanceMeters)} m`;
 }
 
+function formatPopupDateTime(value: string) {
+  if (!value) {
+    return "Chưa rõ";
+  }
+
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("vi-VN", {
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(date);
+}
+
 function appendPopupRow(container: HTMLElement, label: string, value: string) {
   const row = document.createElement("div");
   const labelElement = document.createElement("span");
@@ -330,15 +349,20 @@ function createFacilityPopup(
   title.className = "facility-popup-title";
   title.textContent = name;
 
+  const body = document.createElement("div");
+  body.className = "map-popup-body";
   const details = document.createElement("div");
   details.className = "facility-popup-details";
   appendPopupRow(details, "Loại", getFacilityTypeLabel(type));
   appendPopupRow(details, "Địa chỉ", address);
   appendPopupRow(details, "Khoảng cách", formatDistance(distanceMeters));
+  body.appendChild(details);
 
-  popupContent.append(title, details);
+  popupContent.append(title, body);
 
   if (onDirections) {
+    const footer = document.createElement("div");
+    footer.className = "map-popup-footer";
     const button = document.createElement("button");
     button.className = "facility-directions-button";
     button.type = "button";
@@ -348,7 +372,8 @@ function createFacilityPopup(
       event.stopPropagation();
       onDirections(facility);
     });
-    popupContent.appendChild(button);
+    footer.appendChild(button);
+    popupContent.appendChild(footer);
   }
 
   return popupContent;
@@ -444,7 +469,11 @@ function getSeverityLabel(severity: ReturnType<typeof getIncidentSeverity>) {
   return labels[severity] || severity;
 }
 
-function createIncidentPopup(incident: Incident, onDirections?: (incident: Incident) => void) {
+function createIncidentPopup(
+  incident: Incident,
+  onDirections?: (incident: Incident) => void,
+  options: { includeReporter?: boolean } = {},
+) {
   const severity = getIncidentSeverity(incident);
   const popupContent = document.createElement("div");
   popupContent.className = `incident-map-popup incident-map-popup-${severity}`;
@@ -453,17 +482,25 @@ function createIncidentPopup(incident: Incident, onDirections?: (incident: Incid
   title.className = "incident-map-popup-title";
   title.textContent = getIncidentTitle(incident);
 
+  const body = document.createElement("div");
+  body.className = "map-popup-body";
   const details = document.createElement("div");
   details.className = "incident-map-popup-details";
-  appendPopupRow(details, "Người gửi", getIncidentReporterName(incident));
+  if (options.includeReporter !== false) {
+    appendPopupRow(details, "Người gửi", getIncidentReporterName(incident));
+  }
   appendPopupRow(details, "Loại", getIncidentCategory(incident));
-  appendPopupRow(details, "Thời gian", getIncidentCreatedAt(incident));
+  appendPopupRow(details, "Thời gian", formatPopupDateTime(getIncidentCreatedAt(incident)));
   appendSeverityPopupRow(details, severity);
   appendPopupRow(details, "Địa chỉ", getIncidentLocation(incident));
+  appendPopupRow(details, "Trạng thái", getIncidentStatus(incident));
+  body.appendChild(details);
 
-  popupContent.append(title, details);
+  popupContent.append(title, body);
 
   if (onDirections) {
+    const footer = document.createElement("div");
+    footer.className = "map-popup-footer";
     const button = document.createElement("button");
     button.className = "incident-directions-button";
     button.type = "button";
@@ -473,7 +510,8 @@ function createIncidentPopup(incident: Incident, onDirections?: (incident: Incid
       event.stopPropagation();
       onDirections(incident);
     });
-    popupContent.appendChild(button);
+    footer.appendChild(button);
+    popupContent.appendChild(footer);
   }
 
   return popupContent;
@@ -1301,6 +1339,7 @@ function MapView({
       const popup = new mapboxgl.Popup({
         className: `map-dark-popup facility-popup-shell facility-popup-shell-${facility.type}`,
         closeButton: canUseDirections,
+        maxWidth: "380px",
         offset: 28,
       }).setDOMContent(
         createFacilityPopup(facility, distanceMeters, canUseDirections ? startFacilityDirections : undefined),
@@ -1511,6 +1550,7 @@ function MapView({
         .setPopup(
           new mapboxgl.Popup({
             className: `map-dark-popup incident-popup-shell incident-popup-shell-${getIncidentSeverity(incident)}`,
+            maxWidth: "390px",
             offset: 28,
           }).setDOMContent(
             createIncidentPopup(incident, role === "police" && canUseDirections ? startIncidentDirections : undefined),
@@ -1548,6 +1588,7 @@ function MapView({
     popupRef.current?.remove();
     popupRef.current = new mapboxgl.Popup({
       className: `map-dark-popup incident-popup-shell incident-popup-shell-${getIncidentSeverity(incident)}`,
+      maxWidth: "390px",
       offset: 28,
     })
       .setLngLat(coordinates)
@@ -1702,9 +1743,13 @@ function MapView({
       }
 
       popupRef.current?.remove();
-      popupRef.current = new mapboxgl.Popup({ offset: 16 })
+      popupRef.current = new mapboxgl.Popup({
+        className: `map-dark-popup incident-popup-shell incident-popup-shell-${getIncidentSeverity(incident)}`,
+        maxWidth: "390px",
+        offset: 16,
+      })
         .setLngLat(event.lngLat)
-        .setDOMContent(createIncidentPopup(incident))
+        .setDOMContent(createIncidentPopup(incident, undefined, { includeReporter: false }))
         .addTo(mapRef.current);
     }
 
