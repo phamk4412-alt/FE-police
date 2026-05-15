@@ -4356,7 +4356,7 @@ tbody tr:hover {
 .national-event-card {
   position: relative;
   display: grid;
-  min-height: 184px;
+  min-height: 168px;
   align-items: start;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.13);
@@ -4365,7 +4365,7 @@ tbody tr:hover {
   background:
     linear-gradient(90deg, rgba(4, 10, 18, 0.92), rgba(8, 17, 26, 0.68) 48%, rgba(8, 17, 26, 0.36)),
     linear-gradient(180deg, rgba(8, 17, 26, 0.12), rgba(8, 17, 26, 0.78)),
-    var(--event-image),
+    var(--event-image, linear-gradient(135deg, #7f1d1d, #0f172a)),
     var(--surface-elevated);
   background-position: center;
   background-size: cover;
@@ -4384,6 +4384,25 @@ tbody tr:hover {
   pointer-events: none;
 }
 
+.national-event-card.is-upcoming {
+  min-height: 218px;
+  align-items: end;
+  padding: 20px;
+  background:
+    linear-gradient(90deg, rgba(4, 10, 18, 0.92), rgba(8, 17, 26, 0.66) 54%, rgba(8, 17, 26, 0.22)),
+    linear-gradient(180deg, rgba(8, 17, 26, 0.08), rgba(8, 17, 26, 0.82)),
+    var(--event-image, linear-gradient(135deg, #7f1d1d, #0f172a)),
+    var(--surface-elevated);
+  background-position: center;
+  background-size: cover;
+}
+
+.national-event-card.is-upcoming::before {
+  background:
+    linear-gradient(90deg, rgba(4, 10, 18, 0.68), rgba(4, 10, 18, 0.22) 64%, transparent),
+    linear-gradient(180deg, transparent, rgba(4, 10, 18, 0.5));
+}
+
 .national-event-content {
   position: relative;
   z-index: 1;
@@ -4392,6 +4411,11 @@ tbody tr:hover {
   min-width: 0;
   gap: 7px;
   align-self: end;
+}
+
+.national-event-card.is-upcoming .national-event-content {
+  max-width: min(100%, 340px);
+  gap: 8px;
 }
 
 .national-event-card .national-event-countdown {
@@ -4477,20 +4501,34 @@ tbody tr:hover {
 }
 
 .national-event-card strong {
-  display: -webkit-box;
-  overflow: hidden;
+  display: block;
+  overflow: visible;
   color: #ffffff;
   font-size: 1.06rem;
   font-weight: 950;
-  line-height: 1.18;
+  line-height: 1.22;
   text-shadow: 0 2px 14px rgba(0, 0, 0, 0.56);
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  overflow-wrap: normal;
+  word-break: normal;
 }
 
 .national-event-card small {
   color: #dbeafe;
   font-weight: 850;
+}
+
+.national-event-card.is-upcoming strong {
+  font-size: 1.14rem;
+  line-height: 1.18;
+}
+
+.national-event-card.is-upcoming small {
+  font-size: 0.92rem;
+}
+
+.national-event-card.is-upcoming em {
+  color: #fbbf24;
+  font-size: 0.96rem;
 }
 
 .national-event-card p {
@@ -4580,12 +4618,21 @@ tbody tr:hover {
     padding: 16px;
   }
 
+  .national-event-card.is-upcoming {
+    min-height: 205px;
+    padding: 18px;
+  }
+
   .national-event-content {
     max-width: 100%;
   }
 
   .national-event-card strong {
     font-size: 1rem;
+  }
+
+  .national-event-card.is-upcoming strong {
+    font-size: 1.04rem;
   }
 }
 
