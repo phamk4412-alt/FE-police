@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Button from "../../components/common/Button";
-import DashboardStatCards, { type DashboardStatCardItem } from "../../components/common/DashboardStatCards";
 import AdminIcon, { type AdminIconName } from "../../components/admin/AdminIcons";
 import DashboardLayout from "../../components/layout/DashboardLayout";
 import MapView from "../../components/map/MapView";
@@ -12,13 +11,6 @@ const MAX_IMAGES = 3;
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const DEFAULT_HCM_LOCATION = { lat: 10.7769, lng: 106.7009 };
-
-const citizenStats: DashboardStatCardItem[] = [
-  { icon: "file", label: "Báo cáo nhanh", note: "Gửi kèm vị trí và ảnh", tone: "blue", value: "3 bước" },
-  { icon: "mapPin", label: "Định vị", note: "Tọa độ hiện trường", tone: "green", value: "GPS" },
-  { icon: "ambulance", label: "Số khẩn cấp", note: "Mở dialer khi cần", tone: "red", value: 3 },
-  { icon: "bell", label: "Cảnh báo", note: "Tin an ninh mới nhất", tone: "orange", value: "Live" },
-];
 
 const emergencyNumbers: Array<{
   icon: AdminIconName;
@@ -336,8 +328,6 @@ function UserDashboard() {
             <h2>Báo cáo nhanh trong vài giây</h2>
             <span>Gửi báo cáo nhanh chóng và chính xác.</span>
           </section>
-
-          <DashboardStatCards ariaLabel="Thống kê nhanh người dân" stats={citizenStats} />
 
           <section className="citizen-home-grid">
             <MapView
