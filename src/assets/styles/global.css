@@ -4355,6 +4355,7 @@ tbody tr:hover {
 
 .national-event-card {
   position: relative;
+  isolation: isolate;
   display: grid;
   min-height: 168px;
   align-items: start;
@@ -4363,8 +4364,6 @@ tbody tr:hover {
   border-radius: 10px;
   padding: 18px;
   background:
-    linear-gradient(90deg, rgba(4, 10, 18, 0.92), rgba(8, 17, 26, 0.68) 48%, rgba(8, 17, 26, 0.36)),
-    linear-gradient(180deg, rgba(8, 17, 26, 0.12), rgba(8, 17, 26, 0.78)),
     var(--event-image, linear-gradient(135deg, #7f1d1d, #0f172a)),
     var(--surface-elevated);
   background-position: center;
@@ -4377,20 +4376,20 @@ tbody tr:hover {
 .national-event-card::before {
   position: absolute;
   inset: 0;
+  border-radius: inherit;
   background:
-    radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.1), transparent 22%),
-    linear-gradient(90deg, rgba(4, 10, 18, 0.58), transparent 62%);
+    radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.08), transparent 22%),
+    linear-gradient(90deg, rgba(4, 10, 18, 0.44), rgba(8, 17, 26, 0.26) 52%, rgba(8, 17, 26, 0.08)),
+    linear-gradient(180deg, rgba(8, 17, 26, 0.04), rgba(8, 17, 26, 0.46));
   content: "";
   pointer-events: none;
 }
 
 .national-event-card.is-upcoming {
   min-height: 218px;
-  align-items: end;
+  align-items: start;
   padding: 20px;
   background:
-    linear-gradient(90deg, rgba(4, 10, 18, 0.92), rgba(8, 17, 26, 0.66) 54%, rgba(8, 17, 26, 0.22)),
-    linear-gradient(180deg, rgba(8, 17, 26, 0.08), rgba(8, 17, 26, 0.82)),
     var(--event-image, linear-gradient(135deg, #7f1d1d, #0f172a)),
     var(--surface-elevated);
   background-position: center;
@@ -4398,9 +4397,15 @@ tbody tr:hover {
 }
 
 .national-event-card.is-upcoming::before {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
   background:
-    linear-gradient(90deg, rgba(4, 10, 18, 0.68), rgba(4, 10, 18, 0.22) 64%, transparent),
-    linear-gradient(180deg, transparent, rgba(4, 10, 18, 0.5));
+    linear-gradient(90deg, rgba(2, 6, 12, 0.64) 0%, rgba(4, 10, 18, 0.48) 62%, rgba(4, 10, 18, 0.34) 100%),
+    linear-gradient(180deg, rgba(2, 6, 12, 0.3) 0%, rgba(2, 6, 12, 0.56) 100%);
 }
 
 .national-event-content {
@@ -4414,7 +4419,9 @@ tbody tr:hover {
 }
 
 .national-event-card.is-upcoming .national-event-content {
-  max-width: min(100%, 340px);
+  width: 100%;
+  max-width: none;
+  align-self: start;
   gap: 8px;
 }
 
@@ -4503,6 +4510,8 @@ tbody tr:hover {
 .national-event-card strong {
   display: block;
   overflow: visible;
+  width: 100%;
+  min-width: 0;
   color: #ffffff;
   font-size: 1.06rem;
   font-weight: 950;
@@ -4510,6 +4519,7 @@ tbody tr:hover {
   text-shadow: 0 2px 14px rgba(0, 0, 0, 0.56);
   overflow-wrap: normal;
   word-break: normal;
+  hyphens: none;
 }
 
 .national-event-card small {
@@ -4518,8 +4528,9 @@ tbody tr:hover {
 }
 
 .national-event-card.is-upcoming strong {
-  font-size: 1.14rem;
-  line-height: 1.18;
+  max-width: min(100%, 460px);
+  font-size: 1.08rem;
+  line-height: 1.22;
 }
 
 .national-event-card.is-upcoming small {
@@ -4529,6 +4540,7 @@ tbody tr:hover {
 .national-event-card.is-upcoming em {
   color: #fbbf24;
   font-size: 0.96rem;
+  white-space: nowrap;
 }
 
 .national-event-card p {
@@ -4621,18 +4633,30 @@ tbody tr:hover {
   .national-event-card.is-upcoming {
     min-height: 205px;
     padding: 18px;
+    background:
+      var(--event-image, linear-gradient(135deg, #7f1d1d, #0f172a)),
+      var(--surface-elevated);
+    background-position: center;
+    background-size: cover;
   }
 
   .national-event-content {
+    width: 100%;
     max-width: 100%;
   }
 
   .national-event-card strong {
     font-size: 1rem;
+    line-height: 1.24;
   }
 
   .national-event-card.is-upcoming strong {
-    font-size: 1.04rem;
+    max-width: 100%;
+    font-size: 1rem;
+  }
+
+  .national-event-card.is-upcoming em {
+    font-size: 0.92rem;
   }
 }
 
