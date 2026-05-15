@@ -22,6 +22,30 @@ const eventImages: Record<string, string> = {
   "Tết Nguyên Đán": "/event-images/tet-nguyen-dan.png",
 };
 
+const eventImageAliases: Record<string, string> = {
+  christmas: "/event-images/giang-sinh.png",
+  "giai phong mien nam": "/event-images/giai-phong-mien-nam.png",
+  "giang sinh": "/event-images/giang-sinh.png",
+  "gio to hung vuong": "/event-images/gio-to-hung-vuong.png",
+  "hung vuong": "/event-images/gio-to-hung-vuong.png",
+  "image:giang-sinh": "/event-images/giang-sinh.png",
+  "image:giai-phong-mien-nam": "/event-images/giai-phong-mien-nam.png",
+  "image:gio-to-hung-vuong": "/event-images/gio-to-hung-vuong.png",
+  "image:quoc-khanh-vn": "/event-images/quoc-khanh-vn.png",
+  "image:quoc-te-lao-dong": "/event-images/quoc-te-lao-dong.png",
+  "image:tet-duong-lich": "/event-images/tet-duong-lich.png",
+  "image:tet-nguyen-dan": "/event-images/tet-nguyen-dan.png",
+  noel: "/event-images/giang-sinh.png",
+  "ngay giai phong mien nam thong nhat dat nuoc": "/event-images/giai-phong-mien-nam.png",
+  "ngay giang sinh": "/event-images/giang-sinh.png",
+  "ngay quoc khanh nuoc cong hoa xa hoi chu nghia viet nam": "/event-images/quoc-khanh-vn.png",
+  "ngay quoc te lao dong": "/event-images/quoc-te-lao-dong.png",
+  "quoc khanh": "/event-images/quoc-khanh-vn.png",
+  "quoc te lao dong": "/event-images/quoc-te-lao-dong.png",
+  "tet duong lich": "/event-images/tet-duong-lich.png",
+  "tet nguyen dan": "/event-images/tet-nguyen-dan.png",
+};
+
 function getArticleId(article: NewsArticle) {
   return String(article.id ?? article.Id ?? "");
 }
@@ -92,6 +116,16 @@ function normalizeEventName(value: string) {
 }
 
 function getEventImage(event: NationalEvent) {
+  const source = event as Record<string, unknown>;
+  const imageKey = source.imageKey || source.ImageKey;
+  if (typeof imageKey === "string" && imageKey.trim()) {
+    const key = `image:${normalizeEventName(imageKey).replace(/\.(png|jpg|jpeg|webp)$/i, "")}`;
+    const image = eventImageAliases[key] || eventImageAliases[normalizeEventName(imageKey)];
+    if (image) {
+      return image;
+    }
+  }
+
   const name = getEventName(event);
   const exactImage = eventImages[name];
   if (exactImage) {
@@ -99,10 +133,15 @@ function getEventImage(event: NationalEvent) {
   }
 
   const normalizedName = normalizeEventName(name);
+  const aliasImage = eventImageAliases[normalizedName];
+  if (aliasImage) {
+    return aliasImage;
+  }
+
   const matchedEntry = Object.entries(eventImages).find(([eventName]) =>
     normalizedName.includes(normalizeEventName(eventName)) || normalizeEventName(eventName).includes(normalizedName),
   );
-  return matchedEntry?.[1] || "/event-images/quoc-khanh-vn.png";
+  return matchedEntry?.[1] || "";
 }
 
 function getEventDescription(event: NationalEvent) {
@@ -112,7 +151,8 @@ function getEventDescription(event: NationalEvent) {
 }
 
 function getEventCardStyle(event: NationalEvent): CSSProperties {
-  return { "--event-image": `url("${getEventImage(event)}")` } as CSSProperties;
+  const image = getEventImage(event);
+  return image ? ({ "--event-image": `url("${image}")` } as CSSProperties) : {};
 }
 
 function getEventVisualClass(event: NationalEvent) {
@@ -552,26 +592,21 @@ function UserNewsPage({ articleId }: UserNewsPageProps) {
 
                         return (
                           <article
-                            className={`national-event-card ${getEventVisualClass(event)}`}
+                            className={`national-event-card is-upcoming ${getEventVisualClass(event)}`}
                             key={getEventId(event)}
                             style={getEventCardStyle(event)}
                           >
                             <div className="national-event-content">
-                              <span className="national-event-countdown">
-                                {daysRemaining === 0 ? "0 ngày" : `${daysRemaining} ngày`}
-                              </span>
                               <strong>{getEventName(event)}</strong>
                               <small>{formatEventDate(getEventDate(event))}</small>
-                              {getEventDescription(event) ? <p>{getEventDescription(event)}</p> : null}
                               <em>{daysRemaining === 0 ? "Hôm nay" : `Còn ${daysRemaining} ngày`}</em>
                             </div>
                           </article>
                         );
                       })
                     : Array.from({ length: isLoading ? 2 : 1 }).map((_, index) => (
-                        <article className={`national-event-card news-placeholder-card ${isLoading ? "is-loading" : ""}`} key={index}>
+                        <article className={`national-event-card is-upcoming news-placeholder-card ${isLoading ? "is-loading" : ""}`} key={index}>
                           <div className="national-event-content">
-                            <span className="national-event-countdown">--</span>
                             <strong>{isLoading ? "Đang tải sự kiện..." : "Chưa có sự kiện sắp tới"}</strong>
                             <small>{isLoading ? "Đang cập nhật ngày diễn ra" : "API chưa trả dữ liệu sự kiện."}</small>
                             <em>{isLoading ? "Đang tính countdown" : "Còn -- ngày"}</em>
