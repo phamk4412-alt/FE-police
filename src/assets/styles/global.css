@@ -3610,8 +3610,8 @@ tbody tr:hover {
 }
 
 .support-image-modal img {
-  max-width: min(1100px, 92vw);
-  max-height: 84vh;
+  max-width: min(760px, 82vw);
+  max-height: 72vh;
   border: 1px solid var(--line);
   border-radius: 8px;
   object-fit: contain;
