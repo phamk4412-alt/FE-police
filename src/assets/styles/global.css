@@ -4397,7 +4397,7 @@ tbody tr:hover {
 
 .national-event-card.is-upcoming::before {
   background:
-    linear-gradient(90deg, rgba(4, 10, 18, 0.68), rgba(4, 10, 18, 0.22) 64%, transparent),
+    linear-gradient(90deg, rgba(4, 10, 18, 0.58), rgba(4, 10, 18, 0.2) 68%, transparent),
     linear-gradient(180deg, transparent, rgba(4, 10, 18, 0.5));
 }
 
@@ -4412,7 +4412,8 @@ tbody tr:hover {
 }
 
 .national-event-card.is-upcoming .national-event-content {
-  max-width: min(100%, 340px);
+  width: min(100%, 420px);
+  max-width: 100%;
   gap: 8px;
 }
 
@@ -4501,6 +4502,8 @@ tbody tr:hover {
 .national-event-card strong {
   display: block;
   overflow: visible;
+  width: 100%;
+  min-width: 0;
   color: #ffffff;
   font-size: 1.06rem;
   font-weight: 950;
@@ -4508,6 +4511,7 @@ tbody tr:hover {
   text-shadow: 0 2px 14px rgba(0, 0, 0, 0.56);
   overflow-wrap: normal;
   word-break: normal;
+  hyphens: none;
 }
 
 .national-event-card small {
@@ -4516,8 +4520,8 @@ tbody tr:hover {
 }
 
 .national-event-card.is-upcoming strong {
-  font-size: 1.14rem;
-  line-height: 1.18;
+  font-size: 1.08rem;
+  line-height: 1.22;
 }
 
 .national-event-card.is-upcoming small {
@@ -4527,6 +4531,7 @@ tbody tr:hover {
 .national-event-card.is-upcoming em {
   color: #fbbf24;
   font-size: 0.96rem;
+  white-space: nowrap;
 }
 
 .national-event-card p {
@@ -4618,19 +4623,32 @@ tbody tr:hover {
 
   .national-event-card.is-upcoming {
     min-height: 205px;
-    padding: 18px;
+    padding: 18px 16px;
+    background:
+      linear-gradient(90deg, rgba(4, 10, 18, 0.78), rgba(8, 17, 26, 0.42) 74%, rgba(8, 17, 26, 0.16)),
+      linear-gradient(180deg, rgba(8, 17, 26, 0.08), rgba(8, 17, 26, 0.78)),
+      var(--event-image, linear-gradient(135deg, #7f1d1d, #0f172a)),
+      var(--surface-elevated);
+    background-position: center;
+    background-size: cover;
   }
 
   .national-event-content {
+    width: 100%;
     max-width: 100%;
   }
 
   .national-event-card strong {
     font-size: 1rem;
+    line-height: 1.24;
   }
 
   .national-event-card.is-upcoming strong {
-    font-size: 1.04rem;
+    font-size: 1rem;
+  }
+
+  .national-event-card.is-upcoming em {
+    font-size: 0.92rem;
   }
 }
 

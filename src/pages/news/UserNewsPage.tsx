@@ -100,6 +100,12 @@ function getEventName(event: NationalEvent) {
   return event.name || event.Name || "Sự kiện";
 }
 
+function getEventDisplayName(event: NationalEvent) {
+  const source = event as Record<string, unknown>;
+  const description = source.description || source.Description;
+  return typeof description === "string" && description.trim() ? description : getEventName(event);
+}
+
 function getEventDate(event: NationalEvent) {
   return event.eventDate || event.EventDate || "";
 }
@@ -126,28 +132,27 @@ function getEventImage(event: NationalEvent) {
     }
   }
 
+  const displayName = getEventDisplayName(event);
   const name = getEventName(event);
-  const exactImage = eventImages[name];
+  const exactImage = eventImages[displayName] || eventImages[name];
   if (exactImage) {
     return exactImage;
   }
 
+  const normalizedDisplayName = normalizeEventName(displayName);
   const normalizedName = normalizeEventName(name);
-  const aliasImage = eventImageAliases[normalizedName];
+  const aliasImage = eventImageAliases[normalizedDisplayName] || eventImageAliases[normalizedName];
   if (aliasImage) {
     return aliasImage;
   }
 
   const matchedEntry = Object.entries(eventImages).find(([eventName]) =>
-    normalizedName.includes(normalizeEventName(eventName)) || normalizeEventName(eventName).includes(normalizedName),
+    normalizedDisplayName.includes(normalizeEventName(eventName)) ||
+    normalizeEventName(eventName).includes(normalizedDisplayName) ||
+    normalizedName.includes(normalizeEventName(eventName)) ||
+    normalizeEventName(eventName).includes(normalizedName),
   );
   return matchedEntry?.[1] || "";
-}
-
-function getEventDescription(event: NationalEvent) {
-  const source = event as Record<string, unknown>;
-  const description = source.description || source.Description || source.summary || source.Summary;
-  return typeof description === "string" ? description : "";
 }
 
 function getEventCardStyle(event: NationalEvent): CSSProperties {
@@ -566,9 +571,8 @@ function UserNewsPage({ articleId }: UserNewsPageProps) {
                     >
                       <div className="national-event-content">
                         <span className="national-event-countdown">Hôm nay</span>
-                        <strong>{getEventName(event)}</strong>
+                        <strong>{getEventDisplayName(event)}</strong>
                         <small>{formatEventDate(getEventDate(event))}</small>
-                        {getEventDescription(event) ? <p>{getEventDescription(event)}</p> : null}
                         <em>Hôm nay</em>
                       </div>
                     </article>
@@ -597,7 +601,7 @@ function UserNewsPage({ articleId }: UserNewsPageProps) {
                             style={getEventCardStyle(event)}
                           >
                             <div className="national-event-content">
-                              <strong>{getEventName(event)}</strong>
+                              <strong>{getEventDisplayName(event)}</strong>
                               <small>{formatEventDate(getEventDate(event))}</small>
                               <em>{daysRemaining === 0 ? "Hôm nay" : `Còn ${daysRemaining} ngày`}</em>
                             </div>
