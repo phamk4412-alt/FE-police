@@ -1421,6 +1421,34 @@ tbody tr:hover {
   content: "";
 }
 
+.current-location-marker-police {
+  width: clamp(34px, 7vw, 46px);
+  height: clamp(50px, 10vw, 64px);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.3))
+    drop-shadow(0 0 9px rgba(56, 189, 248, 0.3));
+}
+
+.current-location-marker-police img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+
+.current-location-marker-police::after {
+  inset: 50% auto auto 50%;
+  width: 24px;
+  height: 24px;
+  border-color: rgba(56, 189, 248, 0.26);
+  transform: translate(-50%, -50%);
+}
+
 .police-location-marker {
   width: 32px;
   height: 32px;

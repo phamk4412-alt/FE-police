@@ -4,6 +4,7 @@ import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import hospitalLogo from "../../assets/logos/hospital-logo.svg";
 import policeStationLogo from "../../assets/logos/police-station-logo.svg";
+import policeCarMarker from "../../assets/police-car-marker.png";
 import { API_URL, apiFetch } from "../../services/api";
 import type { Incident } from "../../types/incident";
 import {
@@ -402,11 +403,21 @@ function showPopupOnMarkerHover(marker: mapboxgl.Marker) {
   element.addEventListener("blur", closePopup);
 }
 
-function createCurrentLocationMarker(label: string) {
+function createCurrentLocationMarker(label: string, role: MapRole) {
   const markerElement = document.createElement("div");
-  markerElement.className = "current-location-marker";
+  markerElement.className =
+    role === "police" ? "current-location-marker current-location-marker-police" : "current-location-marker";
   markerElement.setAttribute("aria-label", label);
   markerElement.setAttribute("role", "img");
+
+  if (role === "police") {
+    const markerImage = document.createElement("img");
+    markerImage.src = policeCarMarker;
+    markerImage.alt = "";
+    markerImage.draggable = false;
+    markerElement.appendChild(markerImage);
+  }
+
   return markerElement;
 }
 function normalizePoliceLocation(location: PoliceLocation) {
@@ -1462,7 +1473,7 @@ function MapView({
 
     currentLocationMarkerRef.current?.remove();
     currentLocationMarkerRef.current = new mapboxgl.Marker({
-      element: createCurrentLocationMarker(currentLocationLabel),
+      element: createCurrentLocationMarker(currentLocationLabel, role),
     })
       .setLngLat(currentLocation)
       .setPopup(new mapboxgl.Popup({ offset: 18 }).setText(currentLocationLabel))
@@ -1479,7 +1490,7 @@ function MapView({
         zoom: Math.max(zoom, 14),
       });
     }
-  }, [currentLocation, currentLocationLabel, defaultToCurrentLocation, perspective, zoom]);
+  }, [currentLocation, currentLocationLabel, defaultToCurrentLocation, perspective, role, zoom]);
 
   useEffect(() => {
     const map = mapRef.current;
