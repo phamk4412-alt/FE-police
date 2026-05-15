@@ -8,6 +8,7 @@ import {
   getIncidentCreatedAt,
   getIncidentId,
   getIncidentLocation,
+  getIncidentSeverity,
   getIncidentStatus,
   getIncidentTitle,
 } from "../../types/incident";
@@ -17,6 +18,18 @@ const stats: DashboardStatCardItem[] = [
   { icon: "activity", label: "Đang xử lý", note: "Đã phân công tuần tra", tone: "orange", value: 9 },
   { icon: "mapPin", label: "Khu vực nóng", note: "Mật độ cảnh báo cao", tone: "purple", value: 4 },
 ];
+
+function formatIncidentTime(value: string) {
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("vi-VN", {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(date);
+}
 
 function PoliceDashboard() {
   const [incidents, setIncidents] = useState<Incident[]>([]);
@@ -68,14 +81,14 @@ function PoliceDashboard() {
         </div>
         <div className="incident-list">
           {incidents.map((incident) => (
-            <article className="incident-item" key={getIncidentId(incident)}>
+            <article className={`incident-item incident-item-${getIncidentSeverity(incident)}`} key={getIncidentId(incident)}>
               <div>
                 <strong>{getIncidentTitle(incident)}</strong>
                 <span>{getIncidentLocation(incident)}</span>
               </div>
               <div>
                 <span className="status-pill">{getIncidentStatus(incident)}</span>
-                <small>{getIncidentCreatedAt(incident)}</small>
+                <small>{formatIncidentTime(getIncidentCreatedAt(incident))}</small>
               </div>
             </article>
           ))}

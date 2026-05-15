@@ -74,6 +74,24 @@ function getEventId(event: NationalEvent) {
   return String(event.id ?? event.Id ?? `${getEventName(event)}-${getEventDate(event)}`);
 }
 
+function getEventVisualClass(event: NationalEvent) {
+  const name = getEventName(event).toLowerCase();
+  if (name.includes("noel") || name.includes("giáng sinh") || name.includes("christmas")) {
+    return "is-christmas";
+  }
+  if (name.includes("tết") || name.includes("nguyên đán") || name.includes("lunar")) {
+    return "is-tet";
+  }
+  if (name.includes("quốc khánh") || name.includes("2/9") || name.includes("độc lập")) {
+    return "is-national-day";
+  }
+  if (name.includes("trung thu") || name.includes("mid-autumn") || name.includes("trăng")) {
+    return "is-mid-autumn";
+  }
+
+  return "is-cultural";
+}
+
 function toStartOfDay(value: string | Date) {
   const date = typeof value === "string" ? new Date(value) : new Date(value);
   if (!Number.isFinite(date.getTime())) {
@@ -449,8 +467,9 @@ function UserNewsPage({ articleId }: UserNewsPageProps) {
                 </div>
                 {todayEvents.length ? (
                   todayEvents.map((event) => (
-                    <article className="national-event-card is-today" key={getEventId(event)}>
-                      <span>Hôm nay</span>
+                    <article className={`national-event-card is-today ${getEventVisualClass(event)}`} key={getEventId(event)}>
+                      <span className="national-event-thumb" aria-hidden="true" />
+                      <span className="national-event-countdown">Hôm nay</span>
                       <div>
                         <strong>{getEventName(event)}</strong>
                         <small>{formatEventDate(getEventDate(event))}</small>
@@ -476,8 +495,11 @@ function UserNewsPage({ articleId }: UserNewsPageProps) {
                         const daysRemaining = getDaysRemaining(event);
 
                         return (
-                          <article className="national-event-card" key={getEventId(event)}>
-                            <span>{daysRemaining === 0 ? "0 ngày" : `${daysRemaining} ngày`}</span>
+                          <article className={`national-event-card ${getEventVisualClass(event)}`} key={getEventId(event)}>
+                            <span className="national-event-thumb" aria-hidden="true" />
+                            <span className="national-event-countdown">
+                              {daysRemaining === 0 ? "0 ngày" : `${daysRemaining} ngày`}
+                            </span>
                             <div>
                               <strong>{getEventName(event)}</strong>
                               <small>{formatEventDate(getEventDate(event))}</small>
@@ -488,7 +510,8 @@ function UserNewsPage({ articleId }: UserNewsPageProps) {
                       })
                     : Array.from({ length: isLoading ? 2 : 1 }).map((_, index) => (
                         <article className={`national-event-card news-placeholder-card ${isLoading ? "is-loading" : ""}`} key={index}>
-                          <span>--</span>
+                          <span className="national-event-thumb" aria-hidden="true" />
+                          <span className="national-event-countdown">--</span>
                           <div>
                             <strong>{isLoading ? "Đang tải sự kiện..." : "Chưa có sự kiện sắp tới"}</strong>
                             <small>{isLoading ? "Đang cập nhật ngày diễn ra" : "API chưa trả dữ liệu sự kiện."}</small>
