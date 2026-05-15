@@ -305,6 +305,18 @@ function appendPopupRow(container: HTMLElement, label: string, value: string) {
   container.appendChild(row);
 }
 
+function appendSeverityPopupRow(container: HTMLElement, severity: ReturnType<typeof getIncidentSeverity>) {
+  const row = document.createElement("div");
+  row.className = "incident-popup-severity-row";
+  const labelElement = document.createElement("span");
+  const valueElement = document.createElement("strong");
+  labelElement.textContent = "Mức độ";
+  valueElement.className = `incident-popup-severity-badge incident-popup-severity-${severity}`;
+  valueElement.textContent = getSeverityLabel(severity);
+  row.append(labelElement, valueElement);
+  container.appendChild(row);
+}
+
 function createFacilityPopup(
   facility: FacilityMarker,
   distanceMeters?: number,
@@ -446,7 +458,7 @@ function createIncidentPopup(incident: Incident, onDirections?: (incident: Incid
   appendPopupRow(details, "Người gửi", getIncidentReporterName(incident));
   appendPopupRow(details, "Loại", getIncidentCategory(incident));
   appendPopupRow(details, "Thời gian", getIncidentCreatedAt(incident));
-  appendPopupRow(details, "Mức độ", getSeverityLabel(severity));
+  appendSeverityPopupRow(details, severity);
   appendPopupRow(details, "Địa chỉ", getIncidentLocation(incident));
 
   popupContent.append(title, details);
@@ -1286,7 +1298,11 @@ function MapView({
     facilityMapMarkersRef.current = displayedFacilities.map((facility) => {
       const markerElement = createFacilityMarker(facility);
       const distanceMeters = currentLocation ? calculateDistanceMeters(currentLocation, facility.coordinates) : undefined;
-      const popup = new mapboxgl.Popup({ closeButton: canUseDirections, offset: 28 }).setDOMContent(
+      const popup = new mapboxgl.Popup({
+        className: `map-dark-popup facility-popup-shell facility-popup-shell-${facility.type}`,
+        closeButton: canUseDirections,
+        offset: 28,
+      }).setDOMContent(
         createFacilityPopup(facility, distanceMeters, canUseDirections ? startFacilityDirections : undefined),
       );
       const marker = new mapboxgl.Marker({ anchor: "bottom", element: markerElement })
@@ -1493,7 +1509,10 @@ function MapView({
       })
         .setLngLat(coordinates)
         .setPopup(
-          new mapboxgl.Popup({ offset: 28 }).setDOMContent(
+          new mapboxgl.Popup({
+            className: `map-dark-popup incident-popup-shell incident-popup-shell-${getIncidentSeverity(incident)}`,
+            offset: 28,
+          }).setDOMContent(
             createIncidentPopup(incident, role === "police" && canUseDirections ? startIncidentDirections : undefined),
           ),
         )
@@ -1527,7 +1546,10 @@ function MapView({
     });
 
     popupRef.current?.remove();
-    popupRef.current = new mapboxgl.Popup({ offset: 28 })
+    popupRef.current = new mapboxgl.Popup({
+      className: `map-dark-popup incident-popup-shell incident-popup-shell-${getIncidentSeverity(incident)}`,
+      offset: 28,
+    })
       .setLngLat(coordinates)
       .setDOMContent(createIncidentPopup(incident))
       .addTo(map);

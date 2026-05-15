@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   getFeaturedNews,
@@ -135,42 +135,6 @@ function formatCurrentClock(value: Date) {
   }).format(value);
 }
 
-function getArticleLooseField(article: NewsArticle, keys: string[]) {
-  const source = article as Record<string, unknown>;
-  const match = keys.map((key) => source[key]).find((value) => typeof value === "string" && value.trim());
-  return typeof match === "string" ? match : "";
-}
-
-function getAlertTone(article: NewsArticle) {
-  const text = `${getCategory(article)} ${getTitle(article)} ${getSummary(article)}`.toLowerCase();
-  if (text.includes("giao thông") || text.includes("tai nạn") || text.includes("ùn tắc")) {
-    return { className: "is-traffic", icon: "GT", shortTitle: "Giao thông" };
-  }
-  if (text.includes("thời tiết") || text.includes("mưa") || text.includes("bão") || text.includes("ngập")) {
-    return { className: "is-weather", icon: "TT", shortTitle: "Thời tiết" };
-  }
-  if (text.includes("xã hội") || text.includes("cộng đồng") || text.includes("dân sinh")) {
-    return { className: "is-social", icon: "XH", shortTitle: "Xã hội" };
-  }
-  if (text.includes("khẩn") || text.includes("nguy") || text.includes("cảnh báo")) {
-    return { className: "is-warning", icon: "CB", shortTitle: "Cảnh báo" };
-  }
-
-  return { className: "is-security", icon: "AN", shortTitle: "An ninh" };
-}
-
-function getAlertLevel(article: NewsArticle) {
-  const text = `${getCategory(article)} ${getTitle(article)} ${getSummary(article)}`.toLowerCase();
-  if (text.includes("khẩn") || text.includes("nghiêm trọng") || text.includes("nguy hiểm")) {
-    return "Cao";
-  }
-  if (text.includes("cảnh báo") || text.includes("lưu ý")) {
-    return "Trung bình";
-  }
-
-  return "Thông tin";
-}
-
 function NewsSkeleton() {
   return (
     <div className="news-skeleton-grid" aria-label="Đang tải tin tức">
@@ -228,9 +192,7 @@ function UserNewsPage({ articleId }: UserNewsPageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
   const [error, setError] = useState("");
-  const [selectedAlertIndex, setSelectedAlertIndex] = useState<number | null>(null);
   const [currentClock, setCurrentClock] = useState(() => new Date());
-  const alertSectionRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -351,40 +313,6 @@ function UserNewsPage({ articleId }: UserNewsPageProps) {
     [sortedEvents],
   );
 
-  const alertItems = useMemo(() => {
-    const source = otherArticles.length ? otherArticles : sortedArticles;
-    return source.slice(0, 4).map((article) => ({
-      area: getArticleLooseField(article, ["area", "Area", "location", "Location", "region", "Region"]) || "Toàn quốc",
-      category: getCategory(article),
-      description: getSummary(article) || getContent(article) || "Thông tin chi tiết sẽ được cập nhật khi có dữ liệu mới.",
-      level: getArticleLooseField(article, ["level", "Level", "severity", "Severity", "priority", "Priority"]) || getAlertLevel(article),
-      title: getTitle(article),
-      tone: getAlertTone(article),
-      time: formatDateTime(getPublishedAt(article)),
-    }));
-  }, [otherArticles, sortedArticles]);
-
-  const selectedAlert =
-    selectedAlertIndex !== null && selectedAlertIndex < alertItems.length ? alertItems[selectedAlertIndex] : null;
-
-  useEffect(() => {
-    if (selectedAlertIndex === null) {
-      return;
-    }
-
-    function handlePointerDown(event: PointerEvent) {
-      if (!alertSectionRef.current?.contains(event.target as Node)) {
-        setSelectedAlertIndex(null);
-      }
-    }
-
-    document.addEventListener("pointerdown", handlePointerDown);
-
-    return () => {
-      document.removeEventListener("pointerdown", handlePointerDown);
-    };
-  }, [selectedAlertIndex]);
-
   useEffect(() => {
     const intervalId = window.setInterval(() => setCurrentClock(new Date()), 30000);
     return () => window.clearInterval(intervalId);
@@ -468,7 +396,7 @@ function UserNewsPage({ articleId }: UserNewsPageProps) {
           <div className="news-left-filler">
             <span>Nhịp tin trong ngày</span>
             <strong>{sortedArticles.length}</strong>
-            <small>{featuredArticles.length} tin nổi bật, {alertItems.length} cảnh báo đang theo dõi.</small>
+            <small>{featuredArticles.length} tin nổi bật, {otherArticles.length} tin mới đang theo dõi.</small>
           </div>
         </aside>
 
@@ -573,59 +501,6 @@ function UserNewsPage({ articleId }: UserNewsPageProps) {
             </div>
           </div>
 
-          <div className="news-side-section news-alert-section" ref={alertSectionRef}>
-            <div className="news-column-heading">
-              <span>Thông báo / Cảnh báo</span>
-            </div>
-            <div className="news-alert-bubbles" aria-label="Danh sách thông báo và cảnh báo">
-              {alertItems.length
-                ? alertItems.map((item, index) => (
-                    <button
-                      className={`news-alert-bubble ${item.tone.className} ${selectedAlertIndex === index ? "is-active" : ""}`}
-                      type="button"
-                      aria-expanded={selectedAlertIndex === index}
-                      aria-label={`Mở thông báo ${item.title}`}
-                      onClick={() => setSelectedAlertIndex(index)}
-                      key={`${item.title}-${index}`}
-                    >
-                      <span>{item.tone.icon}</span>
-                      <strong>{item.tone.shortTitle}</strong>
-                    </button>
-                  ))
-                : Array.from({ length: 4 }).map((_, index) => (
-                    <button
-                      className={`news-alert-bubble is-placeholder news-placeholder-card ${isLoading ? "is-loading" : ""}`}
-                      type="button"
-                      disabled
-                      key={index}
-                    >
-                      <span>{isLoading ? "--" : "TB"}</span>
-                      <strong>{isLoading ? "Đang tải" : "Thông báo"}</strong>
-                    </button>
-                  ))}
-            </div>
-            {selectedAlert ? (
-              <article className="news-alert-detail">
-                <span>{selectedAlert.category}</span>
-                <strong>{selectedAlert.title}</strong>
-                <p>{selectedAlert.description}</p>
-                <dl>
-                  <div>
-                    <dt>Thời gian</dt>
-                    <dd>{selectedAlert.time}</dd>
-                  </div>
-                  <div>
-                    <dt>Mức độ</dt>
-                    <dd>{selectedAlert.level}</dd>
-                  </div>
-                  <div>
-                    <dt>Khu vực</dt>
-                    <dd>{selectedAlert.area}</dd>
-                  </div>
-                </dl>
-              </article>
-            ) : null}
-          </div>
         </aside>
       </div>
     </section>
