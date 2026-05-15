@@ -622,9 +622,23 @@ a {
 .stat-card {
   display: grid;
   gap: 8px;
+  min-height: 142px;
   padding: 20px;
   position: relative;
   overflow: hidden;
+  color: var(--primary);
+}
+
+.stat-card::after {
+  position: absolute;
+  right: -28px;
+  bottom: -36px;
+  width: 92px;
+  height: 92px;
+  border-radius: 999px;
+  background: currentColor;
+  content: "";
+  opacity: 0.08;
 }
 
 .stat-card::before,
@@ -666,6 +680,72 @@ a {
   color: var(--ink);
   font-size: 2rem;
   line-height: 1;
+}
+
+.stat-card > span:not(.stat-icon) {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.dashboard-stats-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.dashboard-stat-card {
+  background: var(--surface);
+}
+
+.stat-icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 1px solid currentColor;
+  border-radius: 14px;
+  color: inherit;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.stat-tone-blue {
+  color: #38bdf8;
+  background:
+    linear-gradient(135deg, rgba(56, 189, 248, 0.12), rgba(20, 33, 45, 0) 58%),
+    var(--surface);
+}
+
+.stat-tone-green {
+  color: #4ade80;
+  background:
+    linear-gradient(135deg, rgba(74, 222, 128, 0.12), rgba(20, 33, 45, 0) 58%),
+    var(--surface);
+}
+
+.stat-tone-orange {
+  color: #f79009;
+  background:
+    linear-gradient(135deg, rgba(247, 144, 9, 0.13), rgba(20, 33, 45, 0) 58%),
+    var(--surface);
+}
+
+.stat-tone-purple {
+  color: #a78bfa;
+  background:
+    linear-gradient(135deg, rgba(167, 139, 250, 0.13), rgba(20, 33, 45, 0) 58%),
+    var(--surface);
+}
+
+.stat-tone-red {
+  color: var(--primary);
+  background:
+    linear-gradient(135deg, rgba(255, 70, 85, 0.13), rgba(20, 33, 45, 0) 58%),
+    var(--surface);
+}
+
+.stat-tone-yellow {
+  color: #facc15;
+  background:
+    linear-gradient(135deg, rgba(250, 204, 21, 0.13), rgba(20, 33, 45, 0) 58%),
+    var(--surface);
 }
 
 .panel,
@@ -2378,6 +2458,7 @@ tbody tr:hover {
 }
 
 .emergency-card div,
+.emergency-number-card,
 .location-card,
 .mini-stat,
 .news-panel article {
@@ -2392,6 +2473,7 @@ tbody tr:hover {
 }
 
 .emergency-card div:hover,
+.emergency-number-card:hover,
 .location-card:hover,
 .mini-stat:hover,
 .news-panel article:hover {
@@ -2407,17 +2489,83 @@ tbody tr:hover {
   padding: 14px;
 }
 
+.emergency-number-card {
+  display: grid;
+  gap: 7px;
+  min-height: 148px;
+  padding: 16px;
+  color: var(--primary);
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.emergency-number-card::after {
+  position: absolute;
+  right: -28px;
+  bottom: -34px;
+  width: 86px;
+  height: 86px;
+  border-radius: 999px;
+  background: currentColor;
+  content: "";
+  opacity: 0.12;
+}
+
+.emergency-icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 1px solid currentColor;
+  border-radius: 14px;
+  color: inherit;
+  background: rgba(255, 255, 255, 0.06);
+}
+
 .emergency-card strong {
   color: var(--primary);
   font-size: 1.8rem;
   line-height: 1;
 }
 
+.emergency-number-card strong {
+  color: var(--ink);
+  font-size: 2.1rem;
+}
+
 .emergency-card span,
+.emergency-number-card small,
 .location-card p,
 .news-panel article span,
 .mini-stat span {
   color: var(--muted);
+}
+
+.emergency-number-card > span:not(.emergency-icon) {
+  color: var(--ink);
+  font-weight: 900;
+}
+
+.emergency-tone-police {
+  color: var(--primary);
+  background:
+    linear-gradient(135deg, rgba(255, 70, 85, 0.14), rgba(20, 33, 45, 0.82)),
+    var(--surface-elevated);
+}
+
+.emergency-tone-medical {
+  color: #4ade80;
+  background:
+    linear-gradient(135deg, rgba(74, 222, 128, 0.14), rgba(20, 33, 45, 0.82)),
+    var(--surface-elevated);
+}
+
+.emergency-tone-fire {
+  color: #f97316;
+  background:
+    linear-gradient(135deg, rgba(249, 115, 22, 0.16), rgba(20, 33, 45, 0.82)),
+    var(--surface-elevated);
 }
 
 .location-card {

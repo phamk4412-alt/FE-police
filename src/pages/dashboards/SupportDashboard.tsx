@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import DashboardStatCards, { type DashboardStatCardItem } from "../../components/common/DashboardStatCards";
 import DashboardLayout from "../../components/layout/DashboardLayout";
 import MapView from "../../components/map/MapView";
 import SupportNewsManager from "../news/SupportNewsManager";
@@ -97,6 +98,27 @@ function SupportDashboard() {
     [incidents, selectedIncidentId],
   );
 
+  const supportStats = useMemo<DashboardStatCardItem[]>(() => {
+    const activeCount = incidents.filter((incident) => {
+      const incidentId = getIncidentId(incident);
+      const status = statusByIncident[incidentId] || getIncidentStatus(incident);
+      return !isCompletedStatus(status);
+    }).length;
+    const criticalCount = incidents.filter((incident) => getIncidentSeverity(incident) === "critical").length;
+    const completedCount = incidents.filter((incident) => {
+      const incidentId = getIncidentId(incident);
+      const status = statusByIncident[incidentId] || getIncidentStatus(incident);
+      return isCompletedStatus(status);
+    }).length;
+
+    return [
+      { icon: "file", label: "Tổng báo cáo", note: "Đang có trong hàng đợi", tone: "blue", value: incidents.length },
+      { icon: "activity", label: "Đang xử lý", note: "Cần theo dõi hiện trường", tone: "orange", value: activeCount },
+      { icon: "alert", label: "Khẩn cấp", note: "Ưu tiên điều phối", tone: "red", value: criticalCount },
+      { icon: "shield", label: "Hoàn thành", note: "Có thể lưu hồ sơ", tone: "green", value: completedCount },
+    ];
+  }, [incidents, statusByIncident]);
+
   function handleSelectIncident(incident: Incident) {
     setSelectedIncidentId(getIncidentId(incident));
   }
@@ -165,6 +187,8 @@ function SupportDashboard() {
         <h2>Tiếp nhận và xử lý báo cáo</h2>
         <span>Danh sách, bản đồ, ảnh hiện trường và thao tác xử lý nằm cùng một màn hình.</span>
       </section>
+
+      <DashboardStatCards ariaLabel="Thống kê nhanh hỗ trợ" stats={supportStats} />
 
       <section className="support-workspace">
         <MapView
