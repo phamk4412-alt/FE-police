@@ -1,10 +1,11 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import DashboardStatCards, { type DashboardStatCardItem } from "../../components/common/DashboardStatCards";
 import DashboardLayout from "../../components/layout/DashboardLayout";
 import MapView from "../../components/map/MapView";
 import SupportNewsManager from "../news/SupportNewsManager";
 import { API_URL } from "../../services/api";
+import { getSupportIncidents, updateSupportIncidentStatus } from "../../services/supportIncidentService";
 import type { Incident, IncidentSeverity } from "../../types/incident";
 import { loadSupportCases, saveSupportCases } from "../../utils/supportCasesStorage";
 import {
@@ -70,7 +71,15 @@ function isCompletedStatus(status: string) {
 }
 
 function getStoredStatus(action: string) {
-  return action === statusActions[2] ? "Hoàn thành" : action;
+  if (action === statusActions[2]) {
+    return "done";
+  }
+
+  if (action === statusActions[1]) {
+    return "processing";
+  }
+
+  return "Da tiep nhan";
 }
 
 function getActionLabel(action: string) {
@@ -92,6 +101,26 @@ function SupportDashboard() {
   const [selectedIncidentId, setSelectedIncidentId] = useState("");
   const [statusByIncident, setStatusByIncident] = useState<Record<string, string>>({});
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    getSupportIncidents()
+      .then((items) => {
+        if (!isMounted) {
+          return;
+        }
+
+        setIncidents(items);
+        saveSupportCases(items);
+        setSelectedIncidentId((current) => current || (items[0] ? getIncidentId(items[0]) : ""));
+      })
+      .catch(() => undefined);
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const selectedIncident = useMemo(
     () => incidents.find((incident) => getIncidentId(incident) === selectedIncidentId) || incidents[0] || null,
@@ -143,6 +172,18 @@ function SupportDashboard() {
       ...current,
       [incidentId]: nextStatus,
     }));
+
+    updateSupportIncidentStatus(incidentId, nextStatus)
+      .then((updatedIncident) => {
+        setIncidents((current) => {
+          const next = current.map((incident) =>
+            getIncidentId(incident) === incidentId ? updateIncidentStatus(updatedIncident, nextStatus) : incident,
+          );
+          saveSupportCases(next);
+          return next;
+        });
+      })
+      .catch(() => undefined);
   }
 
   function handleDeleteCase(id: string) {
