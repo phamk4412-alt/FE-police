@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   getFeaturedNews,
@@ -70,6 +70,20 @@ function getEventDate(event: NationalEvent) {
   return event.eventDate || event.EventDate || "";
 }
 
+function getEventId(event: NationalEvent) {
+  return String(event.id ?? event.Id ?? `${getEventName(event)}-${getEventDate(event)}`);
+}
+
+function toStartOfDay(value: string | Date) {
+  const date = typeof value === "string" ? new Date(value) : new Date(value);
+  if (!Number.isFinite(date.getTime())) {
+    return null;
+  }
+
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
 function getDaysRemaining(event: NationalEvent) {
   if (typeof event.daysRemaining === "number") {
     return event.daysRemaining;
@@ -79,15 +93,72 @@ function getDaysRemaining(event: NationalEvent) {
     return event.DaysRemaining;
   }
 
-  const date = new Date(getEventDate(event));
-  if (!Number.isFinite(date.getTime())) {
+  const date = toStartOfDay(getEventDate(event));
+  if (!date) {
     return 0;
   }
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  date.setHours(0, 0, 0, 0);
+  const today = toStartOfDay(new Date()) as Date;
   return Math.max(0, Math.ceil((date.getTime() - today.getTime()) / 86400000));
+}
+
+function isEventToday(event: NationalEvent) {
+  const date = toStartOfDay(getEventDate(event));
+  const today = toStartOfDay(new Date());
+  return Boolean(date && today && date.getTime() === today.getTime());
+}
+
+function formatEventDate(value: string) {
+  if (!value) {
+    return "Chưa có ngày diễn ra";
+  }
+
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(date);
+}
+
+function getArticleLooseField(article: NewsArticle, keys: string[]) {
+  const source = article as Record<string, unknown>;
+  const match = keys.map((key) => source[key]).find((value) => typeof value === "string" && value.trim());
+  return typeof match === "string" ? match : "";
+}
+
+function getAlertTone(article: NewsArticle) {
+  const text = `${getCategory(article)} ${getTitle(article)} ${getSummary(article)}`.toLowerCase();
+  if (text.includes("giao thông") || text.includes("tai nạn") || text.includes("ùn tắc")) {
+    return { className: "is-traffic", icon: "GT", shortTitle: "Giao thông" };
+  }
+  if (text.includes("thời tiết") || text.includes("mưa") || text.includes("bão") || text.includes("ngập")) {
+    return { className: "is-weather", icon: "TT", shortTitle: "Thời tiết" };
+  }
+  if (text.includes("xã hội") || text.includes("cộng đồng") || text.includes("dân sinh")) {
+    return { className: "is-social", icon: "XH", shortTitle: "Xã hội" };
+  }
+  if (text.includes("khẩn") || text.includes("nguy") || text.includes("cảnh báo")) {
+    return { className: "is-warning", icon: "CB", shortTitle: "Cảnh báo" };
+  }
+
+  return { className: "is-security", icon: "AN", shortTitle: "An ninh" };
+}
+
+function getAlertLevel(article: NewsArticle) {
+  const text = `${getCategory(article)} ${getTitle(article)} ${getSummary(article)}`.toLowerCase();
+  if (text.includes("khẩn") || text.includes("nghiêm trọng") || text.includes("nguy hiểm")) {
+    return "Cao";
+  }
+  if (text.includes("cảnh báo") || text.includes("lưu ý")) {
+    return "Trung bình";
+  }
+
+  return "Thông tin";
 }
 
 function NewsSkeleton() {
@@ -147,6 +218,8 @@ function UserNewsPage({ articleId }: UserNewsPageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
   const [error, setError] = useState("");
+  const [selectedAlertIndex, setSelectedAlertIndex] = useState<number | null>(null);
+  const alertSectionRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -260,14 +333,46 @@ function UserNewsPage({ articleId }: UserNewsPageProps) {
     [events],
   );
 
+  const todayEvents = useMemo(() => sortedEvents.filter(isEventToday), [sortedEvents]);
+
+  const upcomingEvents = useMemo(
+    () => sortedEvents.filter((event) => !isEventToday(event) && getDaysRemaining(event) >= 0).slice(0, 4),
+    [sortedEvents],
+  );
+
   const alertItems = useMemo(() => {
     const source = otherArticles.length ? otherArticles : sortedArticles;
     return source.slice(0, 4).map((article) => ({
+      area: getArticleLooseField(article, ["area", "Area", "location", "Location", "region", "Region"]) || "Toàn quốc",
       category: getCategory(article),
+      description: getSummary(article) || getContent(article) || "Thông tin chi tiết sẽ được cập nhật khi có dữ liệu mới.",
+      level: getArticleLooseField(article, ["level", "Level", "severity", "Severity", "priority", "Priority"]) || getAlertLevel(article),
       title: getTitle(article),
+      tone: getAlertTone(article),
       time: formatDateTime(getPublishedAt(article)),
     }));
   }, [otherArticles, sortedArticles]);
+
+  const selectedAlert =
+    selectedAlertIndex !== null && selectedAlertIndex < alertItems.length ? alertItems[selectedAlertIndex] : null;
+
+  useEffect(() => {
+    if (selectedAlertIndex === null) {
+      return;
+    }
+
+    function handlePointerDown(event: PointerEvent) {
+      if (!alertSectionRef.current?.contains(event.target as Node)) {
+        setSelectedAlertIndex(null);
+      }
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+    };
+  }, [selectedAlertIndex]);
 
   if (articleId) {
     const loadedDetail = detail && getArticleId(detail) === articleId ? detail : null;
@@ -383,52 +488,117 @@ function UserNewsPage({ articleId }: UserNewsPageProps) {
             <div className="news-column-heading">
               <span>Sự kiện Việt Nam</span>
             </div>
-            <div className="national-event-list">
-              {sortedEvents.length
-                ? sortedEvents.slice(0, 2).map((event) => (
-                    <article className="national-event-card" key={`${getEventName(event)}-${getEventDate(event)}`}>
-                      <span>{getDaysRemaining(event)}</span>
+            <div className="national-event-groups">
+              <section className="national-event-group">
+                <div className="national-event-group-heading">
+                  <span>Hôm nay</span>
+                </div>
+                {todayEvents.length ? (
+                  todayEvents.map((event) => (
+                    <article className="national-event-card is-today" key={getEventId(event)}>
+                      <span>Hôm nay</span>
                       <div>
                         <strong>{getEventName(event)}</strong>
-                        <small>{formatDateTime(getEventDate(event)).replace(" lúc 00:00", "")}</small>
-                        <em>Còn {getDaysRemaining(event)} ngày</em>
+                        <small>{formatEventDate(getEventDate(event))}</small>
+                        <em>Hôm nay</em>
                       </div>
                     </article>
                   ))
-                : Array.from({ length: 2 }).map((_, index) => (
-                    <article className={`national-event-card news-placeholder-card ${isLoading ? "is-loading" : ""}`} key={index}>
-                      <span>--</span>
-                      <div>
-                        <strong>{isLoading ? "Đang tải sự kiện..." : "Chưa có sự kiện"}</strong>
-                        <small>{isLoading ? "Đang cập nhật ngày diễn ra" : "API chưa trả dữ liệu."}</small>
-                        <em>{isLoading ? "Đang tính countdown" : "Còn -- ngày"}</em>
-                      </div>
-                    </article>
-                  ))}
+                ) : (
+                  <div className={`national-event-empty ${isLoading ? "is-loading news-placeholder-card" : ""}`}>
+                    <strong>{isLoading ? "Đang tải sự kiện..." : "Hôm nay không có sự kiện quan trọng"}</strong>
+                    <small>{isLoading ? "Đang kiểm tra lịch sự kiện Việt Nam" : "Các sự kiện gần nhất nằm ở nhóm Sắp tới."}</small>
+                  </div>
+                )}
+              </section>
+
+              <section className="national-event-group">
+                <div className="national-event-group-heading">
+                  <span>Sắp tới</span>
+                </div>
+                <div className="national-event-list">
+                  {upcomingEvents.length
+                    ? upcomingEvents.map((event) => {
+                        const daysRemaining = getDaysRemaining(event);
+
+                        return (
+                          <article className="national-event-card" key={getEventId(event)}>
+                            <span>{daysRemaining === 0 ? "0 ngày" : `${daysRemaining} ngày`}</span>
+                            <div>
+                              <strong>{getEventName(event)}</strong>
+                              <small>{formatEventDate(getEventDate(event))}</small>
+                              <em>{daysRemaining === 0 ? "Hôm nay" : `Còn ${daysRemaining} ngày`}</em>
+                            </div>
+                          </article>
+                        );
+                      })
+                    : Array.from({ length: isLoading ? 2 : 1 }).map((_, index) => (
+                        <article className={`national-event-card news-placeholder-card ${isLoading ? "is-loading" : ""}`} key={index}>
+                          <span>--</span>
+                          <div>
+                            <strong>{isLoading ? "Đang tải sự kiện..." : "Chưa có sự kiện sắp tới"}</strong>
+                            <small>{isLoading ? "Đang cập nhật ngày diễn ra" : "API chưa trả dữ liệu sự kiện."}</small>
+                            <em>{isLoading ? "Đang tính countdown" : "Còn -- ngày"}</em>
+                          </div>
+                        </article>
+                      ))}
+                </div>
+              </section>
             </div>
           </div>
 
-          <div className="news-side-section news-alert-section">
+          <div className="news-side-section news-alert-section" ref={alertSectionRef}>
             <div className="news-column-heading">
               <span>Thông báo / Cảnh báo</span>
             </div>
-            <div className="news-alert-list">
+            <div className="news-alert-bubbles" aria-label="Danh sách thông báo và cảnh báo">
               {alertItems.length
                 ? alertItems.map((item, index) => (
-                    <article className="news-alert-card" key={`${item.title}-${index}`}>
-                      <span>{item.category}</span>
-                      <strong>{item.title}</strong>
-                      <small>{item.time}</small>
-                    </article>
+                    <button
+                      className={`news-alert-bubble ${item.tone.className} ${selectedAlertIndex === index ? "is-active" : ""}`}
+                      type="button"
+                      aria-expanded={selectedAlertIndex === index}
+                      aria-label={`Mở thông báo ${item.title}`}
+                      onClick={() => setSelectedAlertIndex(index)}
+                      key={`${item.title}-${index}`}
+                    >
+                      <span>{item.tone.icon}</span>
+                      <strong>{item.tone.shortTitle}</strong>
+                    </button>
                   ))
                 : Array.from({ length: 4 }).map((_, index) => (
-                    <article className={`news-alert-card news-placeholder-card ${isLoading ? "is-loading" : ""}`} key={index}>
-                      <span>{isLoading ? "Đang tải" : "Thông báo"}</span>
-                      <strong>{isLoading ? "Đang tải cảnh báo..." : "Chưa có thông báo mới"}</strong>
-                      <small>{isLoading ? "Đang cập nhật" : "Theo dõi tại đây khi có dữ liệu."}</small>
-                  </article>
-                ))}
+                    <button
+                      className={`news-alert-bubble is-placeholder news-placeholder-card ${isLoading ? "is-loading" : ""}`}
+                      type="button"
+                      disabled
+                      key={index}
+                    >
+                      <span>{isLoading ? "--" : "TB"}</span>
+                      <strong>{isLoading ? "Đang tải" : "Thông báo"}</strong>
+                    </button>
+                  ))}
             </div>
+            {selectedAlert ? (
+              <article className="news-alert-detail">
+                <span>{selectedAlert.category}</span>
+                <strong>{selectedAlert.title}</strong>
+                <p>{selectedAlert.description}</p>
+                <dl>
+                  <div>
+                    <dt>Thời gian</dt>
+                    <dd>{selectedAlert.time}</dd>
+                  </div>
+                  <div>
+                    <dt>Mức độ</dt>
+                    <dd>{selectedAlert.level}</dd>
+                  </div>
+                  <div>
+                    <dt>Khu vực</dt>
+                    <dd>{selectedAlert.area}</dd>
+                  </div>
+                </dl>
+              </article>
+            ) : null}
           </div>
         </aside>
       </div>
