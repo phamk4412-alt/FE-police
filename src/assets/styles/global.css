@@ -63,6 +63,150 @@ a {
   min-height: 100vh;
 }
 
+.vietnam-decor {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  color: rgba(255, 70, 85, 0.78);
+  contain: paint;
+}
+
+.login-page,
+.dashboard-main {
+  position: relative;
+  isolation: isolate;
+}
+
+.login-page > :not(.vietnam-decor),
+.dashboard-main > :not(.vietnam-decor) {
+  position: relative;
+  z-index: 1;
+}
+
+.vietnam-motif {
+  position: absolute;
+  display: block;
+  width: clamp(120px, 14vw, 250px);
+  opacity: 0.07;
+  filter: drop-shadow(0 0 24px rgba(255, 70, 85, 0.18));
+  transform-origin: center;
+}
+
+.vietnam-motif svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.vietnam-motif-corner-a {
+  top: 86px;
+  right: clamp(18px, 3vw, 48px);
+}
+
+.vietnam-motif-corner-b {
+  bottom: 26px;
+  left: clamp(18px, 3vw, 48px);
+  transform: rotate(-6deg);
+}
+
+.vietnam-motif-corner-c {
+  top: 42%;
+  right: 2vw;
+  transform: translateY(-50%) rotate(8deg);
+}
+
+.vietnam-motif-field {
+  right: 12vw;
+  bottom: 12vh;
+  width: clamp(170px, 22vw, 420px);
+  opacity: 0.045;
+}
+
+.vietnam-decor-auth {
+  color: rgba(236, 232, 225, 0.9);
+}
+
+.vietnam-decor-auth .vietnam-motif {
+  opacity: 0.06;
+  filter: drop-shadow(0 0 30px rgba(255, 70, 85, 0.16));
+}
+
+.vietnam-decor-auth .vietnam-motif-corner-a {
+  top: 10vh;
+  left: 5vw;
+  right: auto;
+  width: clamp(170px, 19vw, 330px);
+}
+
+.vietnam-decor-auth .vietnam-motif-corner-b {
+  right: 7vw;
+  bottom: 9vh;
+  left: auto;
+}
+
+.vietnam-decor-user-home {
+  color: rgba(255, 188, 96, 0.78);
+}
+
+.vietnam-decor-user-home .vietnam-motif-waves,
+.vietnam-decor-user-map .vietnam-motif-waves,
+.vietnam-decor-user-news-detail .vietnam-motif-waves {
+  color: rgba(56, 189, 248, 0.82);
+}
+
+.vietnam-decor-user-map {
+  color: rgba(245, 158, 11, 0.74);
+}
+
+.vietnam-decor-user-news,
+.vietnam-decor-user-news-detail {
+  color: rgba(236, 232, 225, 0.82);
+}
+
+.vietnam-decor-police {
+  color: rgba(255, 70, 85, 0.84);
+}
+
+.vietnam-decor-police .vietnam-motif-dragon {
+  top: 102px;
+  right: clamp(14px, 2vw, 36px);
+  width: clamp(210px, 24vw, 430px);
+  opacity: 0.075;
+}
+
+.vietnam-decor-police .vietnam-motif-drum {
+  color: rgba(245, 158, 11, 0.78);
+  opacity: 0.065;
+}
+
+.vietnam-decor-support-duty,
+.vietnam-decor-support-news {
+  color: rgba(74, 222, 128, 0.72);
+}
+
+.vietnam-decor-support-duty .vietnam-motif-field,
+.vietnam-decor-support-news .vietnam-motif-field {
+  color: rgba(236, 232, 225, 0.68);
+  opacity: 0.04;
+}
+
+.vietnam-decor-admin {
+  color: rgba(226, 232, 240, 0.75);
+}
+
+.vietnam-decor-admin .vietnam-motif-dongson {
+  top: 92px;
+  right: clamp(12px, 2vw, 38px);
+  width: clamp(170px, 18vw, 320px);
+  opacity: 0.075;
+}
+
+.vietnam-decor-admin .vietnam-motif-drum {
+  color: rgba(245, 158, 11, 0.62);
+}
+
 .login-page {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(460px, 540px);
@@ -1879,6 +2023,16 @@ tbody tr:hover {
     grid-template-columns: 1fr;
   }
 
+  .vietnam-motif {
+    width: clamp(96px, 22vw, 180px);
+    opacity: 0.055;
+  }
+
+  .vietnam-motif-field {
+    width: clamp(140px, 36vw, 260px);
+    opacity: 0.035;
+  }
+
   .login-hero {
     min-height: 360px;
   }
@@ -1952,6 +2106,31 @@ tbody tr:hover {
 }
 
 @media (max-width: 640px) {
+  .vietnam-motif-corner-a {
+    top: 88px;
+    right: -18px;
+  }
+
+  .vietnam-motif-corner-b {
+    bottom: 12px;
+    left: -20px;
+  }
+
+  .vietnam-motif-field {
+    right: -28px;
+    bottom: 18vh;
+  }
+
+  .vietnam-decor-auth .vietnam-motif-corner-a {
+    top: 44px;
+    left: -28px;
+  }
+
+  .vietnam-decor-auth .vietnam-motif-corner-b {
+    right: -24px;
+    bottom: 24px;
+  }
+
   .login-card {
     margin: 20px;
     padding: 22px;

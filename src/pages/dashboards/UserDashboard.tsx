@@ -67,6 +67,13 @@ function UserDashboard() {
   const isNewsRoute = location.pathname.startsWith("/user/news");
   const activeUserTab = isNewsRoute ? "news" : tab;
   const newsArticleId = newsMatch?.[1] ? decodeURIComponent(newsMatch[1]) : undefined;
+  const decorVariant = isNewsRoute
+    ? newsArticleId
+      ? "user-news-detail"
+      : "user-news"
+    : tab === "map"
+      ? "user-map"
+      : "user-home";
 
   function handleUserTabChange(nextTab: "home" | "map" | "news") {
     if (nextTab === "news") {
@@ -289,7 +296,12 @@ function UserDashboard() {
   }
 
   return (
-    <DashboardLayout activeUserTab={activeUserTab} onUserTabChange={handleUserTabChange} role="user">
+    <DashboardLayout
+      activeUserTab={activeUserTab}
+      decorVariant={decorVariant}
+      onUserTabChange={handleUserTabChange}
+      role="user"
+    >
       {isNewsRoute ? (
         <UserNewsPage articleId={newsArticleId} />
       ) : tab === "home" ? (

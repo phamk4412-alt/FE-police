@@ -152,6 +152,7 @@ function SupportDashboard() {
   return (
     <DashboardLayout
       activeSupportTab={location.pathname.startsWith("/support/news") ? "news" : "duty"}
+      decorVariant={location.pathname.startsWith("/support/news") ? "support-news" : "support-duty"}
       onSupportTabChange={handleSupportTabChange}
       role="support"
     >
