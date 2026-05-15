@@ -7,10 +7,12 @@ import policeStationLogo from "../../assets/logos/police-station-logo.svg";
 import { API_URL, apiFetch } from "../../services/api";
 import type { Incident } from "../../types/incident";
 import {
+  getIncidentCategory,
   getIncidentCoordinates,
   getIncidentCreatedAt,
   getIncidentId,
   getIncidentLocation,
+  getIncidentReporterName,
   getIncidentSeverity,
   getIncidentStatus,
   getIncidentTitle,
@@ -76,6 +78,11 @@ interface DirectionsRoute {
   geometry: GeoJSON.LineString;
   origin: [number, number];
 }
+
+type DirectionsTarget = {
+  coordinates: [number, number];
+  label?: string;
+};
 
 interface OverpassElement {
   center?: { lat: number; lon: number };
@@ -264,14 +271,60 @@ function createFacilityMarker({ logo, name, type }: FacilityMarker) {
   return markerElement;
 }
 
-function createFacilityPopup(facility: FacilityMarker, onDirections?: (facility: FacilityMarker) => void) {
+function getFacilityTypeLabel(type: FacilityType) {
+  return type === "hospital" ? "Bệnh viện" : "Công An";
+}
+
+function calculateDistanceMeters(from: [number, number], to: [number, number]) {
+  const earthRadiusMeters = 6371000;
+  const fromLat = (from[1] * Math.PI) / 180;
+  const toLat = (to[1] * Math.PI) / 180;
+  const deltaLat = ((to[1] - from[1]) * Math.PI) / 180;
+  const deltaLng = ((to[0] - from[0]) * Math.PI) / 180;
+  const a =
+    Math.sin(deltaLat / 2) ** 2 +
+    Math.cos(fromLat) * Math.cos(toLat) * Math.sin(deltaLng / 2) ** 2;
+  return earthRadiusMeters * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function formatDistance(distanceMeters?: number) {
+  if (typeof distanceMeters !== "number" || !Number.isFinite(distanceMeters)) {
+    return "Chưa có vị trí hiện tại";
+  }
+
+  return distanceMeters >= 1000 ? `${(distanceMeters / 1000).toFixed(1)} km` : `${Math.round(distanceMeters)} m`;
+}
+
+function appendPopupRow(container: HTMLElement, label: string, value: string) {
+  const row = document.createElement("div");
+  const labelElement = document.createElement("span");
+  const valueElement = document.createElement("strong");
+  labelElement.textContent = label;
+  valueElement.textContent = value || "Chưa rõ";
+  row.append(labelElement, valueElement);
+  container.appendChild(row);
+}
+
+function createFacilityPopup(
+  facility: FacilityMarker,
+  distanceMeters?: number,
+  onDirections?: (facility: FacilityMarker) => void,
+) {
   const { address, name, type } = facility;
   const popupContent = document.createElement("div");
   popupContent.className = `facility-popup facility-popup-${type}`;
-  popupContent.innerHTML = `<strong></strong><span></span><small></small>`;
-  popupContent.querySelector("strong")!.textContent = name;
-  popupContent.querySelector("span")!.textContent = type === "hospital" ? "Bệnh viện" : "Công An";
-  popupContent.querySelector("small")!.textContent = address;
+
+  const title = document.createElement("strong");
+  title.className = "facility-popup-title";
+  title.textContent = name;
+
+  const details = document.createElement("div");
+  details.className = "facility-popup-details";
+  appendPopupRow(details, "Loại", getFacilityTypeLabel(type));
+  appendPopupRow(details, "Địa chỉ", address);
+  appendPopupRow(details, "Khoảng cách", formatDistance(distanceMeters));
+
+  popupContent.append(title, details);
 
   if (onDirections) {
     const button = document.createElement("button");
@@ -370,15 +423,47 @@ function createIncidentMarker(incident: Incident, isActive: boolean) {
   return markerElement;
 }
 
-function createIncidentPopup(incident: Incident) {
+function getSeverityLabel(severity: ReturnType<typeof getIncidentSeverity>) {
+  const labels = {
+    critical: "Khẩn cấp",
+    low: "Thấp",
+    medium: "Trung bình",
+  };
+  return labels[severity] || severity;
+}
+
+function createIncidentPopup(incident: Incident, onDirections?: (incident: Incident) => void) {
+  const severity = getIncidentSeverity(incident);
   const popupContent = document.createElement("div");
-  popupContent.className = "incident-map-popup";
-  popupContent.innerHTML = `<strong></strong><span></span><small></small>`;
-  popupContent.querySelector("strong")!.textContent = getIncidentTitle(incident);
-  popupContent.querySelector("span")!.textContent = getIncidentStatus(incident);
-  popupContent.querySelector("small")!.textContent = [getIncidentLocation(incident), getIncidentCreatedAt(incident)]
-    .filter(Boolean)
-    .join(" - ");
+  popupContent.className = `incident-map-popup incident-map-popup-${severity}`;
+
+  const title = document.createElement("strong");
+  title.className = "incident-map-popup-title";
+  title.textContent = getIncidentTitle(incident);
+
+  const details = document.createElement("div");
+  details.className = "incident-map-popup-details";
+  appendPopupRow(details, "Người gửi", getIncidentReporterName(incident));
+  appendPopupRow(details, "Loại", getIncidentCategory(incident));
+  appendPopupRow(details, "Thời gian", getIncidentCreatedAt(incident));
+  appendPopupRow(details, "Mức độ", getSeverityLabel(severity));
+  appendPopupRow(details, "Địa chỉ", getIncidentLocation(incident));
+
+  popupContent.append(title, details);
+
+  if (onDirections) {
+    const button = document.createElement("button");
+    button.className = "incident-directions-button";
+    button.type = "button";
+    button.textContent = "Chỉ đường";
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      onDirections(incident);
+    });
+    popupContent.appendChild(button);
+  }
+
   return popupContent;
 }
 
@@ -861,11 +946,25 @@ function MapView({
   const [activeRoute, setActiveRoute] = useState<DirectionsRoute | null>(null);
   const [routeHeading, setRouteHeading] = useState(0);
   const [routeMessage, setRouteMessage] = useState("");
+  const [showPoliceFacilitiesLayer, setShowPoliceFacilitiesLayer] = useState(true);
+  const [showPoliceReportsLayer, setShowPoliceReportsLayer] = useState(true);
 
   const isSupportMap = role === "support";
   const canUseDirections = !isSupportMap && mode === "normal" && (role === "police" || (role === "user" && showModeControls));
-  const crimeIncidents = isSupportMap ? [] : incidents.length ? incidents : crimeDataIncidents;
-  const markerIncidents = isSupportMap ? incidents : [];
+  const crimeIncidents = useMemo(
+    () => (isSupportMap ? [] : incidents.length ? incidents : crimeDataIncidents),
+    [crimeDataIncidents, incidents, isSupportMap],
+  );
+  const markerIncidents = useMemo(
+    () => (isSupportMap || (role === "police" && mode === "normal" && showPoliceReportsLayer) ? incidents : []),
+    [incidents, isSupportMap, mode, role, showPoliceReportsLayer],
+  );
+  const displayedFacilities = useMemo(() => limitFacilitiesForDisplay(facilities), [facilities]);
+  const showFacilityLayer =
+    !isSupportMap &&
+    mode === "normal" &&
+    showPoiInNormal &&
+    (role !== "police" || showPoliceFacilitiesLayer);
 
   const crimeTypes = useMemo(
     () => Array.from(new Set(crimeIncidents.map(getIncidentType).filter(Boolean))),
@@ -882,7 +981,7 @@ function MapView({
     [crimeIncidents, crimePeriod, crimeType],
   );
 
-  const startDirections = useCallback(async (facility: FacilityMarker) => {
+  const startDirections = useCallback(async (target: DirectionsTarget) => {
     if (!canUseDirections) {
       return;
     }
@@ -891,13 +990,30 @@ function MapView({
       setRouteMessage("Đang lấy tuyến đường...");
       const origin = currentLocation || (await getBrowserLocation());
       setCurrentLocation(origin);
-      const geometry = await fetchDirectionsRoute(origin, facility.coordinates);
-      setActiveRoute({ destination: facility.coordinates, geometry, origin });
+      const geometry = await fetchDirectionsRoute(origin, target.coordinates);
+      setActiveRoute({ destination: target.coordinates, geometry, origin });
       setRouteMessage("");
     } catch {
       setRouteMessage("Không thể lấy chỉ đường từ vị trí hiện tại.");
     }
   }, [canUseDirections, currentLocation]);
+
+  const startFacilityDirections = useCallback(
+    (facility: FacilityMarker) => {
+      void startDirections({ coordinates: facility.coordinates, label: facility.name });
+    },
+    [startDirections],
+  );
+
+  const startIncidentDirections = useCallback(
+    (incident: Incident) => {
+      const coordinates = getIncidentCoordinates(incident);
+      if (coordinates) {
+        void startDirections({ coordinates, label: getIncidentTitle(incident) });
+      }
+    },
+    [startDirections],
+  );
 
   const clearDirections = useCallback(() => {
     setActiveRoute(null);
@@ -908,6 +1024,49 @@ function MapView({
       clearDirectionsLayers(map);
     }
   }, []);
+
+  const focusNearestFacility = useCallback(
+    async (type: FacilityType) => {
+      const map = mapRef.current;
+      if (!map) {
+        return;
+      }
+
+      try {
+        const origin = currentLocation || (await getBrowserLocation());
+        setCurrentLocation(origin);
+        const candidates = displayedFacilities
+          .map((facility, index) => ({
+            distance: calculateDistanceMeters(origin, facility.coordinates),
+            facility,
+            index,
+          }))
+          .filter((item) => item.facility.type === type)
+          .sort((first, second) => first.distance - second.distance);
+        const nearest = candidates[0];
+
+        if (!nearest) {
+          setRouteMessage("Không tìm thấy điểm phù hợp trên bản đồ.");
+          return;
+        }
+
+        const camera = getCameraForPerspective(perspective);
+        map.easeTo({
+          bearing: camera.bearing,
+          center: nearest.facility.coordinates,
+          duration: 700,
+          pitch: camera.pitch,
+          zoom: Math.max(zoom, 15),
+        });
+        window.setTimeout(() => {
+          facilityMapMarkersRef.current[nearest.index]?.togglePopup();
+        }, 250);
+      } catch {
+        setRouteMessage("Không thể lấy vị trí hiện tại để tìm điểm gần nhất.");
+      }
+    },
+    [currentLocation, displayedFacilities, perspective, zoom],
+  );
 
   useEffect(() => {
     if (!defaultToCurrentLocation || !navigator.geolocation) {
@@ -1119,15 +1278,16 @@ function MapView({
 
     facilityMapMarkersRef.current.forEach((marker) => marker.remove());
 
-    if (isSupportMap || mode !== "normal" || !showPoiInNormal) {
+    if (!showFacilityLayer) {
       facilityMapMarkersRef.current = [];
       return;
     }
 
-    facilityMapMarkersRef.current = limitFacilitiesForDisplay(facilities).map((facility) => {
+    facilityMapMarkersRef.current = displayedFacilities.map((facility) => {
       const markerElement = createFacilityMarker(facility);
+      const distanceMeters = currentLocation ? calculateDistanceMeters(currentLocation, facility.coordinates) : undefined;
       const popup = new mapboxgl.Popup({ closeButton: canUseDirections, offset: 28 }).setDOMContent(
-        createFacilityPopup(facility, canUseDirections ? startDirections : undefined),
+        createFacilityPopup(facility, distanceMeters, canUseDirections ? startFacilityDirections : undefined),
       );
       const marker = new mapboxgl.Marker({ anchor: "bottom", element: markerElement })
         .setLngLat(facility.coordinates)
@@ -1139,7 +1299,7 @@ function MapView({
       }
       return marker;
     });
-  }, [canUseDirections, facilities, isSupportMap, mode, showPoiInNormal, startDirections]);
+  }, [canUseDirections, currentLocation, displayedFacilities, showFacilityLayer, startFacilityDirections]);
 
   useEffect(() => {
     if (role !== "police") {
@@ -1314,7 +1474,7 @@ function MapView({
 
     incidentMapMarkersRef.current.forEach((marker) => marker.remove());
 
-    if (!isSupportMap) {
+    if (!isSupportMap && !(role === "police" && mode === "normal" && showPoliceReportsLayer)) {
       incidentMapMarkersRef.current = [];
       return;
     }
@@ -1332,16 +1492,22 @@ function MapView({
         element: createIncidentMarker(incident, getIncidentId(incident) === selectedId),
       })
         .setLngLat(coordinates)
-        .setPopup(new mapboxgl.Popup({ offset: 28 }).setDOMContent(createIncidentPopup(incident)))
+        .setPopup(
+          new mapboxgl.Popup({ offset: 28 }).setDOMContent(
+            createIncidentPopup(incident, role === "police" && canUseDirections ? startIncidentDirections : undefined),
+          ),
+        )
         .addTo(map);
 
       marker.getElement().addEventListener("click", () => {
-        onIncidentSelect?.(incident);
+        if (isSupportMap) {
+          onIncidentSelect?.(incident);
+        }
       });
 
       return [marker];
     });
-  }, [isSupportMap, markerIncidents, onIncidentSelect, selectedIncident]);
+  }, [canUseDirections, isSupportMap, markerIncidents, mode, onIncidentSelect, role, selectedIncident, showPoliceReportsLayer, startIncidentDirections]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -1557,6 +1723,36 @@ function MapView({
               3D
             </button>
           </div>
+
+          {role === "user" && showModeControls && mode === "normal" ? (
+            <div className="map-quick-search-controls" aria-label="Tìm nhanh điểm hỗ trợ gần nhất">
+              <button type="button" onClick={() => void focusNearestFacility("police")}>
+                Tìm C/A
+              </button>
+              <button type="button" onClick={() => void focusNearestFacility("hospital")}>
+                Tìm B/V
+              </button>
+            </div>
+          ) : null}
+
+          {role === "police" && mode === "normal" ? (
+            <div className="police-layer-controls" aria-label="Bật tắt lớp bản đồ">
+              <button
+                className={showPoliceFacilitiesLayer ? "is-active" : ""}
+                type="button"
+                onClick={() => setShowPoliceFacilitiesLayer((current) => !current)}
+              >
+                Công An / Bệnh Viện
+              </button>
+              <button
+                className={showPoliceReportsLayer ? "is-active" : ""}
+                type="button"
+                onClick={() => setShowPoliceReportsLayer((current) => !current)}
+              >
+                Vụ án / báo cáo
+              </button>
+            </div>
+          ) : null}
 
           <div aria-label={title} className="mapbox-container map-container" ref={mapContainerRef} role="region" />
           {canUseDirections && activeRoute ? (

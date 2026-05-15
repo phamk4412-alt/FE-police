@@ -125,6 +125,16 @@ function formatEventDate(value: string) {
   }).format(date);
 }
 
+function formatCurrentClock(value: Date) {
+  return new Intl.DateTimeFormat("vi-VN", {
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(value);
+}
+
 function getArticleLooseField(article: NewsArticle, keys: string[]) {
   const source = article as Record<string, unknown>;
   const match = keys.map((key) => source[key]).find((value) => typeof value === "string" && value.trim());
@@ -219,6 +229,7 @@ function UserNewsPage({ articleId }: UserNewsPageProps) {
   const [detailLoading, setDetailLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectedAlertIndex, setSelectedAlertIndex] = useState<number | null>(null);
+  const [currentClock, setCurrentClock] = useState(() => new Date());
   const alertSectionRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -374,6 +385,11 @@ function UserNewsPage({ articleId }: UserNewsPageProps) {
     };
   }, [selectedAlertIndex]);
 
+  useEffect(() => {
+    const intervalId = window.setInterval(() => setCurrentClock(new Date()), 30000);
+    return () => window.clearInterval(intervalId);
+  }, []);
+
   if (articleId) {
     const loadedDetail = detail && getArticleId(detail) === articleId ? detail : null;
     const article = loadedDetail || sortedArticles.find((item) => getArticleId(item) === articleId);
@@ -449,6 +465,11 @@ function UserNewsPage({ articleId }: UserNewsPageProps) {
                   <LatestPlaceholder index={index + 1} isLoading={isLoading} key={index} />
                 ))}
           </div>
+          <div className="news-left-filler">
+            <span>Nhịp tin trong ngày</span>
+            <strong>{sortedArticles.length}</strong>
+            <small>{featuredArticles.length} tin nổi bật, {alertItems.length} cảnh báo đang theo dõi.</small>
+          </div>
         </aside>
 
         <section className="news-featured-column">
@@ -484,6 +505,11 @@ function UserNewsPage({ articleId }: UserNewsPageProps) {
         </section>
 
         <aside className="news-events-column">
+          <div className="news-side-section news-clock-section">
+            <span>Thời gian hiện tại</span>
+            <strong>{formatCurrentClock(currentClock)}</strong>
+          </div>
+
           <div className="news-side-section news-event-section">
             <div className="news-column-heading">
               <span>Sự kiện Việt Nam</span>

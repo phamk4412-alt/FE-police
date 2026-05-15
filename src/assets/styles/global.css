@@ -2069,77 +2069,95 @@ tbody tr:hover {
     0 0 0 12px rgba(255, 255, 255, 0.18);
 }
 
-.incident-map-popup {
-  display: grid;
-  gap: 4px;
-  max-width: 260px;
-  color: var(--text);
-}
-
-.incident-map-popup strong {
-  color: var(--ink);
-  font-size: 0.94rem;
-}
-
-.incident-map-popup span {
-  color: var(--primary);
-  font-size: 0.8rem;
-  font-weight: 800;
-}
-
-.incident-map-popup small {
-  color: var(--muted);
-  font-size: 0.82rem;
-}
-
+.incident-map-popup,
 .facility-popup {
   display: grid;
-  gap: 6px;
-  max-width: 240px;
-  color: #f1f5f9;
+  gap: 10px;
+  min-width: 230px;
+  max-width: 300px;
+  color: #f8fafc;
 }
 
-.facility-popup strong {
+.incident-map-popup-title,
+.facility-popup-title {
   color: #ffffff;
-  font-size: 0.92rem;
+  font-size: 1rem;
+  line-height: 1.25;
 }
 
-.facility-popup span {
-  color: #38bdf8;
-  font-size: 0.78rem;
-  font-weight: 800;
+.incident-map-popup-details,
+.facility-popup-details {
+  display: grid;
+  gap: 7px;
+}
+
+.incident-map-popup-details div,
+.facility-popup-details div {
+  display: grid;
+  gap: 2px;
+  border-top: 1px solid rgba(226, 232, 240, 0.12);
+  padding-top: 7px;
+}
+
+.incident-map-popup-details span,
+.facility-popup-details span {
+  color: #aebdcc;
+  font-size: 0.72rem;
+  font-weight: 900;
   text-transform: uppercase;
 }
 
-.facility-popup-hospital span {
-  color: #fb7185;
+.incident-map-popup-details strong,
+.facility-popup-details strong {
+  color: #f8fafc;
+  font-size: 0.84rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 
-.facility-popup-police span {
+.facility-popup-police .facility-popup-title,
+.facility-popup-police .facility-popup-details div:first-child strong {
   color: #22d3ee;
 }
 
-.facility-popup small {
-  color: #cbd5e1;
-  font-size: 0.82rem;
-  line-height: 1.35;
+.facility-popup-hospital .facility-popup-title,
+.facility-popup-hospital .facility-popup-details div:first-child strong {
+  color: #fb7185;
 }
 
-.facility-directions-button {
-  width: fit-content;
-  min-height: 32px;
+.incident-map-popup-critical .incident-map-popup-title,
+.incident-map-popup-critical .incident-map-popup-details div:nth-child(4) strong {
+  color: #ff8a94;
+}
+
+.incident-map-popup-medium .incident-map-popup-title,
+.incident-map-popup-medium .incident-map-popup-details div:nth-child(4) strong {
+  color: #fbbf24;
+}
+
+.incident-map-popup-low .incident-map-popup-title,
+.incident-map-popup-low .incident-map-popup-details div:nth-child(4) strong {
+  color: #4ade80;
+}
+
+.facility-directions-button,
+.incident-directions-button {
+  width: 100%;
+  min-height: 36px;
   border: 0;
-  border-radius: 999px;
-  padding: 7px 12px;
+  border-radius: 8px;
+  padding: 8px 12px;
   color: #ffffff;
-  background: #2563eb;
+  background: linear-gradient(135deg, #2563eb, #0891b2);
   font-size: 0.8rem;
   font-weight: 900;
   cursor: pointer;
 }
 
 .facility-directions-button:hover,
-.facility-directions-button:focus-visible {
+.facility-directions-button:focus-visible,
+.incident-directions-button:hover,
+.incident-directions-button:focus-visible {
   background: #1d4ed8;
 }
 
@@ -2679,6 +2697,48 @@ tbody tr:hover {
 
 .crime-view-controls button:disabled {
   opacity: 0.45;
+}
+
+.map-quick-search-controls,
+.police-layer-controls {
+  position: absolute;
+  left: 14px;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-width: calc(100% - 120px);
+}
+
+.map-quick-search-controls {
+  top: 14px;
+}
+
+.police-layer-controls {
+  top: 62px;
+}
+
+.map-quick-search-controls button,
+.police-layer-controls button {
+  min-height: 36px;
+  border: 1px solid rgba(236, 232, 225, 0.18);
+  border-radius: 8px;
+  padding: 8px 11px;
+  color: #f8fafc;
+  background: rgba(8, 17, 26, 0.82);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.24);
+  font-size: 0.8rem;
+  font-weight: 900;
+  backdrop-filter: blur(10px);
+}
+
+.map-quick-search-controls button:hover,
+.map-quick-search-controls button:focus-visible,
+.police-layer-controls button:hover,
+.police-layer-controls button:focus-visible,
+.police-layer-controls button.is-active {
+  border-color: rgba(56, 189, 248, 0.48);
+  background: rgba(14, 116, 144, 0.86);
 }
 
 .map-controls-footer {
@@ -3717,6 +3777,37 @@ tbody tr:hover {
   max-height: calc(100vh - 250px);
 }
 
+.news-left-filler {
+  display: grid;
+  gap: 6px;
+  margin-top: 16px;
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  border-radius: 8px;
+  padding: 16px;
+  background:
+    linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(20, 33, 45, 0.82)),
+    var(--surface-elevated);
+}
+
+.news-left-filler span,
+.news-clock-section span {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.news-left-filler strong {
+  color: #38bdf8;
+  font-size: 2.4rem;
+  line-height: 1;
+}
+
+.news-left-filler small {
+  color: var(--text);
+  line-height: 1.4;
+}
+
 .news-latest-item {
   grid-template-columns: 14px minmax(0, 1fr);
   gap: 10px;
@@ -3760,13 +3851,30 @@ tbody tr:hover {
 
 .news-events-column {
   display: grid;
-  grid-template-rows: auto auto;
+  grid-template-rows: auto auto auto;
   gap: 20px;
   height: fit-content;
 }
 
 .news-side-section {
   min-width: 0;
+}
+
+.news-clock-section {
+  display: grid;
+  gap: 7px;
+  border: 1px solid rgba(245, 158, 11, 0.28);
+  border-radius: 8px;
+  padding: 16px;
+  background:
+    linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(20, 33, 45, 0.88)),
+    var(--surface-elevated);
+}
+
+.news-clock-section strong {
+  color: var(--ink);
+  font-size: 1.35rem;
+  line-height: 1.2;
 }
 
 .national-event-list,
