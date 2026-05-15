@@ -4353,47 +4353,63 @@ tbody tr:hover {
 
 .national-event-card {
   position: relative;
-  grid-template-columns: 76px minmax(0, 1fr);
-  gap: 12px;
-  min-height: 128px;
+  display: grid;
+  min-height: 184px;
   align-items: start;
   overflow: hidden;
-  padding: 14px;
-  border-color: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 10px;
+  padding: 18px;
   background:
-    linear-gradient(145deg, rgba(20, 33, 45, 0.92), rgba(8, 17, 26, 0.92)),
+    linear-gradient(90deg, rgba(4, 10, 18, 0.92), rgba(8, 17, 26, 0.68) 48%, rgba(8, 17, 26, 0.36)),
+    linear-gradient(180deg, rgba(8, 17, 26, 0.12), rgba(8, 17, 26, 0.78)),
+    var(--event-image),
     var(--surface-elevated);
+  background-position: center;
+  background-size: cover;
+  box-shadow:
+    0 18px 34px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
 }
 
-.national-event-card .national-event-thumb {
-  grid-row: span 2;
-  display: block;
-  width: 76px;
-  height: 92px;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 8px;
+.national-event-card::before {
+  position: absolute;
+  inset: 0;
   background:
-    linear-gradient(180deg, rgba(8, 17, 26, 0.02), rgba(8, 17, 26, 0.45)),
-    radial-gradient(circle at 30% 24%, rgba(255, 255, 255, 0.52), transparent 9px),
-    linear-gradient(135deg, #7f1d1d, #f59e0b);
-  box-shadow: inset 0 -24px 34px rgba(0, 0, 0, 0.24);
+    radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.1), transparent 22%),
+    linear-gradient(90deg, rgba(4, 10, 18, 0.58), transparent 62%);
+  content: "";
+  pointer-events: none;
+}
+
+.national-event-content {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  max-width: 84%;
+  min-width: 0;
+  gap: 7px;
+  align-self: end;
 }
 
 .national-event-card .national-event-countdown {
   display: inline-grid;
   width: fit-content;
-  min-width: 76px;
-  min-height: 32px;
+  min-width: 82px;
+  min-height: 34px;
   place-items: center;
-  border: 1px solid rgba(255, 70, 85, 0.34);
+  border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 999px;
-  padding: 5px 11px;
+  padding: 7px 12px;
   color: #ffffff;
-  background: linear-gradient(135deg, rgba(255, 70, 85, 0.84), rgba(185, 28, 28, 0.78));
+  background:
+    linear-gradient(135deg, rgba(255, 70, 85, 0.78), rgba(245, 158, 11, 0.62)),
+    rgba(8, 17, 26, 0.54);
+  backdrop-filter: blur(10px);
   box-shadow:
-    0 10px 20px rgba(255, 70, 85, 0.14),
-    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+    0 12px 24px rgba(0, 0, 0, 0.28),
+    0 0 20px rgba(255, 70, 85, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
   font-size: 0.82rem;
   font-weight: 950;
   line-height: 1;
@@ -4403,9 +4419,6 @@ tbody tr:hover {
 
 .national-event-card.is-today {
   border-color: rgba(255, 70, 85, 0.46);
-  background:
-    linear-gradient(135deg, rgba(255, 70, 85, 0.16), rgba(20, 33, 45, 0.88)),
-    var(--surface-elevated);
   box-shadow: 0 18px 34px rgba(255, 70, 85, 0.12);
 }
 
@@ -4414,45 +4427,36 @@ tbody tr:hover {
   background: linear-gradient(135deg, var(--primary), #f59e0b);
 }
 
-.national-event-card.is-christmas .national-event-thumb {
-  background:
-    linear-gradient(180deg, rgba(8, 17, 26, 0.02), rgba(8, 17, 26, 0.46)),
-    radial-gradient(circle at 26% 22%, #fde68a 0 5px, transparent 6px),
-    radial-gradient(circle at 62% 42%, #fef3c7 0 3px, transparent 4px),
-    linear-gradient(135deg, #7f1d1d, #166534);
-}
-
-.national-event-card.is-tet .national-event-thumb {
-  background:
-    linear-gradient(180deg, rgba(8, 17, 26, 0.02), rgba(8, 17, 26, 0.42)),
-    radial-gradient(circle at 30% 28%, #facc15 0 7px, transparent 8px),
-    radial-gradient(circle at 58% 54%, #f97316 0 4px, transparent 5px),
-    linear-gradient(135deg, #991b1b, #f59e0b);
-}
-
-.national-event-card.is-national-day .national-event-thumb {
-  background:
-    linear-gradient(180deg, rgba(8, 17, 26, 0.04), rgba(8, 17, 26, 0.38)),
-    radial-gradient(circle at 50% 38%, #fde047 0 9px, transparent 10px),
-    linear-gradient(135deg, #b91c1c, #7f1d1d);
-}
-
-.national-event-card.is-mid-autumn .national-event-thumb {
-  background:
-    linear-gradient(180deg, rgba(8, 17, 26, 0.02), rgba(8, 17, 26, 0.48)),
-    radial-gradient(circle at 64% 24%, #fef3c7 0 12px, transparent 13px),
-    radial-gradient(circle at 30% 58%, #f97316 0 6px, transparent 7px),
-    linear-gradient(135deg, #312e81, #92400e);
-}
-
 .national-event-empty {
+  position: relative;
   display: grid;
-  gap: 5px;
-  border: 1px dashed rgba(255, 255, 255, 0.16);
-  border-radius: 8px;
-  padding: 14px;
+  gap: 8px;
+  overflow: hidden;
+  border: 1px dashed rgba(56, 189, 248, 0.22);
+  border-radius: 10px;
+  padding: 18px 18px 18px 76px;
   color: var(--muted);
-  background: rgba(8, 17, 26, 0.42);
+  background:
+    repeating-linear-gradient(135deg, rgba(56, 189, 248, 0.06) 0 1px, transparent 1px 16px),
+    linear-gradient(145deg, rgba(12, 35, 50, 0.55), rgba(8, 17, 26, 0.72));
+}
+
+.national-event-empty::before {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 10px;
+  color: #bae6fd;
+  background: rgba(14, 116, 144, 0.18);
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.12);
+  content: "CAL";
+  font-size: 0.72rem;
+  font-weight: 950;
 }
 
 .national-event-empty strong {
@@ -4465,7 +4469,37 @@ tbody tr:hover {
 }
 
 .national-event-card em {
-  font-size: 1rem;
+  color: #fbbf24;
+  font-size: 0.94rem;
+  font-weight: 950;
+}
+
+.national-event-card strong {
+  display: -webkit-box;
+  overflow: hidden;
+  color: #ffffff;
+  font-size: 1.06rem;
+  font-weight: 950;
+  line-height: 1.18;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.56);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.national-event-card small {
+  color: #dbeafe;
+  font-weight: 850;
+}
+
+.national-event-card p {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  color: rgba(226, 232, 240, 0.86);
+  font-size: 0.84rem;
+  line-height: 1.35;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 @media (max-width: 1180px) {
@@ -4537,6 +4571,19 @@ tbody tr:hover {
 
   .news-latest-list {
     max-height: none;
+  }
+
+  .national-event-card {
+    min-height: 170px;
+    padding: 16px;
+  }
+
+  .national-event-content {
+    max-width: 100%;
+  }
+
+  .national-event-card strong {
+    font-size: 1rem;
   }
 }
 
