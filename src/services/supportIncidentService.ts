@@ -6,7 +6,7 @@ export function getSupportIncidents() {
 }
 
 export function deleteSupportIncident(id: string) {
-  return apiFetch<void>(`/api/incidents/${encodeURIComponent(id)}`, {
+  return apiFetch<void>(`/api/support/incidents/${encodeURIComponent(id)}`, {
     method: "DELETE",
   });
 }

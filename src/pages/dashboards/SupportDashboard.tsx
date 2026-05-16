@@ -218,15 +218,20 @@ function SupportDashboard() {
       .catch(() => undefined);
   }
 
-  function handleDeleteCase(id: string) {
+  async function handleDeleteCase(id: string) {
     const confirmed = window.confirm("Bạn có chắc muốn xóa vụ án này không?");
 
     if (!confirmed) {
       return;
     }
 
-    removeIncidentFromSupport(id);
-    deleteSupportIncident(id).catch(() => undefined);
+    try {
+      await deleteSupportIncident(id);
+      removeIncidentFromSupport(id);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Khong the xoa vu an.";
+      window.alert(message);
+    }
   }
 
   function handleSupportTabChange(tab: "duty" | "news") {
