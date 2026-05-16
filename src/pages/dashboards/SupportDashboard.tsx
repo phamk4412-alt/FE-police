@@ -5,7 +5,7 @@ import DashboardLayout from "../../components/layout/DashboardLayout";
 import MapView from "../../components/map/MapView";
 import SupportNewsManager from "../news/SupportNewsManager";
 import { API_URL } from "../../services/api";
-import { getSupportIncidents, updateSupportIncidentStatus } from "../../services/supportIncidentService";
+import { deleteSupportIncident, getSupportIncidents, updateSupportIncidentStatus } from "../../services/supportIncidentService";
 import type { Incident, IncidentSeverity } from "../../types/incident";
 import { loadSupportCases, saveSupportCases } from "../../utils/supportCasesStorage";
 import {
@@ -94,10 +94,14 @@ function updateIncidentStatus(incident: Incident, status: string): Incident {
   };
 }
 
+function getActiveSupportIncidents(items: Incident[]) {
+  return items.filter((incident) => !isCompletedStatus(getIncidentStatus(incident)));
+}
+
 function SupportDashboard() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [incidents, setIncidents] = useState<Incident[]>(loadSupportCases);
+  const [incidents, setIncidents] = useState<Incident[]>(() => getActiveSupportIncidents(loadSupportCases()));
   const [selectedIncidentId, setSelectedIncidentId] = useState("");
   const [statusByIncident, setStatusByIncident] = useState<Record<string, string>>({});
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -111,9 +115,10 @@ function SupportDashboard() {
           return;
         }
 
-        setIncidents(items);
-        saveSupportCases(items);
-        setSelectedIncidentId((current) => current || (items[0] ? getIncidentId(items[0]) : ""));
+        const activeItems = getActiveSupportIncidents(items);
+        setIncidents(activeItems);
+        saveSupportCases(activeItems);
+        setSelectedIncidentId((current) => current || (activeItems[0] ? getIncidentId(activeItems[0]) : ""));
       })
       .catch(() => undefined);
 
@@ -152,6 +157,23 @@ function SupportDashboard() {
     setSelectedIncidentId(getIncidentId(incident));
   }
 
+  function removeIncidentFromSupport(id: string) {
+    setIncidents((current) => {
+      const next = current.filter((incident) => getIncidentId(incident) !== id);
+      saveSupportCases(next);
+      setSelectedIncidentId((currentSelectedId) =>
+        currentSelectedId === id ? (next[0] ? getIncidentId(next[0]) : "") : currentSelectedId,
+      );
+      return next;
+    });
+
+    setStatusByIncident((current) => {
+      const next = { ...current };
+      delete next[id];
+      return next;
+    });
+  }
+
   function handleStatusAction(action: string) {
     if (!selectedIncident) {
       return;
@@ -159,22 +181,32 @@ function SupportDashboard() {
 
     const incidentId = getIncidentId(selectedIncident);
     const nextStatus = getStoredStatus(action);
+    const shouldRemoveFromSupport = isCompletedStatus(nextStatus);
 
-    setIncidents((current) => {
-      const next = current.map((incident) =>
-        getIncidentId(incident) === incidentId ? updateIncidentStatus(incident, nextStatus) : incident,
-      );
-      saveSupportCases(next);
-      return next;
-    });
+    if (shouldRemoveFromSupport) {
+      removeIncidentFromSupport(incidentId);
+    } else {
+      setIncidents((current) => {
+        const next = current.map((incident) =>
+          getIncidentId(incident) === incidentId ? updateIncidentStatus(incident, nextStatus) : incident,
+        );
+        saveSupportCases(next);
+        return next;
+      });
 
-    setStatusByIncident((current) => ({
-      ...current,
-      [incidentId]: nextStatus,
-    }));
+      setStatusByIncident((current) => ({
+        ...current,
+        [incidentId]: nextStatus,
+      }));
+    }
 
     updateSupportIncidentStatus(incidentId, nextStatus)
       .then((updatedIncident) => {
+        if (shouldRemoveFromSupport || isCompletedStatus(getIncidentStatus(updatedIncident))) {
+          removeIncidentFromSupport(incidentId);
+          return;
+        }
+
         setIncidents((current) => {
           const next = current.map((incident) =>
             getIncidentId(incident) === incidentId ? updateIncidentStatus(updatedIncident, nextStatus) : incident,
@@ -187,25 +219,14 @@ function SupportDashboard() {
   }
 
   function handleDeleteCase(id: string) {
-    const confirmed = window.confirm("Bạn có chắc muốn xóa vụ án đã hoàn thành này không?");
+    const confirmed = window.confirm("Bạn có chắc muốn xóa vụ án này không?");
 
     if (!confirmed) {
       return;
     }
 
-    const nextIncidents = incidents.filter((incident) => getIncidentId(incident) !== id);
-    setIncidents(nextIncidents);
-    saveSupportCases(nextIncidents);
-
-    setStatusByIncident((current) => {
-      const next = { ...current };
-      delete next[id];
-      return next;
-    });
-
-    if (selectedIncidentId === id || (selectedIncident && getIncidentId(selectedIncident) === id)) {
-      setSelectedIncidentId(nextIncidents[0] ? getIncidentId(nextIncidents[0]) : "");
-    }
+    removeIncidentFromSupport(id);
+    deleteSupportIncident(id).catch(() => undefined);
   }
 
   function handleSupportTabChange(tab: "duty" | "news") {
@@ -256,7 +277,6 @@ function SupportDashboard() {
                 const incidentId = getIncidentId(incident);
                 const severity = getIncidentSeverity(incident);
                 const displayStatus = statusByIncident[incidentId] || getIncidentStatus(incident);
-                const canDelete = isCompletedStatus(displayStatus);
 
                 return (
                   <div className="support-report-row" key={incidentId}>
@@ -279,11 +299,9 @@ function SupportDashboard() {
                       <small>{displayStatus}</small>
                     </span>
                   </button>
-                    {canDelete ? (
-                      <button className="btn delete-button" type="button" onClick={() => handleDeleteCase(incidentId)}>
-                        Xóa
-                      </button>
-                    ) : null}
+                    <button className="btn delete-button" type="button" onClick={() => handleDeleteCase(incidentId)}>
+                      Xóa
+                    </button>
                   </div>
                 );
               })}
