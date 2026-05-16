@@ -42,6 +42,14 @@ function isSecureHost() {
   );
 }
 
+function canUseLiveCameraDevice() {
+  return (
+    typeof navigator !== "undefined" &&
+    isSecureHost() &&
+    typeof navigator.mediaDevices?.getUserMedia === "function"
+  );
+}
+
 function buildIncidentTitle(category: string, description: string) {
   const summary = description.trim().slice(0, 48);
   return summary ? `${category} - ${summary}` : category;
@@ -67,7 +75,7 @@ function UserDashboard() {
   const [formMessage, setFormMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
-  const [canUseLiveCamera, setCanUseLiveCamera] = useState(false);
+  const [canUseLiveCamera] = useState(canUseLiveCameraDevice);
 
   const imagePreviews = useMemo(
     () => images.map((image) => ({ name: image.name, url: URL.createObjectURL(image) })),
@@ -106,12 +114,6 @@ function UserDashboard() {
   }
 
   useEffect(() => {
-    setCanUseLiveCamera(
-      typeof navigator !== "undefined" &&
-        isSecureHost() &&
-        typeof navigator.mediaDevices?.getUserMedia === "function",
-    );
-
     updateCurrentLocation();
   }, []);
 

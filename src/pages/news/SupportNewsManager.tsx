@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import {
   createSupportNews,
   deleteSupportNews,
@@ -159,10 +159,6 @@ function SupportNewsManager() {
   }, [articles]);
 
   useEffect(() => {
-    reloadNews();
-  }, []);
-
-  useEffect(() => {
     if (!toast) {
       return;
     }
@@ -171,22 +167,27 @@ function SupportNewsManager() {
     return () => window.clearTimeout(timeout);
   }, [toast]);
 
-  function showToast(text: string, tone: ToastTone = "error") {
+  const showToast = useCallback((text: string, tone: ToastTone = "error") => {
     setToast({ text, tone });
-  }
+  }, []);
 
-  function handleApiError(error: unknown) {
+  const handleApiError = useCallback((error: unknown) => {
     console.error("Support news API error", error);
     showToast(getFriendlyError(error), "error");
-  }
+  }, [showToast]);
 
-  function reloadNews() {
+  const reloadNews = useCallback(() => {
     setIsLoading(true);
     getSupportNews()
       .then(setArticles)
       .catch(handleApiError)
       .finally(() => setIsLoading(false));
-  }
+  }, [handleApiError]);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(reloadNews, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [reloadNews]);
 
   function resetForm() {
     setEditingId("");

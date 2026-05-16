@@ -1176,8 +1176,8 @@ function MapView({
 
   useEffect(() => {
     if (isSupportMap || incidents.length) {
-      setCrimeDataIncidents([]);
-      return;
+      const timeoutId = window.setTimeout(() => setCrimeDataIncidents([]), 0);
+      return () => window.clearTimeout(timeoutId);
     }
 
     let isMounted = true;
@@ -1260,6 +1260,8 @@ function MapView({
         });
     }
 
+    const policeLocationMarkers = policeLocationMarkersRef.current;
+
     return () => {
       isMounted = false;
       resizeObserverRef.current?.disconnect();
@@ -1267,7 +1269,7 @@ function MapView({
       currentLocationMarkerRef.current?.remove();
       facilityMapMarkersRef.current.forEach((marker) => marker.remove());
       incidentMapMarkersRef.current.forEach((marker) => marker.remove());
-      policeLocationMarkersRef.current.forEach((marker) => marker.remove());
+      policeLocationMarkers.forEach((marker) => marker.remove());
       popupRef.current?.remove();
       miniMapRef.current?.remove();
       map.remove();
@@ -1277,9 +1279,11 @@ function MapView({
       hasCenteredOnCurrentLocationRef.current = false;
       facilityMapMarkersRef.current = [];
       incidentMapMarkersRef.current = [];
-      policeLocationMarkersRef.current.clear();
+      policeLocationMarkers.clear();
       popupRef.current = null;
     };
+    // Map initialization must run once per container lifecycle. Crime layers and perspective are updated by later effects.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [center, isSupportMap, zoom]);
 
   useEffect(() => {
@@ -1373,8 +1377,8 @@ function MapView({
 
   useEffect(() => {
     if (role !== "police") {
-      setPoliceLocations([]);
-      return;
+      const timeoutId = window.setTimeout(() => setPoliceLocations([]), 0);
+      return () => window.clearTimeout(timeoutId);
     }
 
     let isMounted = true;
