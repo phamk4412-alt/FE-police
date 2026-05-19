@@ -31,19 +31,6 @@ export interface NewsArticle {
   UpdatedAt?: string;
 }
 
-export interface NationalEvent {
-  id?: string | number;
-  Id?: string | number;
-  name?: string;
-  Name?: string;
-  eventDate?: string;
-  EventDate?: string;
-  daysRemaining?: number;
-  DaysRemaining?: number;
-  sortOrder?: number;
-  SortOrder?: number;
-}
-
 export interface NewsPayload {
   title: string;
   summary: string;

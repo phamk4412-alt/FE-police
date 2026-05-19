@@ -1,6 +1,6 @@
 import { API_URL, apiFetch } from "./api";
 import { withBackendRoleSession } from "./backendAuthService";
-import type { NationalEvent, NewsArticle, NewsPayload } from "../types/news";
+import type { NewsArticle, NewsPayload } from "../types/news";
 
 export function resolveMediaUrl(url: string) {
   if (!url) {
@@ -32,10 +32,6 @@ export async function getFeaturedNews() {
 
 export function getNewsById(id: string) {
   return apiFetch<NewsArticle>(`/api/news/${encodeURIComponent(id)}`);
-}
-
-export async function getUpcomingEvents() {
-  return unwrapList(await apiFetch<NationalEvent[] | { data?: NationalEvent[]; Data?: NationalEvent[]; items?: NationalEvent[]; Items?: NationalEvent[] }>("/api/events/upcoming"));
 }
 
 export async function getSupportNews() {

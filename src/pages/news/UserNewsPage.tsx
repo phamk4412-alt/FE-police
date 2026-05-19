@@ -4,47 +4,13 @@ import {
   getFeaturedNews,
   getNews,
   getNewsById,
-  getUpcomingEvents,
   resolveMediaUrl,
 } from "../../services/newsService";
-import type { NationalEvent, NewsArticle } from "../../types/news";
+import { nationalEvents, type LocalNationalEvent } from "../../data/nationalEvents";
+import type { NewsArticle } from "../../types/news";
 
 const fallbackImage =
   "https://images.unsplash.com/photo-1495020689067-958852a7765e?auto=format&fit=crop&w=1200&q=80";
-
-const eventImages: Record<string, string> = {
-  "Ngày Giáng sinh": "/event-images/giang-sinh.png",
-  "Ngày Giải phóng miền Nam, thống nhất đất nước": "/event-images/giai-phong-mien-nam.png",
-  "Ngày Quốc khánh nước Cộng hòa Xã hội Chủ nghĩa Việt Nam": "/event-images/quoc-khanh-vn.png",
-  "Ngày Quốc tế Lao động": "/event-images/quoc-te-lao-dong.png",
-  "Giỗ Tổ Hùng Vương": "/event-images/gio-to-hung-vuong.png",
-  "Tết Dương Lịch": "/event-images/tet-duong-lich.png",
-  "Tết Nguyên Đán": "/event-images/tet-nguyen-dan.png",
-};
-
-const eventImageAliases: Record<string, string> = {
-  christmas: "/event-images/giang-sinh.png",
-  "giai phong mien nam": "/event-images/giai-phong-mien-nam.png",
-  "giang sinh": "/event-images/giang-sinh.png",
-  "gio to hung vuong": "/event-images/gio-to-hung-vuong.png",
-  "hung vuong": "/event-images/gio-to-hung-vuong.png",
-  "image:giang-sinh": "/event-images/giang-sinh.png",
-  "image:giai-phong-mien-nam": "/event-images/giai-phong-mien-nam.png",
-  "image:gio-to-hung-vuong": "/event-images/gio-to-hung-vuong.png",
-  "image:quoc-khanh-vn": "/event-images/quoc-khanh-vn.png",
-  "image:quoc-te-lao-dong": "/event-images/quoc-te-lao-dong.png",
-  "image:tet-duong-lich": "/event-images/tet-duong-lich.png",
-  "image:tet-nguyen-dan": "/event-images/tet-nguyen-dan.png",
-  noel: "/event-images/giang-sinh.png",
-  "ngay giai phong mien nam thong nhat dat nuoc": "/event-images/giai-phong-mien-nam.png",
-  "ngay giang sinh": "/event-images/giang-sinh.png",
-  "ngay quoc khanh nuoc cong hoa xa hoi chu nghia viet nam": "/event-images/quoc-khanh-vn.png",
-  "ngay quoc te lao dong": "/event-images/quoc-te-lao-dong.png",
-  "quoc khanh": "/event-images/quoc-khanh-vn.png",
-  "quoc te lao dong": "/event-images/quoc-te-lao-dong.png",
-  "tet duong lich": "/event-images/tet-duong-lich.png",
-  "tet nguyen dan": "/event-images/tet-nguyen-dan.png",
-};
 
 function getArticleId(article: NewsArticle) {
   return String(article.id ?? article.Id ?? "");
@@ -96,24 +62,6 @@ function formatDateTime(value: string) {
   }).format(date);
 }
 
-function getEventName(event: NationalEvent) {
-  return event.name || event.Name || "Sự kiện";
-}
-
-function getEventDisplayName(event: NationalEvent) {
-  const source = event as Record<string, unknown>;
-  const description = source.description || source.Description;
-  return typeof description === "string" && description.trim() ? description : getEventName(event);
-}
-
-function getEventDate(event: NationalEvent) {
-  return event.eventDate || event.EventDate || "";
-}
-
-function getEventId(event: NationalEvent) {
-  return String(event.id ?? event.Id ?? `${getEventName(event)}-${getEventDate(event)}`);
-}
-
 function normalizeEventName(value: string) {
   return value
     .normalize("NFD")
@@ -121,57 +69,22 @@ function normalizeEventName(value: string) {
     .toLowerCase();
 }
 
-function getEventImage(event: NationalEvent) {
-  const source = event as Record<string, unknown>;
-  const imageKey = source.imageKey || source.ImageKey;
-  if (typeof imageKey === "string" && imageKey.trim()) {
-    const key = `image:${normalizeEventName(imageKey).replace(/\.(png|jpg|jpeg|webp)$/i, "")}`;
-    const image = eventImageAliases[key] || eventImageAliases[normalizeEventName(imageKey)];
-    if (image) {
-      return image;
-    }
-  }
-
-  const displayName = getEventDisplayName(event);
-  const name = getEventName(event);
-  const exactImage = eventImages[displayName] || eventImages[name];
-  if (exactImage) {
-    return exactImage;
-  }
-
-  const normalizedDisplayName = normalizeEventName(displayName);
-  const normalizedName = normalizeEventName(name);
-  const aliasImage = eventImageAliases[normalizedDisplayName] || eventImageAliases[normalizedName];
-  if (aliasImage) {
-    return aliasImage;
-  }
-
-  const matchedEntry = Object.entries(eventImages).find(([eventName]) =>
-    normalizedDisplayName.includes(normalizeEventName(eventName)) ||
-    normalizeEventName(eventName).includes(normalizedDisplayName) ||
-    normalizedName.includes(normalizeEventName(eventName)) ||
-    normalizeEventName(eventName).includes(normalizedName),
-  );
-  return matchedEntry?.[1] || "";
+function getEventCardStyle(event: LocalNationalEvent): CSSProperties {
+  return { "--event-image": `url("${event.image}")` } as CSSProperties;
 }
 
-function getEventCardStyle(event: NationalEvent): CSSProperties {
-  const image = getEventImage(event);
-  return image ? ({ "--event-image": `url("${image}")` } as CSSProperties) : {};
-}
-
-function getEventVisualClass(event: NationalEvent) {
-  const name = getEventName(event).toLowerCase();
-  if (name.includes("noel") || name.includes("giáng sinh") || name.includes("christmas")) {
+function getEventVisualClass(event: LocalNationalEvent) {
+  const name = normalizeEventName(event.name);
+  if (name.includes("noel") || name.includes("giang sinh") || name.includes("christmas")) {
     return "is-christmas";
   }
-  if (name.includes("tết") || name.includes("nguyên đán") || name.includes("lunar")) {
+  if (name.includes("tet") || name.includes("nguyen dan") || name.includes("lunar")) {
     return "is-tet";
   }
-  if (name.includes("quốc khánh") || name.includes("2/9") || name.includes("độc lập")) {
+  if (name.includes("quoc khanh") || name.includes("2/9") || name.includes("doc lap")) {
     return "is-national-day";
   }
-  if (name.includes("trung thu") || name.includes("mid-autumn") || name.includes("trăng")) {
+  if (name.includes("trung thu") || name.includes("mid-autumn") || name.includes("trang")) {
     return "is-mid-autumn";
   }
 
@@ -179,7 +92,10 @@ function getEventVisualClass(event: NationalEvent) {
 }
 
 function toStartOfDay(value: string | Date) {
-  const date = typeof value === "string" ? new Date(value) : new Date(value);
+  const date =
+    typeof value === "string"
+      ? new Date(value.includes("T") ? value : `${value}T00:00:00`)
+      : new Date(value);
   if (!Number.isFinite(date.getTime())) {
     return null;
   }
@@ -188,33 +104,19 @@ function toStartOfDay(value: string | Date) {
   return date;
 }
 
-function getDaysRemaining(event: NationalEvent) {
-  if (typeof event.daysRemaining === "number") {
-    return event.daysRemaining;
-  }
-
-  if (typeof event.DaysRemaining === "number") {
-    return event.DaysRemaining;
-  }
-
-  const date = toStartOfDay(getEventDate(event));
+function getDaysRemaining(event: LocalNationalEvent, currentDate: Date) {
+  const date = toStartOfDay(event.eventDate);
   if (!date) {
     return 0;
   }
 
-  const today = toStartOfDay(new Date()) as Date;
+  const today = toStartOfDay(currentDate) as Date;
   return Math.max(0, Math.ceil((date.getTime() - today.getTime()) / 86400000));
 }
 
-function isEventToday(event: NationalEvent) {
-  const date = toStartOfDay(getEventDate(event));
-  const today = toStartOfDay(new Date());
-  return Boolean(date && today && date.getTime() === today.getTime());
-}
-
-function isUpcomingEvent(event: NationalEvent) {
-  const date = toStartOfDay(getEventDate(event));
-  const today = toStartOfDay(new Date());
+function isUpcomingEvent(event: LocalNationalEvent, currentDate: Date) {
+  const date = toStartOfDay(event.eventDate);
+  const today = toStartOfDay(currentDate);
   return Boolean(date && today && date.getTime() > today.getTime());
 }
 
@@ -297,7 +199,6 @@ function UserNewsPage({ articleId }: UserNewsPageProps) {
   const navigate = useNavigate();
   const [articles, setArticles] = useState<NewsArticle[]>([]);
   const [featured, setFeatured] = useState<NewsArticle[]>([]);
-  const [events, setEvents] = useState<NationalEvent[]>([]);
   const [detail, setDetail] = useState<NewsArticle | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
@@ -314,10 +215,9 @@ function UserNewsPage({ articleId }: UserNewsPageProps) {
         setError("");
       }
 
-      const [newsResult, featuredResult, eventResult] = await Promise.allSettled([
+      const [newsResult, featuredResult] = await Promise.allSettled([
         getNews(),
         getFeaturedNews(),
-        getUpcomingEvents(),
       ]);
 
       if (!isMounted) {
@@ -330,10 +230,6 @@ function UserNewsPage({ articleId }: UserNewsPageProps) {
 
       if (featuredResult.status === "fulfilled") {
         setFeatured(featuredResult.value);
-      }
-
-      if (eventResult.status === "fulfilled") {
-        setEvents(eventResult.value);
       }
 
       if (newsResult.status === "rejected" || featuredResult.status === "rejected") {
@@ -413,20 +309,19 @@ function UserNewsPage({ articleId }: UserNewsPageProps) {
 
   const sortedEvents = useMemo(
     () =>
-      [...events].sort((first, second) => {
-        const firstDate = toStartOfDay(getEventDate(first));
-        const secondDate = toStartOfDay(getEventDate(second));
-        return (firstDate?.getTime() || 0) - (secondDate?.getTime() || 0);
-      }),
-    [events],
+      [...nationalEvents]
+        .filter((event) => isUpcomingEvent(event, currentClock))
+        .sort((first, second) => {
+          const firstDate = toStartOfDay(first.eventDate);
+          const secondDate = toStartOfDay(second.eventDate);
+          const dateSort = (firstDate?.getTime() || 0) - (secondDate?.getTime() || 0);
+          return dateSort || first.sortOrder - second.sortOrder;
+        })
+        .slice(0, 3),
+    [currentClock],
   );
 
-  const todayEvents = useMemo(() => sortedEvents.filter(isEventToday), [sortedEvents]);
-
-  const upcomingEvents = useMemo(
-    () => sortedEvents.filter(isUpcomingEvent).slice(0, 3),
-    [sortedEvents],
-  );
+  const upcomingEvents = sortedEvents;
 
   useEffect(() => {
     const intervalId = window.setInterval(() => setCurrentClock(new Date()), 30000);
@@ -560,63 +455,26 @@ function UserNewsPage({ articleId }: UserNewsPageProps) {
             <div className="national-event-groups">
               <section className="national-event-group">
                 <div className="national-event-group-heading">
-                  <span>Hôm nay</span>
-                </div>
-                {todayEvents.length ? (
-                  todayEvents.map((event) => (
-                    <article
-                      className={`national-event-card is-today ${getEventVisualClass(event)}`}
-                      key={getEventId(event)}
-                      style={getEventCardStyle(event)}
-                    >
-                      <div className="national-event-content">
-                        <span className="national-event-countdown">Hôm nay</span>
-                        <strong>{getEventDisplayName(event)}</strong>
-                        <small>{formatEventDate(getEventDate(event))}</small>
-                        <em>Hôm nay</em>
-                      </div>
-                    </article>
-                  ))
-                ) : (
-                  <div className={`national-event-empty ${isLoading ? "is-loading news-placeholder-card" : ""}`}>
-                    <strong>{isLoading ? "Đang tải sự kiện..." : "Hôm nay không có sự kiện quan trọng"}</strong>
-                    <small>{isLoading ? "Đang kiểm tra lịch sự kiện Việt Nam" : "Các sự kiện gần nhất nằm ở nhóm Sắp tới."}</small>
-                  </div>
-                )}
-              </section>
-
-              <section className="national-event-group">
-                <div className="national-event-group-heading">
                   <span>Sắp tới</span>
                 </div>
                 <div className="national-event-list">
-                  {upcomingEvents.length
-                    ? upcomingEvents.map((event) => {
-                        const daysRemaining = getDaysRemaining(event);
+                  {upcomingEvents.map((event) => {
+                    const daysRemaining = getDaysRemaining(event, currentClock);
 
-                        return (
-                          <article
-                            className={`national-event-card is-upcoming ${getEventVisualClass(event)}`}
-                            key={getEventId(event)}
-                            style={getEventCardStyle(event)}
-                          >
-                            <div className="national-event-content">
-                              <strong>{getEventDisplayName(event)}</strong>
-                              <small>{formatEventDate(getEventDate(event))}</small>
-                              <em>{daysRemaining === 0 ? "Hôm nay" : `Còn ${daysRemaining} ngày`}</em>
-                            </div>
-                          </article>
-                        );
-                      })
-                    : Array.from({ length: isLoading ? 2 : 1 }).map((_, index) => (
-                        <article className={`national-event-card is-upcoming news-placeholder-card ${isLoading ? "is-loading" : ""}`} key={index}>
-                          <div className="national-event-content">
-                            <strong>{isLoading ? "Đang tải sự kiện..." : "Chưa có sự kiện sắp tới"}</strong>
-                            <small>{isLoading ? "Đang cập nhật ngày diễn ra" : "API chưa trả dữ liệu sự kiện."}</small>
-                            <em>{isLoading ? "Đang tính countdown" : "Còn -- ngày"}</em>
-                          </div>
-                        </article>
-                      ))}
+                    return (
+                      <article
+                        className={`national-event-card is-upcoming ${getEventVisualClass(event)}`}
+                        key={event.id}
+                        style={getEventCardStyle(event)}
+                      >
+                        <div className="national-event-content">
+                          <strong>{event.fullDescription}</strong>
+                          <small>{formatEventDate(event.eventDate)}</small>
+                          <em>{daysRemaining === 0 ? "Hôm nay" : `Còn ${daysRemaining} ngày`}</em>
+                        </div>
+                      </article>
+                    );
+                  })}
                 </div>
               </section>
             </div>
