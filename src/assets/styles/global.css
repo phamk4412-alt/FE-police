@@ -1448,25 +1448,31 @@ tbody tr:hover {
 }
 
 .police-location-marker {
-  width: 32px;
-  height: 32px;
-  border: 3px solid #ffffff;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #38bdf8, #2563eb);
-  color: #ffffff;
+  width: clamp(34px, 7vw, 46px);
+  height: clamp(50px, 10vw, 64px);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  appearance: none;
+  background: transparent;
   cursor: pointer;
   display: grid;
-  font-size: 0.78rem;
-  font-weight: 900;
-  letter-spacing: 0;
   place-items: center;
-  box-shadow:
-    0 0 0 9px rgba(56, 189, 248, 0.2),
-    0 12px 24px rgba(0, 0, 0, 0.34);
+  filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.3))
+    drop-shadow(0 0 9px rgba(56, 189, 248, 0.3));
 }
 
 .police-location-marker::before {
-  content: "CS";
+  content: none;
+}
+
+.police-location-marker img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
 }
 
 .police-location-popup {
@@ -3211,25 +3217,31 @@ tbody tr:hover {
 }
 
 .police-location-marker {
-  width: 32px;
-  height: 32px;
-  border: 3px solid #ffffff;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #38bdf8, #2563eb);
-  color: #ffffff;
+  width: clamp(34px, 7vw, 46px);
+  height: clamp(50px, 10vw, 64px);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  appearance: none;
+  background: transparent;
   cursor: pointer;
   display: grid;
-  font-size: 0.78rem;
-  font-weight: 900;
-  letter-spacing: 0;
   place-items: center;
-  box-shadow:
-    0 0 0 9px rgba(56, 189, 248, 0.2),
-    0 12px 24px rgba(0, 0, 0, 0.34);
+  filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.3))
+    drop-shadow(0 0 9px rgba(56, 189, 248, 0.3));
 }
 
 .police-location-marker::before {
-  content: "CS";
+  content: none;
+}
+
+.police-location-marker img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
 }
 
 .police-location-popup {

@@ -447,6 +447,13 @@ function createPoliceLocationMarker(label: string) {
   markerElement.type = "button";
   markerElement.className = "police-location-marker";
   markerElement.setAttribute("aria-label", label);
+
+  const markerImage = document.createElement("img");
+  markerImage.src = policeCarMarker;
+  markerImage.alt = "";
+  markerImage.draggable = false;
+  markerElement.appendChild(markerImage);
+
   return markerElement;
 }
 
