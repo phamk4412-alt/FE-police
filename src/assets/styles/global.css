@@ -403,7 +403,7 @@ a {
 }
 
 .cccd-preview {
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 85.6 / 53.98;
 }
 
 .face-preview {
@@ -449,7 +449,7 @@ a {
 
 .cccd-frame {
   position: relative;
-  width: min(82%, 720px);
+  width: min(94%, 1180px);
   aspect-ratio: 85.6 / 53.98;
   border: 1px solid rgba(56, 189, 248, 0.34);
   border-radius: 16px;
@@ -510,28 +510,14 @@ a {
   inset: 0;
   border: 2px solid rgba(56, 189, 248, 0.78);
   border-radius: 16px;
-  background:
-    linear-gradient(135deg, rgba(56, 189, 248, 0.1), transparent 42%),
-    rgba(8, 17, 26, 0.02);
-}
-
-.cccd-card-guide::before {
-  position: absolute;
-  top: 8%;
-  left: 50%;
-  width: 28%;
-  height: 4px;
-  border-radius: 999px;
-  background: rgba(255, 70, 85, 0.72);
-  content: "";
-  transform: translateX(-50%);
+  background: rgba(8, 17, 26, 0.02);
 }
 
 .cccd-qr-guide {
   position: absolute;
-  top: 8%;
-  right: 7%;
-  width: 15%;
+  top: 6%;
+  right: 6%;
+  width: 12.5%;
   aspect-ratio: 1;
   border: 2px solid rgba(236, 232, 225, 0.78);
   border-radius: 8px;
@@ -2969,7 +2955,7 @@ tbody tr:hover {
   }
 
   .cccd-frame {
-    width: 90%;
+    width: 94%;
   }
 
   .face-frame {
