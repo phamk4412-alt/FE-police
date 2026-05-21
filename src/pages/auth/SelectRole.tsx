@@ -5,6 +5,7 @@ import Button from "../../components/common/Button";
 import VietnameseDecor from "../../components/common/VietnameseDecor";
 import { getClerkUserRole } from "../../utils/clerkRole";
 import { ROLE_HOME_PATHS, ROLE_LABELS } from "../../utils/constants";
+import { getRequiredIdentityStep } from "../../utils/identityVerification";
 import type { UserRole } from "../../types/user";
 
 const roles: UserRole[] = ["admin", "police", "user", "support"];
@@ -24,6 +25,11 @@ function SelectRole() {
   }
 
   const existingRole = getClerkUserRole(user);
+  const requiredIdentityStep = getRequiredIdentityStep(user?.id);
+
+  if (requiredIdentityStep) {
+    return <Navigate to={requiredIdentityStep} replace />;
+  }
 
   if (existingRole) {
     return <Navigate to={ROLE_HOME_PATHS[existingRole]} replace />;

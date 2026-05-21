@@ -4,6 +4,7 @@ import { Navigate } from "react-router-dom";
 import type { UserRole } from "../../types/user";
 import { ROLE_HOME_PATHS } from "../../utils/constants";
 import { getClerkUserRole } from "../../utils/clerkRole";
+import { getRequiredIdentityStep } from "../../utils/identityVerification";
 
 interface ProtectedRouteProps {
   allowedRoles: UserRole[];
@@ -22,6 +23,11 @@ function ProtectedRoute({ allowedRoles, children }: ProtectedRouteProps) {
   }
 
   const role = getClerkUserRole(user);
+  const requiredIdentityStep = getRequiredIdentityStep(user?.id);
+
+  if (requiredIdentityStep) {
+    return <Navigate to={requiredIdentityStep} replace />;
+  }
 
   if (!role) {
     return <Navigate to="/select-role" replace />;

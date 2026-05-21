@@ -3,6 +3,7 @@ import { Navigate } from "react-router-dom";
 import VietnameseDecor from "../../components/common/VietnameseDecor";
 import { getClerkUserRole } from "../../utils/clerkRole";
 import { APP_NAME, ROLE_HOME_PATHS } from "../../utils/constants";
+import { getRequiredIdentityStep } from "../../utils/identityVerification";
 
 function Login() {
   const { isLoaded, isSignedIn, user } = useUser();
@@ -13,8 +14,14 @@ function Login() {
 
   if (isSignedIn) {
     const role = getClerkUserRole(user);
+    const requiredIdentityStep = getRequiredIdentityStep(user?.id);
 
-    return <Navigate to={role ? ROLE_HOME_PATHS[role] : "/select-role"} replace />;
+    return (
+      <Navigate
+        to={requiredIdentityStep || (role ? ROLE_HOME_PATHS[role] : "/select-role")}
+        replace
+      />
+    );
   }
 
   return (
