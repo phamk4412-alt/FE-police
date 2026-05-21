@@ -9,7 +9,7 @@ import {
   saveIdentityVerificationState,
 } from "../../utils/identityVerification";
 
-type CccdStatus = "idle" | "valid" | "blurred" | "nearer" | "framing";
+type CccdStatus = "idle" | "valid" | "invalid" | "blurred" | "nearer" | "framing";
 
 interface Region {
   x: number;
@@ -18,11 +18,21 @@ interface Region {
   height: number;
 }
 
+interface DetectorWindow extends Window {
+  BarcodeDetector?: new (options?: { formats?: string[] }) => {
+    detect(source: CanvasImageSource): Promise<Array<{ boundingBox?: DOMRectReadOnly }>>;
+  };
+  TextDetector?: new () => {
+    detect(source: CanvasImageSource): Promise<Array<{ rawValue?: string; text?: string }>>;
+  };
+}
+
 const cardRatio = 85.6 / 53.98;
 
 const statusText: Record<CccdStatus, string> = {
   idle: "Chưa phát hiện CCCD",
   valid: "CCCD hợp lệ",
+  invalid: "Không phát hiện CCCD hợp lệ",
   blurred: "Ảnh quá mờ",
   nearer: "Đưa gần hơn",
   framing: "Đưa đúng khung",
@@ -31,10 +41,20 @@ const statusText: Record<CccdStatus, string> = {
 const statusHelp: Record<CccdStatus, string> = {
   idle: "Chụp hoặc tải ảnh mặt trước CCCD để tiếp tục.",
   valid: "Ảnh CCCD đã được lưu tạm cho phiên đăng nhập này.",
-  blurred: "Ảnh đã nhận, nên chụp lại nếu cần bản rõ hơn.",
-  nearer: "Ảnh đã nhận, đặt thẻ chiếm nhiều khung hơn nếu chụp lại.",
-  framing: "Ảnh đã nhận, căn thẻ nằm gọn trong khung nếu chụp lại.",
+  invalid: "Ảnh không có đủ dấu hiệu CCCD Việt Nam: tỉ lệ thẻ, QR góc phải trên và tiêu đề căn cước.",
+  blurred: "Ảnh quá mờ, vui lòng chụp hoặc tải ảnh rõ hơn.",
+  nearer: "Đặt thẻ chiếm nhiều khung hơn rồi chụp lại.",
+  framing: "Căn mặt trước CCCD nằm gọn trong khung rồi chụp lại.",
 };
+
+function normalizeText(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/Đ/g, "D")
+    .replace(/đ/g, "d")
+    .toUpperCase();
+}
 
 function getRegionStats(
   imageData: ImageData,
@@ -91,11 +111,120 @@ function getRegionStats(
   };
 }
 
-function analyzeCccdImage(canvas: HTMLCanvasElement, sourceRatio: number) {
+function getRegionColorSignals(
+  imageData: ImageData,
+  canvasWidth: number,
+  canvasHeight: number,
+  region: Region,
+) {
+  const { data } = imageData;
+  const startX = Math.max(0, Math.floor(region.x * canvasWidth));
+  const endX = Math.min(canvasWidth, Math.floor((region.x + region.width) * canvasWidth));
+  const startY = Math.max(0, Math.floor(region.y * canvasHeight));
+  const endY = Math.min(canvasHeight, Math.floor((region.y + region.height) * canvasHeight));
+  let darkPixels = 0;
+  let lightPixels = 0;
+  let redDominantPixels = 0;
+  let blueGreenPixels = 0;
+  let totalPixels = 0;
+  let transitions = 0;
+
+  for (let y = startY; y < endY; y += 3) {
+    let previousIsDark = false;
+
+    for (let x = startX; x < endX; x += 3) {
+      const offset = (y * canvasWidth + x) * 4;
+      const red = data[offset];
+      const green = data[offset + 1];
+      const blue = data[offset + 2];
+      const luminance = 0.299 * red + 0.587 * green + 0.114 * blue;
+      const isDark = luminance < 72;
+
+      if (isDark) {
+        darkPixels += 1;
+      }
+
+      if (luminance > 188) {
+        lightPixels += 1;
+      }
+
+      if (red > green + 26 && red > blue + 26 && red > 120) {
+        redDominantPixels += 1;
+      }
+
+      if (green > 110 && blue > 110 && red < 190) {
+        blueGreenPixels += 1;
+      }
+
+      if (x > startX && isDark !== previousIsDark) {
+        transitions += 1;
+      }
+
+      previousIsDark = isDark;
+      totalPixels += 1;
+    }
+  }
+
+  return {
+    blueGreenRatio: blueGreenPixels / Math.max(1, totalPixels),
+    darkRatio: darkPixels / Math.max(1, totalPixels),
+    lightRatio: lightPixels / Math.max(1, totalPixels),
+    redRatio: redDominantPixels / Math.max(1, totalPixels),
+    transitions: transitions / Math.max(1, totalPixels),
+  };
+}
+
+async function detectQrByBrowser(canvas: HTMLCanvasElement) {
+  const detectorWindow = window as DetectorWindow;
+
+  if (!detectorWindow.BarcodeDetector) {
+    return false;
+  }
+
+  try {
+    const detector = new detectorWindow.BarcodeDetector({ formats: ["qr_code"] });
+    const detectedCodes = await detector.detect(canvas);
+
+    return detectedCodes.some((code) => {
+      if (!code.boundingBox) {
+        return true;
+      }
+
+      const centerX = (code.boundingBox.x + code.boundingBox.width / 2) / canvas.width;
+      const centerY = (code.boundingBox.y + code.boundingBox.height / 2) / canvas.height;
+
+      return centerX > 0.68 && centerY < 0.36;
+    });
+  } catch {
+    return false;
+  }
+}
+
+async function detectCccdTitleByBrowser(canvas: HTMLCanvasElement) {
+  const detectorWindow = window as DetectorWindow;
+
+  if (!detectorWindow.TextDetector) {
+    return null;
+  }
+
+  try {
+    const detector = new detectorWindow.TextDetector();
+    const detectedText = await detector.detect(canvas);
+    const text = normalizeText(
+      detectedText.map((item) => item.rawValue || item.text || "").join(" "),
+    );
+
+    return /CAN\s*CUOC(?:\s*CONG\s*DAN)?/.test(text);
+  } catch {
+    return null;
+  }
+}
+
+async function analyzeCccdImage(canvas: HTMLCanvasElement, sourceRatio: number) {
   const context = canvas.getContext("2d", { willReadFrequently: true });
 
   if (!context) {
-    return "valid" satisfies CccdStatus;
+    return "invalid" satisfies CccdStatus;
   }
 
   const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
@@ -117,18 +246,47 @@ function analyzeCccdImage(canvas: HTMLCanvasElement, sourceRatio: number) {
     width: 0.42,
     height: 0.54,
   });
-  const chipZone = getRegionStats(imageData, canvas.width, canvas.height, {
+  const qrZone = getRegionStats(imageData, canvas.width, canvas.height, {
     x: 0.78,
-    y: 0.33,
-    width: 0.17,
-    height: 0.3,
+    y: 0.08,
+    width: 0.16,
+    height: 0.26,
+  });
+  const qrSignals = getRegionColorSignals(imageData, canvas.width, canvas.height, {
+    x: 0.78,
+    y: 0.08,
+    width: 0.16,
+    height: 0.26,
+  });
+  const titleSignals = getRegionColorSignals(imageData, canvas.width, canvas.height, {
+    x: 0.34,
+    y: 0.22,
+    width: 0.42,
+    height: 0.17,
+  });
+  const cardBackgroundSignals = getRegionColorSignals(imageData, canvas.width, canvas.height, {
+    x: 0.1,
+    y: 0.08,
+    width: 0.82,
+    height: 0.76,
   });
   const ratioDelta = Math.abs(sourceRatio - cardRatio);
-  const hasCardRatio = ratioDelta < 0.58;
-  const hasEnoughDetail =
-    fullCard.edges > 5.2 && (portraitZone.contrast > 7 || textZone.edges > 6.8);
-  const hasLayoutSignals =
-    portraitZone.saturation > 8 || textZone.contrast > 10 || chipZone.contrast > 8;
+  const hasCardRatio = ratioDelta < 0.28;
+  const hasQrByShape =
+    qrZone.contrast > 46 &&
+    qrZone.edges > 13 &&
+    qrSignals.darkRatio > 0.08 &&
+    qrSignals.lightRatio > 0.18 &&
+    qrSignals.transitions > 0.18;
+  const hasQr = hasQrByShape || (await detectQrByBrowser(canvas));
+  const hasOcrTitle = await detectCccdTitleByBrowser(canvas);
+  const hasVisualTitle = titleSignals.redRatio > 0.035 && textZone.edges > 5.8;
+  const hasCccdTitle = hasOcrTitle === true || (hasOcrTitle === null && hasVisualTitle);
+  const hasCardLayout =
+    portraitZone.contrast > 9 &&
+    textZone.contrast > 13 &&
+    textZone.edges > 6.2 &&
+    cardBackgroundSignals.blueGreenRatio > 0.08;
 
   if (canvas.width < 720 || canvas.height < 430) {
     return "nearer" satisfies CccdStatus;
@@ -138,8 +296,12 @@ function analyzeCccdImage(canvas: HTMLCanvasElement, sourceRatio: number) {
     return "blurred" satisfies CccdStatus;
   }
 
-  if (!hasCardRatio || !hasEnoughDetail || !hasLayoutSignals) {
+  if (!hasCardRatio) {
     return "framing" satisfies CccdStatus;
+  }
+
+  if (!hasQr || !hasCccdTitle || !hasCardLayout) {
+    return "invalid" satisfies CccdStatus;
   }
 
   return "valid" satisfies CccdStatus;
@@ -163,6 +325,7 @@ function VerifyCccd() {
   const streamRef = useRef<MediaStream | null>(null);
   const [cameraReady, setCameraReady] = useState(false);
   const [cameraError, setCameraError] = useState("");
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [previewImage, setPreviewImage] = useState("");
   const [status, setStatus] = useState<CccdStatus>("idle");
 
@@ -234,12 +397,19 @@ function VerifyCccd() {
 
   const currentUserId = user.id;
 
-  function handleAnalyzedImage(canvas: HTMLCanvasElement, sourceRatio: number) {
+  async function handleAnalyzedImage(canvas: HTMLCanvasElement, sourceRatio: number) {
     const nextImage = canvas.toDataURL("image/jpeg", 0.84);
-    const nextStatus = analyzeCccdImage(canvas, sourceRatio);
 
+    setIsAnalyzing(true);
     setPreviewImage(nextImage);
-    setStatus(nextStatus);
+    setStatus("idle");
+
+    try {
+      const nextStatus = await analyzeCccdImage(canvas, sourceRatio);
+      setStatus(nextStatus);
+    } finally {
+      setIsAnalyzing(false);
+    }
   }
 
   function handleCapture() {
@@ -272,7 +442,7 @@ function VerifyCccd() {
       canvas.width,
       canvas.height,
     );
-    handleAnalyzedImage(canvas, cardRatio);
+    void handleAnalyzedImage(canvas, cardRatio);
   }
 
   function handleUpload(event: ChangeEvent<HTMLInputElement>) {
@@ -321,7 +491,7 @@ function VerifyCccd() {
           canvas.width,
           canvas.height,
         );
-        handleAnalyzedImage(canvas, sourceRatio);
+        void handleAnalyzedImage(canvas, sourceRatio);
       };
 
       image.src = String(reader.result);
@@ -372,9 +542,8 @@ function VerifyCccd() {
                 <span className="frame-corner frame-corner-bottom-left" />
                 <span className="frame-corner frame-corner-bottom-right" />
                 <span className="scan-line" />
-                <span className="cccd-photo-zone" />
-                <span className="cccd-text-zone" />
-                <span className="cccd-chip-zone" />
+                <span className="cccd-card-guide" />
+                <span className="cccd-qr-guide" />
               </div>
             </div>
           </div>
@@ -382,8 +551,13 @@ function VerifyCccd() {
           <div className={`scan-status scan-status-${status}`}>
             <span className="scan-status-dot" aria-hidden="true" />
             <div>
-              <strong>{statusText[status]}</strong>
-              <span>{cameraError || statusHelp[status]}</span>
+              <strong>{isAnalyzing ? "Đang kiểm tra CCCD" : statusText[status]}</strong>
+              <span>
+                {cameraError ||
+                  (isAnalyzing
+                    ? "Đang kiểm tra tỉ lệ thẻ, vùng QR và bố cục căn cước."
+                    : statusHelp[status])}
+              </span>
             </div>
           </div>
 
@@ -396,7 +570,7 @@ function VerifyCccd() {
               <input accept="image/*" onChange={handleUpload} type="file" />
             </label>
             <Button
-              disabled={!previewImage}
+              disabled={isAnalyzing || status !== "valid"}
               onClick={() => continueToFaceScan(false)}
               type="button"
             >

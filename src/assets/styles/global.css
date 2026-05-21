@@ -451,8 +451,8 @@ a {
   position: relative;
   width: min(82%, 720px);
   aspect-ratio: 85.6 / 53.98;
-  border: 1px solid rgba(56, 189, 248, 0.48);
-  border-radius: 14px;
+  border: 1px solid rgba(56, 189, 248, 0.34);
+  border-radius: 16px;
   box-shadow:
     0 0 0 999px rgba(8, 17, 26, 0.34),
     0 0 28px rgba(56, 189, 248, 0.18);
@@ -505,34 +505,44 @@ a {
   animation: scan-line-pass 2.4s ease-in-out infinite;
 }
 
-.cccd-photo-zone,
-.cccd-text-zone,
-.cccd-chip-zone {
+.cccd-card-guide {
   position: absolute;
-  border: 1px solid rgba(236, 232, 225, 0.26);
-  border-radius: 8px;
-  background: rgba(236, 232, 225, 0.06);
+  inset: 0;
+  border: 2px solid rgba(56, 189, 248, 0.78);
+  border-radius: 16px;
+  background:
+    linear-gradient(135deg, rgba(56, 189, 248, 0.1), transparent 42%),
+    rgba(8, 17, 26, 0.02);
 }
 
-.cccd-photo-zone {
-  top: 32%;
-  left: 6%;
-  width: 24%;
-  height: 50%;
+.cccd-card-guide::before {
+  position: absolute;
+  top: 8%;
+  left: 50%;
+  width: 28%;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 70, 85, 0.72);
+  content: "";
+  transform: translateX(-50%);
 }
 
-.cccd-text-zone {
-  top: 19%;
-  left: 36%;
-  width: 38%;
-  height: 55%;
-}
-
-.cccd-chip-zone {
-  top: 34%;
+.cccd-qr-guide {
+  position: absolute;
+  top: 8%;
   right: 7%;
-  width: 16%;
-  height: 29%;
+  width: 15%;
+  aspect-ratio: 1;
+  border: 2px solid rgba(236, 232, 225, 0.78);
+  border-radius: 8px;
+  background:
+    linear-gradient(90deg, rgba(236, 232, 225, 0.44) 2px, transparent 2px),
+    linear-gradient(rgba(236, 232, 225, 0.44) 2px, transparent 2px),
+    rgba(8, 17, 26, 0.18);
+  background-size: 10px 10px;
+  box-shadow:
+    inset 0 0 0 4px rgba(8, 17, 26, 0.22),
+    0 0 18px rgba(56, 189, 248, 0.18);
 }
 
 .face-frame {
@@ -595,6 +605,11 @@ a {
   box-shadow: 0 0 20px rgba(33, 197, 93, 0.36);
 }
 
+.scan-status-invalid .scan-status-dot {
+  background: var(--danger);
+  box-shadow: 0 0 20px rgba(255, 70, 85, 0.36);
+}
+
 .scan-status-blurred .scan-status-dot,
 .scan-status-nearer .scan-status-dot,
 .scan-status-framing .scan-status-dot {
@@ -609,7 +624,7 @@ a {
 }
 
 .identity-actions-face {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .identity-actions .btn {

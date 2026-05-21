@@ -102,6 +102,17 @@ function FaceScan() {
     navigate("/select-role", { replace: true });
   }
 
+  function returnToCccd() {
+    saveIdentityVerificationState(currentUserId, {
+      cccdImage: undefined,
+      cccdSkipped: false,
+      cccdVerified: false,
+      faceScanned: false,
+      faceSkipped: false,
+    });
+    navigate("/verify-cccd", { replace: true });
+  }
+
   return (
     <main className="identity-page">
       <VietnameseDecor variant="auth" />
@@ -143,6 +154,9 @@ function FaceScan() {
               type="button"
             >
               Tiếp tục
+            </Button>
+            <Button onClick={returnToCccd} type="button" variant="secondary">
+              Quay lại CCCD
             </Button>
             <Button onClick={() => continueToRole(true)} type="button" variant="ghost">
               Bỏ qua
