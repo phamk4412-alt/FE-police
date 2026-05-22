@@ -4,6 +4,7 @@ import { Navigate, useNavigate } from "react-router-dom";
 import { useUser } from "@clerk/react";
 import Button from "../../components/common/Button";
 import VietnameseDecor from "../../components/common/VietnameseDecor";
+import cccdSamplePlaceholder from "../../assets/identity/cccd-sample-placeholder.jpg";
 import {
   getIdentityVerificationState,
   saveIdentityVerificationState,
@@ -538,26 +539,8 @@ function VerifyCccd() {
             {!previewImage && !cameraReady ? (
               <>
                 <div className="cccd-sample-card" aria-hidden="true">
-                  <span className="cccd-sample-pattern" />
-                  <span className="cccd-sample-emblem" />
-                  <span className="cccd-sample-map" />
-                  <span className="cccd-sample-qr" />
-                  <div className="cccd-sample-header">
-                    <span>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</span>
-                    <small>Độc lập - Tự do - Hạnh phúc</small>
-                    <strong>CĂN CƯỚC CÔNG DÂN</strong>
-                    <em>Citizen Identity Card</em>
-                  </div>
-                  <span className="cccd-sample-photo" />
-                  <div className="cccd-sample-lines">
-                    <span>Số / No.</span>
-                    <span>Họ và tên / Full name</span>
-                    <span>Ngày sinh / Date of birth</span>
-                    <span>Giới tính / Sex &nbsp;&nbsp;&nbsp; Quốc tịch / Nationality</span>
-                    <span>Quê quán / Place of origin</span>
-                    <span>Nơi thường trú / Place of residence</span>
-                  </div>
-                  <span className="cccd-sample-chip" />
+                  <img src={cccdSamplePlaceholder} alt="" />
+                  <span className="cccd-sample-shade" />
                 </div>
                 <div className="cccd-sample-hint">Chụp hoặc tải lên mặt trước CCCD</div>
               </>
