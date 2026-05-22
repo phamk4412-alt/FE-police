@@ -573,17 +573,23 @@ function FaceScan() {
             tone: "scanning",
           } satisfies FaceAnalysisResult)
         : analysis;
-      const isStable = effectiveAnalysis.issue === "none";
+      const hasUsableFace =
+        effectiveAnalysis.issue === "none" ||
+        effectiveAnalysis.issue === "off-center" ||
+        effectiveAnalysis.issue === "too-close" ||
+        effectiveAnalysis.issue === "too-far" ||
+        effectiveAnalysis.issue === "turned" ||
+        effectiveAnalysis.issue === "too-dark";
       const previousScore = scoreRef.current;
-      const nextScore = clampScore(previousScore + (isStable ? 7 : -8));
+      const nextScore = clampScore(previousScore + (hasUsableFace ? 10 : -12));
 
-      stableFramesRef.current = isStable ? stableFramesRef.current + 1 : 0;
+      stableFramesRef.current = hasUsableFace ? stableFramesRef.current + 1 : 0;
 
       if (nextScore > 56) {
         hadStrongSignalRef.current = true;
       }
 
-      if (!isStable && hadStrongSignalRef.current && nextScore < 45) {
+      if (!hasUsableFace && hadStrongSignalRef.current && nextScore < 45) {
         setScanMessage("Khuôn mặt không khớp với CCCD");
         setScanTone("danger");
       } else {
