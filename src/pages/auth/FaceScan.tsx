@@ -40,7 +40,7 @@ interface FaceSignature {
 
 const analysisWidth = 180;
 const analysisHeight = 135;
-const faceMatchThreshold = 62;
+const faceMatchThreshold = 38;
 
 function clampScore(value: number) {
   return Math.max(0, Math.min(100, Math.round(value)));
@@ -147,17 +147,17 @@ function getFaceSignatureFromCanvas(
 
 function compareFaceSignatures(cccdFace: FaceSignature, liveFace: FaceSignature) {
   const colorDistance =
-    Math.abs(cccdFace.red - liveFace.red) * 0.32 +
-    Math.abs(cccdFace.green - liveFace.green) * 0.32 +
-    Math.abs(cccdFace.blue - liveFace.blue) * 0.32;
-  const brightnessDistance = Math.abs(cccdFace.brightness - liveFace.brightness) * 0.22;
+    Math.abs(cccdFace.red - liveFace.red) * 0.08 +
+    Math.abs(cccdFace.green - liveFace.green) * 0.08 +
+    Math.abs(cccdFace.blue - liveFace.blue) * 0.08;
+  const brightnessDistance = Math.abs(cccdFace.brightness - liveFace.brightness) * 0.05;
   const shapeDistance =
-    Math.abs(cccdFace.faceWidthRatio - liveFace.faceWidthRatio) * 55 +
-    Math.abs(cccdFace.faceHeightRatio - liveFace.faceHeightRatio) * 45;
+    Math.abs(cccdFace.faceWidthRatio - liveFace.faceWidthRatio) * 26 +
+    Math.abs(cccdFace.faceHeightRatio - liveFace.faceHeightRatio) * 22;
   const centerPenalty =
-    Math.max(0, Math.abs(liveFace.centerX - 0.5) - 0.08) * 90 +
-    Math.max(0, Math.abs(liveFace.centerY - 0.5) - 0.12) * 70;
-  const skinPenalty = Math.abs(cccdFace.skinRatio - liveFace.skinRatio) * 28;
+    Math.max(0, Math.abs(liveFace.centerX - 0.5) - 0.14) * 45 +
+    Math.max(0, Math.abs(liveFace.centerY - 0.5) - 0.18) * 35;
+  const skinPenalty = Math.abs(cccdFace.skinRatio - liveFace.skinRatio) * 8;
 
   return clampScore(100 - colorDistance - brightnessDistance - shapeDistance - centerPenalty - skinPenalty);
 }
@@ -556,7 +556,7 @@ function FaceScan() {
 
       setMatchScore(nextScore);
 
-      if (stableFramesRef.current >= 5 && nextScore >= 85) {
+      if (stableFramesRef.current >= 3 && nextScore >= 70) {
         void captureAndVerifyFace();
       }
     }, 360);
