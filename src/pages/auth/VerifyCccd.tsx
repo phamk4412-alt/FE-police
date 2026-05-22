@@ -493,7 +493,7 @@ function VerifyCccd() {
           canvas.width,
           canvas.height,
         );
-        void handleAnalyzedImage(canvas, sourceRatio);
+        void handleAnalyzedImage(canvas, cropRatio);
       };
 
       image.src = String(reader.result);
