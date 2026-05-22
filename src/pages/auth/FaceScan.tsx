@@ -3,6 +3,7 @@ import { Navigate, useNavigate } from "react-router-dom";
 import { useUser } from "@clerk/react";
 import Button from "../../components/common/Button";
 import VietnameseDecor from "../../components/common/VietnameseDecor";
+import { apiFetch } from "../../services/api";
 import {
   getIdentityVerificationState,
   saveIdentityVerificationState,
@@ -26,21 +27,16 @@ interface FaceAnalysisResult {
   tone: FaceScanTone;
 }
 
-interface FaceSignature {
-  brightness: number;
-  centerX: number;
-  centerY: number;
-  faceHeightRatio: number;
-  faceWidthRatio: number;
-  red: number;
-  green: number;
-  blue: number;
-  skinRatio: number;
+interface FaceCompareResponse {
+  IsMatch: boolean;
+  Confidence: number;
+  Threshold: number;
+  RequestId: string;
 }
 
 const analysisWidth = 180;
 const analysisHeight = 135;
-const faceMatchThreshold = 68;
+const faceCompareTriggerScore = 70;
 
 function clampScore(value: number) {
   return Math.max(0, Math.min(100, Math.round(value)));
@@ -64,175 +60,6 @@ function getSkinScore(red: number, green: number, blue: number) {
   }
 
   return 0;
-}
-
-function getFaceSignatureFromCanvas(
-  canvas: HTMLCanvasElement,
-  options: { ovalOnly?: boolean } = {},
-): FaceSignature | null {
-  const context = canvas.getContext("2d", { willReadFrequently: true });
-
-  if (!context || !canvas.width || !canvas.height) {
-    return null;
-  }
-
-  const { data } = context.getImageData(0, 0, canvas.width, canvas.height);
-  let skinPixels = 0;
-  let sampledPixels = 0;
-  let redTotal = 0;
-  let greenTotal = 0;
-  let blueTotal = 0;
-  let brightnessTotal = 0;
-  let minX = canvas.width;
-  let maxX = 0;
-  let minY = canvas.height;
-  let maxY = 0;
-  let centerTotalX = 0;
-  let centerTotalY = 0;
-
-  for (let y = 0; y < canvas.height; y += 2) {
-    for (let x = 0; x < canvas.width; x += 2) {
-      if (options.ovalOnly) {
-        const normalizedX = (x - canvas.width / 2) / (canvas.width * 0.32);
-        const normalizedY = (y - canvas.height / 2) / (canvas.height * 0.42);
-
-        if (normalizedX * normalizedX + normalizedY * normalizedY > 1.15) {
-          continue;
-        }
-      }
-
-      const offset = (y * canvas.width + x) * 4;
-      const red = data[offset];
-      const green = data[offset + 1];
-      const blue = data[offset + 2];
-      const brightness = 0.299 * red + 0.587 * green + 0.114 * blue;
-      const isSkin = getSkinScore(red, green, blue);
-
-      sampledPixels += 1;
-
-      if (!isSkin) {
-        continue;
-      }
-
-      skinPixels += 1;
-      redTotal += red;
-      greenTotal += green;
-      blueTotal += blue;
-      brightnessTotal += brightness;
-      centerTotalX += x;
-      centerTotalY += y;
-      minX = Math.min(minX, x);
-      maxX = Math.max(maxX, x);
-      minY = Math.min(minY, y);
-      maxY = Math.max(maxY, y);
-    }
-  }
-
-  if (skinPixels < Math.max(12, sampledPixels * 0.025)) {
-    return null;
-  }
-
-  return {
-    brightness: brightnessTotal / skinPixels,
-    centerX: centerTotalX / skinPixels / canvas.width,
-    centerY: centerTotalY / skinPixels / canvas.height,
-    faceHeightRatio: (maxY - minY) / canvas.height,
-    faceWidthRatio: (maxX - minX) / canvas.width,
-    red: redTotal / skinPixels,
-    green: greenTotal / skinPixels,
-    blue: blueTotal / skinPixels,
-    skinRatio: skinPixels / Math.max(1, sampledPixels),
-  };
-}
-
-function compareFaceSignatures(cccdFace: FaceSignature, liveFace: FaceSignature) {
-  const colorDistance =
-    Math.abs(cccdFace.red - liveFace.red) * 0.08 +
-    Math.abs(cccdFace.green - liveFace.green) * 0.08 +
-    Math.abs(cccdFace.blue - liveFace.blue) * 0.08;
-  const brightnessDistance = Math.abs(cccdFace.brightness - liveFace.brightness) * 0.05;
-  const shapeDistance =
-    Math.abs(cccdFace.faceWidthRatio - liveFace.faceWidthRatio) * 26 +
-    Math.abs(cccdFace.faceHeightRatio - liveFace.faceHeightRatio) * 22;
-  const centerPenalty =
-    Math.max(0, Math.abs(liveFace.centerX - 0.5) - 0.14) * 45 +
-    Math.max(0, Math.abs(liveFace.centerY - 0.5) - 0.18) * 35;
-  const skinPenalty = Math.abs(cccdFace.skinRatio - liveFace.skinRatio) * 8;
-
-  return clampScore(100 - colorDistance - brightnessDistance - shapeDistance - centerPenalty - skinPenalty);
-}
-
-function loadImage(source: string) {
-  return new Promise<HTMLImageElement>((resolve, reject) => {
-    const image = new Image();
-    image.onload = () => resolve(image);
-    image.onerror = reject;
-    image.src = source;
-  });
-}
-
-function getSignatureFromImageRegion(
-  image: HTMLImageElement,
-  region: { x: number; y: number; width: number; height: number },
-) {
-  const canvas = document.createElement("canvas");
-  const context = canvas.getContext("2d", { willReadFrequently: true });
-
-  canvas.width = 180;
-  canvas.height = 240;
-
-  if (!context) {
-    return null;
-  }
-
-  context.drawImage(
-    image,
-    image.naturalWidth * region.x,
-    image.naturalHeight * region.y,
-    image.naturalWidth * region.width,
-    image.naturalHeight * region.height,
-    0,
-    0,
-    canvas.width,
-    canvas.height,
-  );
-
-  return getFaceSignatureFromCanvas(canvas);
-}
-
-async function getCccdFaceSignature(cccdImage: string) {
-  const image = await loadImage(cccdImage);
-  const candidateRegions = [
-    { x: 0.03, y: 0.28, width: 0.3, height: 0.58 },
-    { x: 0.04, y: 0.32, width: 0.27, height: 0.52 },
-    { x: 0.02, y: 0.25, width: 0.34, height: 0.64 },
-    { x: 0.07, y: 0.3, width: 0.3, height: 0.56 },
-    { x: 0.0, y: 0.22, width: 0.4, height: 0.68 },
-  ];
-  let bestSignature: FaceSignature | null = null;
-  let bestScore = 0;
-
-  for (const region of candidateRegions) {
-    const signature = getSignatureFromImageRegion(image, region);
-
-    if (!signature) {
-      continue;
-    }
-
-    const portraitScore =
-      signature.skinRatio * 120 +
-      signature.faceHeightRatio * 35 +
-      signature.faceWidthRatio * 25 -
-      Math.abs(signature.centerX - 0.5) * 20 -
-      Math.abs(signature.centerY - 0.5) * 14;
-
-    if (portraitScore > bestScore) {
-      bestScore = portraitScore;
-      bestSignature = signature;
-    }
-  }
-
-  return bestSignature;
 }
 
 function analyzeFaceFrame(video: HTMLVideoElement, canvas: HTMLCanvasElement): FaceAnalysisResult {
@@ -497,17 +324,17 @@ function FaceScan() {
         throw new Error("Missing CCCD image");
       }
 
-      const cccdFaceSignature = await getCccdFaceSignature(identityState.cccdImage);
-      const liveFaceSignature = getFaceSignatureFromCanvas(canvas, { ovalOnly: true });
-
-      if (!cccdFaceSignature || !liveFaceSignature) {
-        throw new Error("Cannot read face signature");
-      }
-
-      const faceMatchScore = compareFaceSignatures(cccdFaceSignature, liveFaceSignature);
+      const compareResult = await apiFetch<FaceCompareResponse>("/api/identity/face-compare", {
+        method: "POST",
+        body: JSON.stringify({
+          CccdImage: identityState.cccdImage,
+          LiveImage: faceImage,
+        }),
+      });
+      const faceMatchScore = clampScore(compareResult.Confidence);
       setMatchScore(faceMatchScore);
 
-      if (faceMatchScore < faceMatchThreshold) {
+      if (!compareResult.IsMatch) {
         verificationStartedRef.current = false;
         stableFramesRef.current = 0;
         hadStrongSignalRef.current = false;
@@ -515,7 +342,9 @@ function FaceScan() {
         setIsVerifying(false);
         setScanTone("danger");
         setScanReady(false);
-        setScanMessage(`Khuôn mặt chưa khớp với ảnh trên CCCD (${faceMatchScore}%)`);
+        setScanMessage(
+          `Face++ chưa xác nhận khớp (${faceMatchScore}%, cần ${Math.round(compareResult.Threshold)}%)`,
+        );
         return;
       }
 
@@ -526,15 +355,15 @@ function FaceScan() {
       setScanReady(true);
       setIsVerifying(false);
       setScanTone("success");
-      setScanMessage(`Khuôn mặt khớp với CCCD (${faceMatchScore}%)`);
-    } catch {
+      setScanMessage(`Face++ xác nhận khuôn mặt khớp (${faceMatchScore}%)`);
+    } catch (error) {
       verificationStartedRef.current = false;
       stableFramesRef.current = 0;
       setCapturedFaceImage("");
       setIsVerifying(false);
       setScanTone("danger");
       setScanReady(false);
-      setScanMessage("Không thể đọc ảnh khuôn mặt trên CCCD");
+      setScanMessage(error instanceof Error ? error.message : "Không thể gọi Face++ để so khớp khuôn mặt");
     }
   }
 
@@ -599,7 +428,7 @@ function FaceScan() {
 
       setMatchScore(nextScore);
 
-      if (nextScore >= faceMatchThreshold) {
+      if (nextScore >= faceCompareTriggerScore) {
         void captureAndVerifyFace();
       }
     }, 360);
@@ -628,7 +457,7 @@ function FaceScan() {
 
   const canContinue = scanReady;
   const scoreTone =
-    scanTone === "success" || matchScore >= faceMatchThreshold
+    scanTone === "success" || matchScore >= faceCompareTriggerScore
       ? "high"
       : scanTone === "danger" || matchScore < 45
         ? "low"
@@ -747,7 +576,7 @@ function FaceScan() {
               </strong>
               <span>
                 {cameraError ||
-                  "Đây là mô phỏng đối chiếu khuôn mặt bằng tín hiệu camera trên trình duyệt."}
+                  "Hệ thống dùng Face++ để đối chiếu khuôn mặt hiện tại với ảnh trên CCCD."}
               </span>
             </div>
           </div>
