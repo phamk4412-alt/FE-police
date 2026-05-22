@@ -219,6 +219,7 @@ function FaceScan() {
   const lastIssueRef = useRef<FaceIssue>("no-face");
   const repeatedIssueFramesRef = useRef(0);
   const verificationStartedRef = useRef(false);
+  const compareCooldownUntilRef = useRef(0);
   const [cameraReady, setCameraReady] = useState(false);
   const [scanReady, setScanReady] = useState(false);
   const [cameraError, setCameraError] = useState("");
@@ -296,7 +297,12 @@ function FaceScan() {
   async function captureAndVerifyFace() {
     const video = videoRef.current;
 
-    if (!video || verificationStartedRef.current || !currentUserId) {
+    if (
+      !video ||
+      verificationStartedRef.current ||
+      !currentUserId ||
+      Date.now() < compareCooldownUntilRef.current
+    ) {
       return;
     }
 
@@ -314,7 +320,6 @@ function FaceScan() {
     const identityState = getIdentityVerificationState(currentUserId);
 
     verificationStartedRef.current = true;
-    setCapturedFaceImage(faceImage);
     setIsVerifying(true);
     setScanTone("verifying");
     setScanMessage("Đang so khớp với ảnh trên CCCD...");
@@ -335,11 +340,16 @@ function FaceScan() {
       setMatchScore(faceMatchScore);
 
       if (!compareResult.IsMatch) {
+        const retryScore = Math.min(faceMatchScore, faceCompareTriggerScore - 15);
+
         verificationStartedRef.current = false;
+        compareCooldownUntilRef.current = Date.now() + 2500;
         stableFramesRef.current = 0;
         hadStrongSignalRef.current = false;
         setCapturedFaceImage("");
         setIsVerifying(false);
+        scoreRef.current = retryScore;
+        setMatchScore(retryScore);
         setScanTone("danger");
         setScanReady(false);
         setScanMessage(
@@ -351,6 +361,7 @@ function FaceScan() {
       saveIdentityVerificationState(currentUserId, {
         faceImage,
       });
+      setCapturedFaceImage(faceImage);
       setMatchScore((currentScore) => Math.max(currentScore, faceMatchScore));
       setScanReady(true);
       setIsVerifying(false);
@@ -358,9 +369,12 @@ function FaceScan() {
       setScanMessage(`Face++ xác nhận khuôn mặt khớp (${faceMatchScore}%)`);
     } catch (error) {
       verificationStartedRef.current = false;
+      compareCooldownUntilRef.current = Date.now() + 3000;
       stableFramesRef.current = 0;
       setCapturedFaceImage("");
       setIsVerifying(false);
+      scoreRef.current = 0;
+      setMatchScore(0);
       setScanTone("danger");
       setScanReady(false);
       setScanMessage(error instanceof Error ? error.message : "Không thể gọi Face++ để so khớp khuôn mặt");
@@ -381,6 +395,10 @@ function FaceScan() {
       const canvas = analysisCanvasRef.current;
 
       if (!video || !canvas || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
+        return;
+      }
+
+      if (Date.now() < compareCooldownUntilRef.current) {
         return;
       }
 
