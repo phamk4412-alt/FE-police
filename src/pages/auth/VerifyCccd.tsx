@@ -543,7 +543,6 @@ function VerifyCccd() {
                 <span className="frame-corner frame-corner-bottom-right" />
                 <span className="scan-line" />
                 <span className="cccd-card-guide" />
-                <span className="cccd-qr-guide" />
               </div>
             </div>
           </div>

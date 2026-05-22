@@ -129,12 +129,28 @@ function FaceScan() {
         </div>
 
         <section className="identity-panel" aria-label="Quét khuôn mặt">
-          <div className="scan-preview face-preview">
-            <video ref={videoRef} autoPlay muted playsInline />
-            <div className="scan-overlay" aria-hidden="true">
-              <div className="face-frame">
-                <span className="face-ring" />
-                <span className="scan-line" />
+          <div className="face-scan-layout">
+            <aside className="cccd-reference-panel" aria-label="Ảnh trên CCCD">
+              <h2>Ảnh trên CCCD</h2>
+              <div className="cccd-reference-thumb">
+                {identityState.cccdImage ? (
+                  <img src={identityState.cccdImage} alt="Ảnh CCCD đã lưu" />
+                ) : (
+                  <div className="cccd-reference-placeholder">
+                    <span>Chưa có ảnh</span>
+                  </div>
+                )}
+              </div>
+              <p>So sánh khuôn mặt hiện tại với ảnh trên CCCD</p>
+            </aside>
+
+            <div className="scan-preview face-preview">
+              <video ref={videoRef} autoPlay muted playsInline />
+              <div className="scan-overlay" aria-hidden="true">
+                <div className="face-frame">
+                  <span className="face-ring" />
+                  <span className="scan-line" />
+                </div>
               </div>
             </div>
           </div>
