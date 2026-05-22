@@ -556,7 +556,7 @@ function FaceScan() {
 
       setMatchScore(nextScore);
 
-      if (stableFramesRef.current >= 3 && nextScore >= 70) {
+      if (nextScore >= faceMatchThreshold) {
         void captureAndVerifyFace();
       }
     }, 360);
