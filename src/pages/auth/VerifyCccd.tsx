@@ -330,56 +330,11 @@ function VerifyCccd() {
   const [status, setStatus] = useState<CccdStatus>("idle");
 
   useEffect(() => {
-    let isMounted = true;
-
-    async function startCamera() {
-      if (!isSignedIn) {
-        return;
-      }
-
-      if (!navigator.mediaDevices?.getUserMedia) {
-        setCameraError("Thiết bị không hỗ trợ mở camera trong trình duyệt này.");
-        return;
-      }
-
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: false,
-          video: {
-            facingMode: "environment",
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
-          },
-        });
-
-        if (!isMounted) {
-          stream.getTracks().forEach((track) => track.stop());
-          return;
-        }
-
-        streamRef.current = stream;
-
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
-
-        setCameraReady(true);
-        setCameraError("");
-      } catch {
-        if (isMounted) {
-          setCameraError("Không thể mở camera. Bạn vẫn có thể tải ảnh CCCD lên.");
-        }
-      }
-    }
-
-    void startCamera();
-
     return () => {
-      isMounted = false;
       streamRef.current?.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     };
-  }, [isSignedIn]);
+  }, []);
 
   if (!isLoaded) {
     return <main className="auth-loading">Đang tải...</main>;
@@ -412,7 +367,53 @@ function VerifyCccd() {
     }
   }
 
-  function handleCapture() {
+  async function openCamera() {
+    if (!isSignedIn) {
+      return false;
+    }
+
+    if (streamRef.current && cameraReady) {
+      return true;
+    }
+
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setCameraError("Thiết bị không hỗ trợ mở camera trong trình duyệt này.");
+      setCameraReady(false);
+      return false;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: {
+          facingMode: "environment",
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+      });
+
+      streamRef.current = stream;
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+
+      setCameraReady(true);
+      setCameraError("");
+      return true;
+    } catch {
+      setCameraReady(false);
+      setCameraError("Không thể mở camera. Bạn vẫn có thể tải ảnh CCCD lên.");
+      return false;
+    }
+  }
+
+  async function handleCapture() {
+    if (!cameraReady) {
+      await openCamera();
+      return;
+    }
+
     const video = videoRef.current;
 
     if (!video || !video.videoWidth || !video.videoHeight) {
@@ -532,8 +533,29 @@ function VerifyCccd() {
               autoPlay
               muted
               playsInline
-              className={previewImage ? "is-muted" : ""}
+              className={previewImage || !cameraReady ? "is-muted" : ""}
             />
+            {!previewImage && !cameraReady ? (
+              <>
+                <div className="cccd-sample-card" aria-hidden="true">
+                  <span className="cccd-sample-emblem" />
+                  <div className="cccd-sample-header">
+                    <span />
+                    <strong>CĂN CƯỚC CÔNG DÂN</strong>
+                    <small>Citizen Identity Card</small>
+                  </div>
+                  <span className="cccd-sample-photo" />
+                  <div className="cccd-sample-lines">
+                    <span />
+                    <span />
+                    <span />
+                    <span />
+                  </div>
+                  <span className="cccd-sample-chip" />
+                </div>
+                <div className="cccd-sample-hint">Chụp hoặc tải lên mặt trước CCCD</div>
+              </>
+            ) : null}
             {previewImage ? <img src={previewImage} alt="Ảnh CCCD đã chụp" /> : null}
             <div className="scan-overlay" aria-hidden="true">
               <div className="cccd-frame">
@@ -561,7 +583,7 @@ function VerifyCccd() {
           </div>
 
           <div className="identity-actions">
-            <Button disabled={!cameraReady} onClick={handleCapture} type="button">
+            <Button disabled={isAnalyzing} onClick={handleCapture} type="button">
               Chụp CCCD
             </Button>
             <label className="btn btn-secondary identity-upload-button">
