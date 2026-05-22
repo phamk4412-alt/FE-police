@@ -329,13 +329,29 @@ function FaceScan() {
         throw new Error("Missing CCCD image");
       }
 
-      const compareResult = await apiFetch<FaceCompareResponse>("/api/identity/face-compare", {
-        method: "POST",
-        body: JSON.stringify({
-          CccdImage: identityState.cccdImage,
-          LiveImage: faceImage,
-        }),
-      });
+      const abortController = new AbortController();
+      const timeoutId = window.setTimeout(() => abortController.abort(), 18000);
+      let compareResult: FaceCompareResponse;
+
+      try {
+        compareResult = await apiFetch<FaceCompareResponse>("/api/identity/face-compare", {
+          method: "POST",
+          signal: abortController.signal,
+          body: JSON.stringify({
+            CccdImage: identityState.cccdImage,
+            LiveImage: faceImage,
+          }),
+        });
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") {
+          throw new Error("Face++ phản hồi quá lâu, vui lòng thử lại.");
+        }
+
+        throw error;
+      } finally {
+        window.clearTimeout(timeoutId);
+      }
+
       const faceMatchScore = clampScore(compareResult.Confidence);
       setMatchScore(faceMatchScore);
 
