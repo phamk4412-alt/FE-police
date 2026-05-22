@@ -40,7 +40,7 @@ interface FaceSignature {
 
 const analysisWidth = 180;
 const analysisHeight = 135;
-const faceMatchThreshold = 85;
+const faceMatchThreshold = 68;
 
 function clampScore(value: number) {
   return Math.max(0, Math.min(100, Math.round(value)));
@@ -628,7 +628,7 @@ function FaceScan() {
 
   const canContinue = scanReady;
   const scoreTone =
-    scanTone === "success" || matchScore >= 85
+    scanTone === "success" || matchScore >= faceMatchThreshold
       ? "high"
       : scanTone === "danger" || matchScore < 45
         ? "low"
