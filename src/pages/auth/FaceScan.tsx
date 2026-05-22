@@ -166,10 +166,10 @@ function analyzeFaceFrame(video: HTMLVideoElement, canvas: HTMLCanvasElement): F
     };
   }
 
-  if (sideBalance > 0.46) {
+  if (sideBalance > 0.78 && !isCenteredInOval) {
     return {
       issue: "turned",
-      message: "Hãy nhìn thẳng vào camera",
+      message: "Hãy giữ khuôn mặt thẳng",
       tone: "warning",
     };
   }
@@ -351,7 +351,7 @@ function FaceScan() {
       }
 
       const isTransientDistanceWarning =
-        (analysis.issue === "too-close" || analysis.issue === "too-far") &&
+        (analysis.issue === "too-close" || analysis.issue === "too-far" || analysis.issue === "turned") &&
         repeatedIssueFramesRef.current < 3;
       const effectiveAnalysis = isTransientDistanceWarning
         ? ({
