@@ -171,8 +171,10 @@ function loadImage(source: string) {
   });
 }
 
-async function getCccdFaceSignature(cccdImage: string) {
-  const image = await loadImage(cccdImage);
+function getSignatureFromImageRegion(
+  image: HTMLImageElement,
+  region: { x: number; y: number; width: number; height: number },
+) {
   const canvas = document.createElement("canvas");
   const context = canvas.getContext("2d", { willReadFrequently: true });
 
@@ -185,10 +187,10 @@ async function getCccdFaceSignature(cccdImage: string) {
 
   context.drawImage(
     image,
-    image.naturalWidth * 0.05,
-    image.naturalHeight * 0.28,
-    image.naturalWidth * 0.28,
-    image.naturalHeight * 0.58,
+    image.naturalWidth * region.x,
+    image.naturalHeight * region.y,
+    image.naturalWidth * region.width,
+    image.naturalHeight * region.height,
     0,
     0,
     canvas.width,
@@ -196,6 +198,41 @@ async function getCccdFaceSignature(cccdImage: string) {
   );
 
   return getFaceSignatureFromCanvas(canvas);
+}
+
+async function getCccdFaceSignature(cccdImage: string) {
+  const image = await loadImage(cccdImage);
+  const candidateRegions = [
+    { x: 0.03, y: 0.28, width: 0.3, height: 0.58 },
+    { x: 0.04, y: 0.32, width: 0.27, height: 0.52 },
+    { x: 0.02, y: 0.25, width: 0.34, height: 0.64 },
+    { x: 0.07, y: 0.3, width: 0.3, height: 0.56 },
+    { x: 0.0, y: 0.22, width: 0.4, height: 0.68 },
+  ];
+  let bestSignature: FaceSignature | null = null;
+  let bestScore = 0;
+
+  for (const region of candidateRegions) {
+    const signature = getSignatureFromImageRegion(image, region);
+
+    if (!signature) {
+      continue;
+    }
+
+    const portraitScore =
+      signature.skinRatio * 120 +
+      signature.faceHeightRatio * 35 +
+      signature.faceWidthRatio * 25 -
+      Math.abs(signature.centerX - 0.5) * 20 -
+      Math.abs(signature.centerY - 0.5) * 14;
+
+    if (portraitScore > bestScore) {
+      bestScore = portraitScore;
+      bestSignature = signature;
+    }
+  }
+
+  return bestSignature;
 }
 
 function analyzeFaceFrame(video: HTMLVideoElement, canvas: HTMLCanvasElement): FaceAnalysisResult {
