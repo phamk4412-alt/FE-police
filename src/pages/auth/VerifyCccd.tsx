@@ -186,16 +186,7 @@ async function detectQrByBrowser(canvas: HTMLCanvasElement) {
     const detector = new detectorWindow.BarcodeDetector({ formats: ["qr_code"] });
     const detectedCodes = await detector.detect(canvas);
 
-    return detectedCodes.some((code) => {
-      if (!code.boundingBox) {
-        return true;
-      }
-
-      const centerX = (code.boundingBox.x + code.boundingBox.width / 2) / canvas.width;
-      const centerY = (code.boundingBox.y + code.boundingBox.height / 2) / canvas.height;
-
-      return centerX > 0.68 && centerY < 0.36;
-    });
+    return detectedCodes.length > 0;
   } catch {
     return false;
   }
@@ -221,7 +212,7 @@ async function detectCccdTitleByBrowser(canvas: HTMLCanvasElement) {
   }
 }
 
-async function analyzeCccdImage(canvas: HTMLCanvasElement, sourceRatio: number) {
+async function analyzeCccdImage(canvas: HTMLCanvasElement) {
   const context = canvas.getContext("2d", { willReadFrequently: true });
 
   if (!context) {
@@ -271,8 +262,6 @@ async function analyzeCccdImage(canvas: HTMLCanvasElement, sourceRatio: number) 
     width: 0.82,
     height: 0.76,
   });
-  const ratioDelta = Math.abs(sourceRatio - cardRatio);
-  const hasCardRatio = ratioDelta < 0.28;
   const hasQrByShape =
     qrZone.contrast > 46 &&
     qrZone.edges > 13 &&
@@ -288,6 +277,9 @@ async function analyzeCccdImage(canvas: HTMLCanvasElement, sourceRatio: number) 
     textZone.contrast > 13 &&
     textZone.edges > 6.2 &&
     cardBackgroundSignals.blueGreenRatio > 0.08;
+  const hasCccdSignals =
+    (hasQr && (hasCccdTitle || hasCardLayout)) ||
+    (hasCccdTitle && hasCardLayout);
 
   if (canvas.width < 720 || canvas.height < 430) {
     return "nearer" satisfies CccdStatus;
@@ -297,11 +289,7 @@ async function analyzeCccdImage(canvas: HTMLCanvasElement, sourceRatio: number) 
     return "blurred" satisfies CccdStatus;
   }
 
-  if (!hasCardRatio) {
-    return "framing" satisfies CccdStatus;
-  }
-
-  if (!hasQr || !hasCccdTitle || !hasCardLayout) {
+  if (!hasCccdSignals) {
     return "invalid" satisfies CccdStatus;
   }
 
@@ -353,7 +341,7 @@ function VerifyCccd() {
 
   const currentUserId = user.id;
 
-  async function handleAnalyzedImage(canvas: HTMLCanvasElement, sourceRatio: number) {
+  async function handleAnalyzedImage(canvas: HTMLCanvasElement) {
     const nextImage = canvas.toDataURL("image/jpeg", 0.84);
 
     setIsAnalyzing(true);
@@ -361,7 +349,7 @@ function VerifyCccd() {
     setStatus("idle");
 
     try {
-      const nextStatus = await analyzeCccdImage(canvas, sourceRatio);
+      const nextStatus = await analyzeCccdImage(canvas);
       setStatus(nextStatus);
     } finally {
       setIsAnalyzing(false);
@@ -444,7 +432,7 @@ function VerifyCccd() {
       canvas.width,
       canvas.height,
     );
-    void handleAnalyzedImage(canvas, cardRatio);
+    void handleAnalyzedImage(canvas);
   }
 
   function handleUpload(event: ChangeEvent<HTMLInputElement>) {
@@ -493,7 +481,7 @@ function VerifyCccd() {
           canvas.width,
           canvas.height,
         );
-        void handleAnalyzedImage(canvas, cropRatio);
+        void handleAnalyzedImage(canvas);
       };
 
       image.src = String(reader.result);
