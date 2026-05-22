@@ -27,6 +27,8 @@ function FaceScan() {
 
       if (!navigator.mediaDevices?.getUserMedia) {
         setCameraError("Thiết bị không hỗ trợ mở camera trong trình duyệt này.");
+        setCameraReady(false);
+        setScanReady(false);
         return;
       }
 
@@ -60,7 +62,9 @@ function FaceScan() {
         }, 1200);
       } catch {
         if (isMounted) {
-          setCameraError("Không thể mở camera. Bạn có thể bỏ qua bước demo này.");
+          setCameraReady(false);
+          setScanReady(false);
+          setCameraError("Không thể mở camera");
         }
       }
     }
@@ -93,6 +97,8 @@ function FaceScan() {
   }
 
   const currentUserId = user.id;
+  const canContinue = scanReady || Boolean(cameraError);
+  const isCameraStarting = cameraReady && !scanReady && !cameraError;
 
   function continueToRole(skipped: boolean) {
     saveIdentityVerificationState(currentUserId, {
@@ -155,17 +161,32 @@ function FaceScan() {
             </div>
           </div>
 
-          <div className={`scan-status ${scanReady ? "scan-status-valid" : "scan-status-idle"}`}>
+          <div
+            className={`scan-status ${
+              cameraError ? "scan-status-invalid" : scanReady ? "scan-status-valid" : "scan-status-idle"
+            }`}
+          >
             <span className="scan-status-dot" aria-hidden="true" />
             <div>
-              <strong>{scanReady ? "Đã nhận khuôn mặt trong khung" : "Đang mở camera"}</strong>
-              <span>{cameraError || "Giữ khuôn mặt ở giữa khung quét."}</span>
+              <strong>
+                {cameraError
+                  ? "Không thể mở camera"
+                  : scanReady
+                    ? "Đang mô phỏng đối chiếu khuôn mặt"
+                    : isCameraStarting
+                      ? "Đang căn khuôn mặt"
+                    : "Đang mở camera"}
+              </strong>
+              <span>
+                {cameraError ||
+                  "So sánh khuôn mặt hiện tại với ảnh trên CCCD trong giao diện demo."}
+              </span>
             </div>
           </div>
 
           <div className="identity-actions identity-actions-face">
             <Button
-              disabled={!cameraReady || !scanReady}
+              disabled={!canContinue}
               onClick={() => continueToRole(false)}
               type="button"
             >
