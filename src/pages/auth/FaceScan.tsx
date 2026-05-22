@@ -138,7 +138,11 @@ function analyzeFaceFrame(video: HTMLVideoElement, canvas: HTMLCanvasElement): F
   const sideBalance =
     Math.abs(leftSkin - rightSkin) / Math.max(1, Math.max(leftSkin, rightSkin));
 
-  if (skinRatio > 0.4 || faceWidthRatio > 0.62 || faceHeightRatio > 0.78) {
+  const isCenteredInOval = centerOffsetX <= 0.14 && centerOffsetY <= 0.16;
+  const clearlyOverfillsOval =
+    faceWidthRatio > 0.72 || faceHeightRatio > 0.88 || (faceWidthRatio > 0.66 && faceHeightRatio > 0.8);
+
+  if (clearlyOverfillsOval && !isCenteredInOval) {
     return {
       issue: "too-close",
       message: "Đưa mặt ra xa",
@@ -146,7 +150,7 @@ function analyzeFaceFrame(video: HTMLVideoElement, canvas: HTMLCanvasElement): F
     };
   }
 
-  if (skinRatio < 0.075 || faceWidthRatio < 0.18 || faceHeightRatio < 0.22) {
+  if (skinRatio < 0.055 || faceWidthRatio < 0.14 || faceHeightRatio < 0.18) {
     return {
       issue: "too-far",
       message: "Đưa mặt lại gần",
@@ -204,6 +208,8 @@ function FaceScan() {
   const scoreRef = useRef(0);
   const stableFramesRef = useRef(0);
   const hadStrongSignalRef = useRef(false);
+  const lastIssueRef = useRef<FaceIssue>("no-face");
+  const repeatedIssueFramesRef = useRef(0);
   const verificationStartedRef = useRef(false);
   const [cameraReady, setCameraReady] = useState(false);
   const [scanReady, setScanReady] = useState(false);
@@ -337,9 +343,26 @@ function FaceScan() {
       }
 
       const analysis = analyzeFaceFrame(video, canvas);
-      const isStable = analysis.issue === "none";
+      if (analysis.issue === lastIssueRef.current) {
+        repeatedIssueFramesRef.current += 1;
+      } else {
+        lastIssueRef.current = analysis.issue;
+        repeatedIssueFramesRef.current = 1;
+      }
+
+      const isTransientDistanceWarning =
+        (analysis.issue === "too-close" || analysis.issue === "too-far") &&
+        repeatedIssueFramesRef.current < 3;
+      const effectiveAnalysis = isTransientDistanceWarning
+        ? ({
+            issue: "none",
+            message: "Đang đối chiếu khuôn mặt...",
+            tone: "scanning",
+          } satisfies FaceAnalysisResult)
+        : analysis;
+      const isStable = effectiveAnalysis.issue === "none";
       const previousScore = scoreRef.current;
-      const nextScore = clampScore(previousScore + (isStable ? 7 : -11));
+      const nextScore = clampScore(previousScore + (isStable ? 7 : -8));
 
       stableFramesRef.current = isStable ? stableFramesRef.current + 1 : 0;
 
@@ -351,8 +374,8 @@ function FaceScan() {
         setScanMessage("Khuôn mặt không khớp với CCCD");
         setScanTone("danger");
       } else {
-        setScanMessage(analysis.message);
-        setScanTone(analysis.tone);
+        setScanMessage(effectiveAnalysis.message);
+        setScanTone(effectiveAnalysis.tone);
       }
 
       setMatchScore(nextScore);
