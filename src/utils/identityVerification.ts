@@ -6,6 +6,7 @@ export interface IdentityVerificationState {
   cccdSkipped?: boolean;
   faceSkipped?: boolean;
   cccdImage?: string;
+  faceImage?: string;
   updatedAt?: string;
 }
 

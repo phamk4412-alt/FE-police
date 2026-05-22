@@ -8,14 +8,211 @@ import {
   saveIdentityVerificationState,
 } from "../../utils/identityVerification";
 
+type FaceScanTone = "idle" | "warning" | "danger" | "scanning" | "verifying" | "success";
+
+type FaceIssue =
+  | "none"
+  | "no-face"
+  | "off-center"
+  | "too-close"
+  | "too-far"
+  | "turned"
+  | "too-dark"
+  | "multiple";
+
+interface FaceAnalysisResult {
+  issue: FaceIssue;
+  message: string;
+  tone: FaceScanTone;
+}
+
+const analysisWidth = 180;
+const analysisHeight = 135;
+
+function clampScore(value: number) {
+  return Math.max(0, Math.min(100, Math.round(value)));
+}
+
+function getSkinScore(red: number, green: number, blue: number) {
+  const maxChannel = Math.max(red, green, blue);
+  const minChannel = Math.min(red, green, blue);
+  const chroma = maxChannel - minChannel;
+
+  if (
+    red > 58 &&
+    green > 38 &&
+    blue > 24 &&
+    red > blue + 10 &&
+    red >= green - 8 &&
+    chroma > 18 &&
+    maxChannel < 248
+  ) {
+    return 1;
+  }
+
+  return 0;
+}
+
+function analyzeFaceFrame(video: HTMLVideoElement, canvas: HTMLCanvasElement): FaceAnalysisResult {
+  const context = canvas.getContext("2d", { willReadFrequently: true });
+
+  if (!context || !video.videoWidth || !video.videoHeight) {
+    return {
+      issue: "no-face",
+      message: "Không phát hiện khuôn mặt",
+      tone: "idle",
+    };
+  }
+
+  canvas.width = analysisWidth;
+  canvas.height = analysisHeight;
+  context.drawImage(video, 0, 0, analysisWidth, analysisHeight);
+
+  const { data } = context.getImageData(0, 0, analysisWidth, analysisHeight);
+  let skinPixels = 0;
+  let ovalPixels = 0;
+  let brightnessTotal = 0;
+  let leftSkin = 0;
+  let rightSkin = 0;
+  let minX = analysisWidth;
+  let maxX = 0;
+  let minY = analysisHeight;
+  let maxY = 0;
+  let centerTotalX = 0;
+  let centerTotalY = 0;
+
+  for (let y = 0; y < analysisHeight; y += 2) {
+    for (let x = 0; x < analysisWidth; x += 2) {
+      const normalizedX = (x - analysisWidth / 2) / (analysisWidth * 0.29);
+      const normalizedY = (y - analysisHeight / 2) / (analysisHeight * 0.39);
+
+      if (normalizedX * normalizedX + normalizedY * normalizedY > 1.2) {
+        continue;
+      }
+
+      const offset = (y * analysisWidth + x) * 4;
+      const red = data[offset];
+      const green = data[offset + 1];
+      const blue = data[offset + 2];
+      const brightness = 0.299 * red + 0.587 * green + 0.114 * blue;
+      const skinScore = getSkinScore(red, green, blue);
+
+      brightnessTotal += brightness;
+      ovalPixels += 1;
+
+      if (skinScore) {
+        skinPixels += 1;
+        centerTotalX += x;
+        centerTotalY += y;
+        minX = Math.min(minX, x);
+        maxX = Math.max(maxX, x);
+        minY = Math.min(minY, y);
+        maxY = Math.max(maxY, y);
+
+        if (x < analysisWidth / 2) {
+          leftSkin += 1;
+        } else {
+          rightSkin += 1;
+        }
+      }
+    }
+  }
+
+  const skinRatio = skinPixels / Math.max(1, ovalPixels);
+  const brightness = brightnessTotal / Math.max(1, ovalPixels);
+
+  if (skinRatio < 0.035) {
+    return {
+      issue: "no-face",
+      message: "Không phát hiện khuôn mặt",
+      tone: "idle",
+    };
+  }
+
+  const centerX = centerTotalX / Math.max(1, skinPixels);
+  const centerY = centerTotalY / Math.max(1, skinPixels);
+  const centerOffsetX = Math.abs(centerX / analysisWidth - 0.5);
+  const centerOffsetY = Math.abs(centerY / analysisHeight - 0.52);
+  const faceWidthRatio = (maxX - minX) / analysisWidth;
+  const faceHeightRatio = (maxY - minY) / analysisHeight;
+  const sideBalance =
+    Math.abs(leftSkin - rightSkin) / Math.max(1, Math.max(leftSkin, rightSkin));
+
+  if (skinRatio > 0.4 || faceWidthRatio > 0.62 || faceHeightRatio > 0.78) {
+    return {
+      issue: "too-close",
+      message: "Đưa mặt ra xa",
+      tone: "warning",
+    };
+  }
+
+  if (skinRatio < 0.075 || faceWidthRatio < 0.18 || faceHeightRatio < 0.22) {
+    return {
+      issue: "too-far",
+      message: "Đưa mặt lại gần",
+      tone: "warning",
+    };
+  }
+
+  if (centerOffsetX > 0.16 || centerOffsetY > 0.18) {
+    return {
+      issue: "off-center",
+      message: "Đưa khuôn mặt vào giữa khung",
+      tone: "warning",
+    };
+  }
+
+  if (sideBalance > 0.46) {
+    return {
+      issue: "turned",
+      message: "Hãy nhìn thẳng vào camera",
+      tone: "warning",
+    };
+  }
+
+  if (brightness < 46) {
+    return {
+      issue: "too-dark",
+      message: "Giữ khuôn mặt đủ sáng",
+      tone: "warning",
+    };
+  }
+
+  if (skinRatio > 0.28 && faceWidthRatio > 0.5 && sideBalance < 0.16) {
+    return {
+      issue: "multiple",
+      message: "Đưa một khuôn mặt vào giữa khung",
+      tone: "danger",
+    };
+  }
+
+  return {
+    issue: "none",
+    message: "Đang đối chiếu khuôn mặt...",
+    tone: "scanning",
+  };
+}
+
 function FaceScan() {
   const navigate = useNavigate();
   const { isLoaded, isSignedIn, user } = useUser();
+  const currentUserId = user?.id;
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const analysisCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const verificationTimeoutRef = useRef<number | null>(null);
+  const scoreRef = useRef(0);
+  const stableFramesRef = useRef(0);
+  const hadStrongSignalRef = useRef(false);
+  const verificationStartedRef = useRef(false);
   const [cameraReady, setCameraReady] = useState(false);
   const [scanReady, setScanReady] = useState(false);
   const [cameraError, setCameraError] = useState("");
+  const [matchScore, setMatchScore] = useState(0);
+  const [scanTone, setScanTone] = useState<FaceScanTone>("idle");
+  const [scanMessage, setScanMessage] = useState("Không phát hiện khuôn mặt");
+  const [capturedFaceImage, setCapturedFaceImage] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -55,16 +252,15 @@ function FaceScan() {
 
         setCameraReady(true);
         setCameraError("");
-        window.setTimeout(() => {
-          if (isMounted) {
-            setScanReady(true);
-          }
-        }, 1200);
+        setScanMessage("Đưa khuôn mặt vào giữa khung");
+        setScanTone("idle");
       } catch {
         if (isMounted) {
           setCameraReady(false);
           setScanReady(false);
           setCameraError("Không thể mở camera");
+          setScanTone("danger");
+          setScanMessage("Không thể mở camera");
         }
       }
     }
@@ -75,18 +271,110 @@ function FaceScan() {
       isMounted = false;
       streamRef.current?.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
+
+      if (verificationTimeoutRef.current) {
+        window.clearTimeout(verificationTimeoutRef.current);
+      }
     };
   }, [isSignedIn]);
+
+  useEffect(() => {
+    scoreRef.current = matchScore;
+  }, [matchScore]);
+
+  function captureAndVerifyFace() {
+    const video = videoRef.current;
+
+    if (!video || verificationStartedRef.current || !currentUserId) {
+      return;
+    }
+
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.min(640, video.videoWidth || 640);
+    canvas.height = Math.round(canvas.width * ((video.videoHeight || 480) / (video.videoWidth || 640)));
+    const context = canvas.getContext("2d");
+
+    if (!context) {
+      return;
+    }
+
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const faceImage = canvas.toDataURL("image/jpeg", 0.84);
+
+    verificationStartedRef.current = true;
+    setCapturedFaceImage(faceImage);
+    setIsVerifying(true);
+    setScanTone("verifying");
+    setScanMessage("Đang xác minh...");
+
+    verificationTimeoutRef.current = window.setTimeout(() => {
+      saveIdentityVerificationState(currentUserId, {
+        faceImage,
+      });
+      setMatchScore((currentScore) => Math.max(currentScore, 93));
+      setScanReady(true);
+      setIsVerifying(false);
+      setScanTone("success");
+      setScanMessage("Xác thực khuôn mặt thành công");
+    }, 1100);
+  }
+
+  useEffect(() => {
+    if (!cameraReady || cameraError || scanReady || isVerifying) {
+      return undefined;
+    }
+
+    if (!analysisCanvasRef.current) {
+      analysisCanvasRef.current = document.createElement("canvas");
+    }
+
+    const intervalId = window.setInterval(() => {
+      const video = videoRef.current;
+      const canvas = analysisCanvasRef.current;
+
+      if (!video || !canvas || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
+        return;
+      }
+
+      const analysis = analyzeFaceFrame(video, canvas);
+      const isStable = analysis.issue === "none";
+      const previousScore = scoreRef.current;
+      const nextScore = clampScore(previousScore + (isStable ? 7 : -11));
+
+      stableFramesRef.current = isStable ? stableFramesRef.current + 1 : 0;
+
+      if (nextScore > 56) {
+        hadStrongSignalRef.current = true;
+      }
+
+      if (!isStable && hadStrongSignalRef.current && nextScore < 45) {
+        setScanMessage("Khuôn mặt không khớp với CCCD");
+        setScanTone("danger");
+      } else {
+        setScanMessage(analysis.message);
+        setScanTone(analysis.tone);
+      }
+
+      setMatchScore(nextScore);
+
+      if (stableFramesRef.current >= 5 && nextScore >= 85) {
+        captureAndVerifyFace();
+      }
+    }, 360);
+
+    return () => window.clearInterval(intervalId);
+  }, [cameraError, cameraReady, isVerifying, scanReady]);
 
   if (!isLoaded) {
     return <main className="auth-loading">Đang tải...</main>;
   }
 
-  if (!isSignedIn || !user) {
+  if (!isSignedIn || !user || !currentUserId) {
     return <Navigate to="/login" replace />;
   }
 
-  const identityState = getIdentityVerificationState(user.id);
+  const verifiedUserId = user.id;
+  const identityState = getIdentityVerificationState(verifiedUserId);
 
   if (!identityState.cccdVerified) {
     return <Navigate to="/verify-cccd" replace />;
@@ -96,12 +384,17 @@ function FaceScan() {
     return <Navigate to="/select-role" replace />;
   }
 
-  const currentUserId = user.id;
   const canContinue = scanReady || Boolean(cameraError);
-  const isCameraStarting = cameraReady && !scanReady && !cameraError;
+  const scoreTone =
+    scanTone === "success" || matchScore >= 85
+      ? "high"
+      : scanTone === "danger" || matchScore < 45
+        ? "low"
+        : "medium";
 
   function continueToRole(skipped: boolean) {
-    saveIdentityVerificationState(currentUserId, {
+    saveIdentityVerificationState(verifiedUserId, {
+      faceImage: skipped ? undefined : capturedFaceImage || identityState.faceImage,
       faceScanned: true,
       faceSkipped: skipped,
     });
@@ -109,10 +402,11 @@ function FaceScan() {
   }
 
   function returnToCccd() {
-    saveIdentityVerificationState(currentUserId, {
+    saveIdentityVerificationState(verifiedUserId, {
       cccdImage: undefined,
       cccdSkipped: false,
       cccdVerified: false,
+      faceImage: undefined,
       faceScanned: false,
       faceSkipped: false,
     });
@@ -150,12 +444,44 @@ function FaceScan() {
               <p>So sánh khuôn mặt hiện tại với ảnh trên CCCD</p>
             </aside>
 
-            <div className="scan-preview face-preview">
-              <video ref={videoRef} autoPlay muted playsInline />
-              <div className="scan-overlay" aria-hidden="true">
-                <div className="face-frame">
-                  <span className="face-ring" />
-                  <span className="scan-line" />
+            <div className="face-camera-column">
+              <div className={`scan-preview face-preview face-preview-${scanTone}`}>
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  muted
+                  playsInline
+                  className={capturedFaceImage ? "is-muted" : ""}
+                />
+                {capturedFaceImage ? (
+                  <img
+                    className="face-capture-image"
+                    src={capturedFaceImage}
+                    alt="Ảnh khuôn mặt vừa chụp"
+                  />
+                ) : null}
+                <div className="scan-overlay" aria-hidden="true">
+                  <div className="face-frame">
+                    <span className="face-ring" />
+                    <span className="scan-line" />
+                  </div>
+                </div>
+                {isVerifying ? <span className="face-verifying-badge">Đang xác minh...</span> : null}
+              </div>
+
+              <div className={`face-feedback face-feedback-${scanTone}`}>
+                <div className="face-feedback-copy">
+                  <strong>{cameraError || scanMessage}</strong>
+                  <span>Giữ khuôn mặt ổn định trong khung oval để tăng độ khớp.</span>
+                </div>
+                <strong className={`face-match-score face-match-score-${scoreTone}`}>
+                  {matchScore}%
+                </strong>
+                <div className="face-match-meter" aria-hidden="true">
+                  <span
+                    className={`face-match-meter-fill face-match-meter-${scoreTone}`}
+                    style={{ width: `${matchScore}%` }}
+                  />
                 </div>
               </div>
             </div>
@@ -172,14 +498,14 @@ function FaceScan() {
                 {cameraError
                   ? "Không thể mở camera"
                   : scanReady
-                    ? "Đang mô phỏng đối chiếu khuôn mặt"
-                    : isCameraStarting
-                      ? "Đang căn khuôn mặt"
-                    : "Đang mở camera"}
+                    ? "Xác thực khuôn mặt thành công"
+                    : isVerifying
+                      ? "Đang xác minh..."
+                      : "Đang quét khuôn mặt"}
               </strong>
               <span>
                 {cameraError ||
-                  "So sánh khuôn mặt hiện tại với ảnh trên CCCD trong giao diện demo."}
+                  "Đây là mô phỏng đối chiếu khuôn mặt bằng tín hiệu camera trên trình duyệt."}
               </span>
             </div>
           </div>
