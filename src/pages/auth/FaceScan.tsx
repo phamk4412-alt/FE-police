@@ -40,7 +40,7 @@ interface FaceSignature {
 
 const analysisWidth = 180;
 const analysisHeight = 135;
-const faceMatchThreshold = 38;
+const faceMatchThreshold = 85;
 
 function clampScore(value: number) {
   return Math.max(0, Math.min(100, Math.round(value)));
@@ -478,7 +478,7 @@ function FaceScan() {
         setIsVerifying(false);
         setScanTone("danger");
         setScanReady(false);
-        setScanMessage("Khuôn mặt không khớp với ảnh trên CCCD");
+        setScanMessage(`Khuôn mặt chưa khớp với ảnh trên CCCD (${faceMatchScore}%)`);
         return;
       }
 
@@ -489,7 +489,7 @@ function FaceScan() {
       setScanReady(true);
       setIsVerifying(false);
       setScanTone("success");
-      setScanMessage("Khuôn mặt khớp với CCCD");
+      setScanMessage(`Khuôn mặt khớp với CCCD (${faceMatchScore}%)`);
     } catch {
       verificationStartedRef.current = false;
       stableFramesRef.current = 0;
