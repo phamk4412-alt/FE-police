@@ -1,10 +1,10 @@
 import type { ReactNode } from "react";
 import { useUser } from "@clerk/react";
 import { Navigate } from "react-router-dom";
+import useIdentityVerificationState from "../../hooks/useIdentityVerificationState";
 import type { UserRole } from "../../types/user";
 import { ROLE_HOME_PATHS } from "../../utils/constants";
 import { getClerkUserRole } from "../../utils/clerkRole";
-import { getRequiredIdentityStep } from "../../utils/identityVerification";
 
 interface ProtectedRouteProps {
   allowedRoles: UserRole[];
@@ -13,9 +13,12 @@ interface ProtectedRouteProps {
 
 function ProtectedRoute({ allowedRoles, children }: ProtectedRouteProps) {
   const { isLoaded, isSignedIn, user } = useUser();
+  const { isLoading: isIdentityLoading, requiredIdentityStep } = useIdentityVerificationState(
+    isLoaded && isSignedIn,
+  );
 
-  if (!isLoaded) {
-    return <main className="auth-loading">Đang tải...</main>;
+  if (!isLoaded || isIdentityLoading) {
+    return <main className="auth-loading">Dang tai...</main>;
   }
 
   if (!isSignedIn) {
@@ -23,7 +26,6 @@ function ProtectedRoute({ allowedRoles, children }: ProtectedRouteProps) {
   }
 
   const role = getClerkUserRole(user);
-  const requiredIdentityStep = getRequiredIdentityStep(user?.id);
 
   if (requiredIdentityStep) {
     return <Navigate to={requiredIdentityStep} replace />;

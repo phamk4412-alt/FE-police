@@ -2,12 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useUser } from "@clerk/react";
+import useIdentityVerificationState from "../../hooks/useIdentityVerificationState";
 import Button from "../../components/common/Button";
 import VietnameseDecor from "../../components/common/VietnameseDecor";
 import cccdSamplePlaceholder from "../../assets/identity/cccd-sample-placeholder.jpg";
 import {
-  getIdentityVerificationState,
-  saveIdentityVerificationState,
+  saveCccdVerificationState,
 } from "../../utils/identityVerification";
 
 type CccdStatus = "idle" | "valid" | "invalid" | "blurred" | "nearer" | "framing";
@@ -310,6 +310,9 @@ function createCccdCanvas(width: number) {
 function VerifyCccd() {
   const navigate = useNavigate();
   const { isLoaded, isSignedIn, user } = useUser();
+  const { identityState, isLoading: isIdentityLoading } = useIdentityVerificationState(
+    isLoaded && isSignedIn,
+  );
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [cameraReady, setCameraReady] = useState(false);
@@ -325,7 +328,7 @@ function VerifyCccd() {
     };
   }, []);
 
-  if (!isLoaded) {
+  if (!isLoaded || isIdentityLoading) {
     return <main className="auth-loading">Đang tải...</main>;
   }
 
@@ -333,13 +336,9 @@ function VerifyCccd() {
     return <Navigate to="/login" replace />;
   }
 
-  const identityState = getIdentityVerificationState(user.id);
-
-  if (identityState.cccdVerified) {
+  if (identityState.CccdVerified) {
     return <Navigate to="/face-scan" replace />;
   }
-
-  const currentUserId = user.id;
 
   async function handleAnalyzedImage(canvas: HTMLCanvasElement) {
     const nextImage = canvas.toDataURL("image/jpeg", 0.84);
@@ -491,11 +490,11 @@ function VerifyCccd() {
     event.target.value = "";
   }
 
-  function continueToFaceScan(skipped: boolean) {
-    saveIdentityVerificationState(currentUserId, {
-      cccdImage: skipped ? undefined : previewImage,
-      cccdSkipped: skipped,
-      cccdVerified: true,
+  async function continueToFaceScan() {
+    await saveCccdVerificationState({
+      CccdImage: previewImage,
+      CccdSkipped: false,
+      CccdVerified: true,
     });
     navigate("/face-scan", { replace: true });
   }
@@ -569,12 +568,12 @@ function VerifyCccd() {
             </label>
             <Button
               disabled={isAnalyzing || status !== "valid"}
-              onClick={() => continueToFaceScan(false)}
+              onClick={() => void continueToFaceScan()}
               type="button"
             >
               Tiếp tục
             </Button>
-            <Button onClick={() => continueToFaceScan(true)} type="button" variant="ghost">
+            <Button disabled type="button" variant="ghost">
               Bỏ qua
             </Button>
           </div>

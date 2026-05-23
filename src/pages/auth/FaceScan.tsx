@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useUser } from "@clerk/react";
+import useIdentityVerificationState from "../../hooks/useIdentityVerificationState";
 import Button from "../../components/common/Button";
 import VietnameseDecor from "../../components/common/VietnameseDecor";
 import { apiFetch } from "../../services/api";
 import {
-  getIdentityVerificationState,
-  saveIdentityVerificationState,
+  resetIdentityVerificationState,
+  saveFaceVerificationState,
 } from "../../utils/identityVerification";
 
 type FaceScanTone = "idle" | "warning" | "danger" | "scanning" | "verifying" | "success";
@@ -209,7 +210,10 @@ function analyzeFaceFrame(video: HTMLVideoElement, canvas: HTMLCanvasElement): F
 function FaceScan() {
   const navigate = useNavigate();
   const { isLoaded, isSignedIn, user } = useUser();
-  const currentUserId = user?.id;
+  const {
+    identityState,
+    isLoading: isIdentityLoading,
+  } = useIdentityVerificationState(isLoaded && isSignedIn);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const analysisCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -300,7 +304,6 @@ function FaceScan() {
     if (
       !video ||
       verificationStartedRef.current ||
-      !currentUserId ||
       Date.now() < compareCooldownUntilRef.current
     ) {
       return;
@@ -317,15 +320,13 @@ function FaceScan() {
 
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
     const faceImage = canvas.toDataURL("image/jpeg", 0.84);
-    const identityState = getIdentityVerificationState(currentUserId);
-
     verificationStartedRef.current = true;
     setIsVerifying(true);
     setScanTone("verifying");
     setScanMessage("Đang so khớp với ảnh trên CCCD...");
 
     try {
-      if (!identityState.cccdImage) {
+      if (!identityState.CccdImage) {
         throw new Error("Missing CCCD image");
       }
 
@@ -338,7 +339,6 @@ function FaceScan() {
           method: "POST",
           signal: abortController.signal,
           body: JSON.stringify({
-            CccdImage: identityState.cccdImage,
             LiveImage: faceImage,
           }),
         });
@@ -374,8 +374,10 @@ function FaceScan() {
         return;
       }
 
-      saveIdentityVerificationState(currentUserId, {
-        faceImage,
+      await saveFaceVerificationState({
+        FaceImage: faceImage,
+        FaceScanned: true,
+        FaceSkipped: false,
       });
       setCapturedFaceImage(faceImage);
       setMatchScore((currentScore) => Math.max(currentScore, faceMatchScore));
@@ -470,22 +472,19 @@ function FaceScan() {
     return () => window.clearInterval(intervalId);
   }, [cameraError, cameraReady, isVerifying, scanReady]);
 
-  if (!isLoaded) {
+  if (!isLoaded || isIdentityLoading) {
     return <main className="auth-loading">Đang tải...</main>;
   }
 
-  if (!isSignedIn || !user || !currentUserId) {
+  if (!isSignedIn || !user) {
     return <Navigate to="/login" replace />;
   }
 
-  const verifiedUserId = user.id;
-  const identityState = getIdentityVerificationState(verifiedUserId);
-
-  if (!identityState.cccdVerified) {
+  if (!identityState.CccdVerified) {
     return <Navigate to="/verify-cccd" replace />;
   }
 
-  if (identityState.faceScanned) {
+  if (identityState.FaceScanned) {
     return <Navigate to="/select-role" replace />;
   }
 
@@ -497,24 +496,12 @@ function FaceScan() {
         ? "low"
         : "medium";
 
-  function continueToRole(skipped: boolean) {
-    saveIdentityVerificationState(verifiedUserId, {
-      faceImage: skipped ? undefined : capturedFaceImage || identityState.faceImage,
-      faceScanned: true,
-      faceSkipped: skipped,
-    });
+  function continueToRole() {
     navigate("/select-role", { replace: true });
   }
 
-  function returnToCccd() {
-    saveIdentityVerificationState(verifiedUserId, {
-      cccdImage: undefined,
-      cccdSkipped: false,
-      cccdVerified: false,
-      faceImage: undefined,
-      faceScanned: false,
-      faceSkipped: false,
-    });
+  async function returnToCccd() {
+    await resetIdentityVerificationState();
     navigate("/verify-cccd", { replace: true });
   }
 
@@ -538,8 +525,8 @@ function FaceScan() {
             <aside className="cccd-reference-panel" aria-label="Ảnh trên CCCD">
               <h2>Ảnh trên CCCD</h2>
               <div className="cccd-reference-thumb">
-                {identityState.cccdImage ? (
-                  <img src={identityState.cccdImage} alt="Ảnh CCCD đã lưu" />
+                {identityState.CccdImage ? (
+                  <img src={identityState.CccdImage} alt="Ảnh CCCD đã lưu" />
                 ) : (
                   <div className="cccd-reference-placeholder">
                     <span>Chưa có ảnh</span>
@@ -618,12 +605,12 @@ function FaceScan() {
           <div className="identity-actions identity-actions-face">
             <Button
               disabled={!canContinue}
-              onClick={() => continueToRole(false)}
+              onClick={continueToRole}
               type="button"
             >
               Tiếp tục
             </Button>
-            <Button onClick={returnToCccd} type="button" variant="secondary">
+            <Button onClick={() => void returnToCccd()} type="button" variant="secondary">
               Quay lại CCCD
             </Button>
             <Button disabled type="button" variant="ghost">

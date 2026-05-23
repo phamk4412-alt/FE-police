@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useUser } from "@clerk/react";
+import useIdentityVerificationState from "../../hooks/useIdentityVerificationState";
 import Button from "../../components/common/Button";
 import VietnameseDecor from "../../components/common/VietnameseDecor";
 import { getClerkUserRole } from "../../utils/clerkRole";
 import { ROLE_HOME_PATHS, ROLE_LABELS } from "../../utils/constants";
-import { getRequiredIdentityStep } from "../../utils/identityVerification";
 import type { UserRole } from "../../types/user";
 
 const roles: UserRole[] = ["admin", "police", "user", "support"];
@@ -13,11 +13,14 @@ const roles: UserRole[] = ["admin", "police", "user", "support"];
 function SelectRole() {
   const navigate = useNavigate();
   const { isLoaded, isSignedIn, user } = useUser();
+  const { isLoading: isIdentityLoading, requiredIdentityStep } = useIdentityVerificationState(
+    isLoaded && isSignedIn,
+  );
   const [role, setRole] = useState<UserRole>("user");
   const [isSaving, setIsSaving] = useState(false);
 
-  if (!isLoaded) {
-    return <main className="auth-loading">Đang tải...</main>;
+  if (!isLoaded || isIdentityLoading) {
+    return <main className="auth-loading">Dang tai...</main>;
   }
 
   if (!isSignedIn) {
@@ -25,7 +28,6 @@ function SelectRole() {
   }
 
   const existingRole = getClerkUserRole(user);
-  const requiredIdentityStep = getRequiredIdentityStep(user?.id);
 
   if (requiredIdentityStep) {
     return <Navigate to={requiredIdentityStep} replace />;
@@ -55,22 +57,18 @@ function SelectRole() {
     <main className="login-page">
       <VietnameseDecor variant="auth" />
       <section className="login-hero">
-        <h1>Chọn vai trò tài khoản</h1>
+        <h1>Chon vai tro tai khoan</h1>
       </section>
 
       <section className="login-card">
         <div className="section-heading">
-          <span className="eyebrow">Phân quyền</span>
-          <h2>Thiết lập lần đầu</h2>
+          <span className="eyebrow">Phan quyen</span>
+          <h2>Thiet lap lan dau</h2>
         </div>
 
         <label className="field" htmlFor="role">
-          <span>Vai trò</span>
-          <select
-            id="role"
-            onChange={(event) => setRole(event.target.value as UserRole)}
-            value={role}
-          >
+          <span>Vai tro</span>
+          <select id="role" onChange={(event) => setRole(event.target.value as UserRole)} value={role}>
             {roles.map((item) => (
               <option key={item} value={item}>
                 {ROLE_LABELS[item]}
@@ -80,7 +78,7 @@ function SelectRole() {
         </label>
 
         <Button disabled={isSaving} onClick={handleSave} type="button">
-          {isSaving ? "Đang lưu..." : "Tiếp tục"}
+          {isSaving ? "Dang luu..." : "Tiep tuc"}
         </Button>
       </section>
     </main>

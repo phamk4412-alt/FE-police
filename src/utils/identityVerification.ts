@@ -1,79 +1,67 @@
+import { apiFetch } from "../services/api";
+
 export type IdentityVerificationRoute = "/verify-cccd" | "/face-scan";
 
 export interface IdentityVerificationState {
-  cccdVerified: boolean;
-  faceScanned: boolean;
-  cccdSkipped?: boolean;
-  faceSkipped?: boolean;
-  cccdImage?: string;
-  faceImage?: string;
-  updatedAt?: string;
+  CccdVerified: boolean;
+  FaceScanned: boolean;
+  CccdSkipped: boolean;
+  FaceSkipped: boolean;
+  CccdImage?: string;
+  FaceImage?: string;
+  UpdatedAt?: string;
 }
 
-const STORAGE_PREFIX = "police.identityVerification.";
+export interface UpdateCccdVerificationPayload {
+  CccdImage?: string;
+  CccdVerified: boolean;
+  CccdSkipped: boolean;
+}
 
-const defaultIdentityState: IdentityVerificationState = {
-  cccdVerified: false,
-  faceScanned: false,
+export interface UpdateFaceVerificationPayload {
+  FaceImage?: string;
+  FaceScanned: boolean;
+  FaceSkipped: boolean;
+}
+
+export const defaultIdentityVerificationState: IdentityVerificationState = {
+  CccdVerified: false,
+  FaceScanned: false,
+  CccdSkipped: false,
+  FaceSkipped: false,
 };
 
-function getStorageKey(userId: string) {
-  return `${STORAGE_PREFIX}${userId}`;
+export async function fetchIdentityVerificationState() {
+  return apiFetch<IdentityVerificationState>("/api/identity/state");
 }
 
-function canUseSessionStorage() {
-  return typeof window !== "undefined" && typeof window.sessionStorage !== "undefined";
+export async function saveCccdVerificationState(payload: UpdateCccdVerificationPayload) {
+  return apiFetch<IdentityVerificationState>("/api/identity/cccd", {
+    body: JSON.stringify(payload),
+    method: "POST",
+  });
 }
 
-export function getIdentityVerificationState(userId: string | null | undefined) {
-  if (!userId || !canUseSessionStorage()) {
-    return defaultIdentityState;
-  }
-
-  try {
-    const savedState = window.sessionStorage.getItem(getStorageKey(userId));
-
-    if (!savedState) {
-      return defaultIdentityState;
-    }
-
-    return {
-      ...defaultIdentityState,
-      ...JSON.parse(savedState),
-    } as IdentityVerificationState;
-  } catch {
-    return defaultIdentityState;
-  }
+export async function saveFaceVerificationState(payload: UpdateFaceVerificationPayload) {
+  return apiFetch<IdentityVerificationState>("/api/identity/face", {
+    body: JSON.stringify(payload),
+    method: "POST",
+  });
 }
 
-export function saveIdentityVerificationState(
-  userId: string,
-  patch: Partial<IdentityVerificationState>,
-) {
-  const nextState: IdentityVerificationState = {
-    ...getIdentityVerificationState(userId),
-    ...patch,
-    updatedAt: new Date().toISOString(),
-  };
-
-  if (canUseSessionStorage()) {
-    window.sessionStorage.setItem(getStorageKey(userId), JSON.stringify(nextState));
-  }
-
-  return nextState;
+export async function resetIdentityVerificationState() {
+  return apiFetch<IdentityVerificationState>("/api/identity/reset", {
+    method: "POST",
+  });
 }
 
-export function getRequiredIdentityStep(
-  userId: string | null | undefined,
-): IdentityVerificationRoute | null {
-  const state = getIdentityVerificationState(userId);
-
-  if (!state.cccdVerified) {
-    return "/verify-cccd";
+export function getRequiredIdentityStep(state: IdentityVerificationState | null | undefined) {
+  if (!state?.CccdVerified) {
+    return "/verify-cccd" satisfies IdentityVerificationRoute;
   }
 
-  if (!state.faceScanned) {
-    return "/face-scan";
+  if (!state.FaceScanned) {
+    return "/face-scan" satisfies IdentityVerificationRoute;
   }
 
   return null;
