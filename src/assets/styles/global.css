@@ -426,6 +426,35 @@ a {
   opacity: 0.18;
 }
 
+.camera-retry-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.camera-retry-overlay button {
+  border: 1px solid rgba(56, 189, 248, 0.36);
+  border-radius: 999px;
+  padding: 10px 16px;
+  background: rgba(8, 17, 26, 0.86);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 800;
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.28);
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.camera-retry-overlay button:hover,
+.camera-retry-overlay button:focus-visible {
+  border-color: rgba(125, 211, 252, 0.76);
+  color: #ffffff;
+}
+
 .scan-preview img {
   position: absolute;
   inset: 0;

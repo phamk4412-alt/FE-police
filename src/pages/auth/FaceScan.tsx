@@ -232,20 +232,49 @@ function FaceScan() {
   const [scanMessage, setScanMessage] = useState("Không phát hiện khuôn mặt");
   const [capturedFaceImage, setCapturedFaceImage] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
+  const [cameraStartAttempt, setCameraStartAttempt] = useState(0);
+  const [hasCameraFrame, setHasCameraFrame] = useState(false);
 
   function markCameraReady() {
-    if (!videoRef.current?.videoWidth || !videoRef.current?.videoHeight) {
+    const video = videoRef.current;
+
+    if (!video?.videoWidth || !video.videoHeight || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
       return;
     }
 
+    setHasCameraFrame(true);
     setCameraReady(true);
     setCameraError("");
     setScanMessage("Đưa khuôn mặt vào giữa khung");
     setScanTone("idle");
   }
 
+  function stopCameraStream() {
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    streamRef.current = null;
+
+    if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.srcObject = null;
+      videoRef.current.load();
+    }
+  }
+
+  function retryCamera() {
+    stopCameraStream();
+    setHasCameraFrame(false);
+    setCameraReady(false);
+    setCameraError("");
+    setScanReady(false);
+    setScanMessage("Đang mở camera...");
+    setScanTone("idle");
+    setCameraStartAttempt((attempt) => attempt + 1);
+  }
+
   useEffect(() => {
     let isMounted = true;
+    let frameCheckId = 0;
+    let fallbackTimerId = 0;
 
     async function startCamera() {
       if (!isSignedIn) {
@@ -260,6 +289,13 @@ function FaceScan() {
       }
 
       try {
+        stopCameraStream();
+        setHasCameraFrame(false);
+        setCameraReady(false);
+        setCameraError("");
+        setScanReady(false);
+        setScanMessage("Đang mở camera...");
+
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: false,
           video: {
@@ -279,13 +315,38 @@ function FaceScan() {
         if (videoRef.current) {
           const video = videoRef.current;
           video.srcObject = stream;
+          video.load();
 
           await video.play().catch(() => undefined);
-          markCameraReady();
+
+          const checkFrame = () => {
+            if (!isMounted) {
+              return;
+            }
+
+            markCameraReady();
+
+            if (!video.videoWidth || !video.videoHeight || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
+              frameCheckId = window.setTimeout(checkFrame, 220);
+            }
+          };
+
+          checkFrame();
+
+          fallbackTimerId = window.setTimeout(() => {
+            if (!isMounted || video.videoWidth) {
+              return;
+            }
+
+            setCameraReady(false);
+            setHasCameraFrame(false);
+            setScanMessage("Camera chưa có hình, bấm mở lại camera");
+          }, 1800);
         }
       } catch {
         if (isMounted) {
           setCameraReady(false);
+          setHasCameraFrame(false);
           setScanReady(false);
           setCameraError("Không thể mở camera");
           setScanTone("danger");
@@ -298,11 +359,11 @@ function FaceScan() {
 
     return () => {
       isMounted = false;
-      streamRef.current?.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
-
+      window.clearTimeout(frameCheckId);
+      window.clearTimeout(fallbackTimerId);
+      stopCameraStream();
     };
-  }, [isSignedIn]);
+  }, [isSignedIn, cameraStartAttempt]);
 
   useEffect(() => {
     scoreRef.current = matchScore;
@@ -555,8 +616,17 @@ function FaceScan() {
                   playsInline
                   className={capturedFaceImage ? "is-muted" : ""}
                   onCanPlay={markCameraReady}
+                  onLoadedData={markCameraReady}
                   onLoadedMetadata={markCameraReady}
+                  onPlay={markCameraReady}
                 />
+                {!hasCameraFrame ? (
+                  <div className="camera-retry-overlay">
+                    <button type="button" onClick={retryCamera}>
+                      Mở lại camera
+                    </button>
+                  </div>
+                ) : null}
                 {capturedFaceImage ? (
                   <img
                     className="face-capture-image"
