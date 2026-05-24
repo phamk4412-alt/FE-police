@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   defaultIdentityVerificationState,
   fetchIdentityVerificationState,
@@ -13,7 +13,7 @@ function useIdentityVerificationState(enabled: boolean) {
   const [isLoading, setIsLoading] = useState(enabled);
   const [error, setError] = useState("");
 
-  async function refreshIdentityState() {
+  const refreshIdentityState = useCallback(async () => {
     if (!enabled) {
       setIdentityState(defaultIdentityVerificationState);
       setIsLoading(false);
@@ -39,11 +39,15 @@ function useIdentityVerificationState(enabled: boolean) {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [enabled]);
 
   useEffect(() => {
-    void refreshIdentityState();
-  }, [enabled]);
+    const timeoutId = window.setTimeout(() => {
+      void refreshIdentityState();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [refreshIdentityState]);
 
   return {
     error,
