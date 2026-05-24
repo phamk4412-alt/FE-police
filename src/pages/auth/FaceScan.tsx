@@ -233,6 +233,17 @@ function FaceScan() {
   const [capturedFaceImage, setCapturedFaceImage] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
 
+  function markCameraReady() {
+    if (!videoRef.current?.videoWidth || !videoRef.current?.videoHeight) {
+      return;
+    }
+
+    setCameraReady(true);
+    setCameraError("");
+    setScanMessage("Đưa khuôn mặt vào giữa khung");
+    setScanTone("idle");
+  }
+
   useEffect(() => {
     let isMounted = true;
 
@@ -266,13 +277,12 @@ function FaceScan() {
         streamRef.current = stream;
 
         if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
+          const video = videoRef.current;
+          video.srcObject = stream;
 
-        setCameraReady(true);
-        setCameraError("");
-        setScanMessage("Đưa khuôn mặt vào giữa khung");
-        setScanTone("idle");
+          await video.play().catch(() => undefined);
+          markCameraReady();
+        }
       } catch {
         if (isMounted) {
           setCameraReady(false);
@@ -544,6 +554,8 @@ function FaceScan() {
                   muted
                   playsInline
                   className={capturedFaceImage ? "is-muted" : ""}
+                  onCanPlay={markCameraReady}
+                  onLoadedMetadata={markCameraReady}
                 />
                 {capturedFaceImage ? (
                   <img
