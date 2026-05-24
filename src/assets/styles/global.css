@@ -688,6 +688,84 @@ a {
   min-width: 0;
 }
 
+.didit-scan-layout {
+  grid-template-columns: minmax(210px, 0.38fr) minmax(0, 1fr);
+}
+
+.didit-verification-panel {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  min-height: 360px;
+  border: 1px solid rgba(236, 232, 225, 0.12);
+  border-radius: 8px;
+  padding: 24px;
+  background:
+    linear-gradient(rgba(236, 232, 225, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(236, 232, 225, 0.05) 1px, transparent 1px),
+    linear-gradient(135deg, rgba(15, 25, 35, 0.94), rgba(8, 17, 26, 0.98));
+  background-size: 42px 42px, 42px 42px, auto;
+  text-align: center;
+}
+
+.didit-verification-mark {
+  display: grid;
+  width: 148px;
+  aspect-ratio: 1;
+  place-items: center;
+  border: 2px solid rgba(56, 189, 248, 0.58);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 16px rgba(56, 189, 248, 0.04),
+    0 0 44px rgba(56, 189, 248, 0.16);
+}
+
+.didit-verification-mark span {
+  width: 58px;
+  aspect-ratio: 1;
+  border: 3px solid rgba(236, 232, 225, 0.72);
+  border-top-color: transparent;
+  border-radius: 50%;
+}
+
+.didit-verification-loading span {
+  animation: spin 0.9s linear infinite;
+}
+
+.didit-verification-success {
+  border-color: rgba(33, 197, 93, 0.82);
+  box-shadow:
+    0 0 0 16px rgba(33, 197, 93, 0.06),
+    0 0 44px rgba(33, 197, 93, 0.2);
+}
+
+.didit-verification-danger {
+  border-color: rgba(255, 70, 85, 0.82);
+  box-shadow:
+    0 0 0 16px rgba(255, 70, 85, 0.06),
+    0 0 44px rgba(255, 70, 85, 0.18);
+}
+
+.didit-verification-copy {
+  display: grid;
+  gap: 8px;
+  max-width: 460px;
+  margin: 24px 0 20px;
+}
+
+.didit-verification-copy h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 1.45rem;
+  line-height: 1.15;
+}
+
+.didit-verification-copy p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
 .cccd-reference-panel {
   display: grid;
   align-content: center;
@@ -954,6 +1032,12 @@ a {
   100% {
     top: 86%;
     opacity: 0;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 
