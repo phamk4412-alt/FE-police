@@ -6,7 +6,10 @@ import useIdentityVerificationState from "../../hooks/useIdentityVerificationSta
 import Button from "../../components/common/Button";
 import VietnameseDecor from "../../components/common/VietnameseDecor";
 import { apiFetch } from "../../services/api";
-import { resetIdentityVerificationState } from "../../utils/identityVerification";
+import {
+  resetIdentityVerificationState,
+  saveFaceVerificationState,
+} from "../../utils/identityVerification";
 
 interface DiditSessionResponse {
   SessionId: string;
@@ -170,6 +173,15 @@ function FaceScan() {
     navigate("/verify-cccd", { replace: true });
   }
 
+  async function skipFaceScan() {
+    await saveFaceVerificationState({
+      FaceImage: undefined,
+      FaceScanned: true,
+      FaceSkipped: true,
+    });
+    navigate("/select-role", { replace: true });
+  }
+
   return (
     <main className="identity-page">
       <VietnameseDecor variant="auth" />
@@ -275,7 +287,7 @@ function FaceScan() {
             <Button onClick={() => void returnToCccd()} type="button" variant="secondary">
               Quay lại CCCD
             </Button>
-            <Button disabled type="button" variant="ghost">
+            <Button onClick={() => void skipFaceScan()} type="button" variant="ghost">
               Bỏ qua
             </Button>
           </div>

@@ -499,6 +499,15 @@ function VerifyCccd() {
     navigate("/face-scan", { replace: true });
   }
 
+  async function skipCccdScan() {
+    await saveCccdVerificationState({
+      CccdImage: previewImage,
+      CccdSkipped: true,
+      CccdVerified: true,
+    });
+    navigate("/face-scan", { replace: true });
+  }
+
   return (
     <main className="identity-page">
       <VietnameseDecor variant="auth" />
@@ -573,7 +582,7 @@ function VerifyCccd() {
             >
               Tiếp tục
             </Button>
-            <Button disabled type="button" variant="ghost">
+            <Button onClick={() => void skipCccdScan()} type="button" variant="ghost">
               Bỏ qua
             </Button>
           </div>
