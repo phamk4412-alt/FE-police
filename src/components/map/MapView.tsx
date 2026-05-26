@@ -975,7 +975,7 @@ function sendEndPoliceShiftBeacon(username: string) {
 function MapView({
   center = DEFAULT_MAP_CENTER,
   className = "",
-  currentLocationLabel = "Vi tri hien tai",
+  currentLocationLabel = "Vị trí hiện tại",
   defaultToCurrentLocation = false,
   incidents = [],
   initialMode = "normal",
@@ -985,7 +985,7 @@ function MapView({
   selectedIncident = null,
   showModeControls = false,
   showPoiInNormal = true,
-  title = "Ban do tac nghiep",
+  title = "Bản đồ tác nghiệp",
   variant = "full",
   zoom = DEFAULT_MAP_ZOOM,
 }: MapViewProps) {
@@ -1795,7 +1795,7 @@ function MapView({
     <section className={`map-card map-card-${variant} map-wrapper ${className}`.trim()} id="map">
       <div className="section-heading map-heading">
         <div>
-          <span className="eyebrow">Ban do</span>
+          <span className="eyebrow">Bản đồ</span>
           <h2>{title}</h2>
         </div>
       </div>
@@ -1804,7 +1804,7 @@ function MapView({
         <div className="map-stage">
           <div
             className="map-perspective-controls"
-            aria-label="Che do hien thi ban do"
+            aria-label="Chế độ hiển thị bản đồ"
             role="group"
           >
             <button
@@ -1866,20 +1866,20 @@ function MapView({
         </div>
       ) : (
         <div className="map-token-warning">
-          <strong>Thieu Mapbox token</strong>
-          <span>Them VITE_MAPBOX_TOKEN vao file .env de tai ban do.</span>
+          <strong>Thiếu Mapbox token</strong>
+          <span>Thêm VITE_MAPBOX_TOKEN vào file .env để tải bản đồ.</span>
         </div>
       )}
 
       {showModeControls ? (
         <div className="map-controls-footer">
-          <div className="map-mode-controls" aria-label="Che do ban do">
+          <div className="map-mode-controls" aria-label="Chế độ bản đồ">
             <button
               className={mode === "normal" ? "is-active" : ""}
               type="button"
               onClick={() => setMode("normal")}
             >
-              Ban do thuong
+              Bản đồ thường
             </button>
             <button
               className={mode === "crime" ? "is-active" : ""}
@@ -1889,12 +1889,12 @@ function MapView({
                 setMode("crime");
               }}
             >
-              Vu an
+              Vụ án
             </button>
           </div>
 
           <div className="crime-filters">
-            <div className="crime-view-controls" aria-label="Kieu hien thi vu an">
+            <div className="crime-view-controls" aria-label="Kiểu hiển thị vụ án">
               <button
                 className={crimeView === "heatmap" ? "is-active" : ""}
                 disabled={mode !== "crime"}
@@ -1909,29 +1909,29 @@ function MapView({
                 type="button"
                 onClick={() => setCrimeView("point")}
               >
-                Cham
+                Chấm
               </button>
             </div>
             <label>
-              <span>Thoi gian</span>
+              <span>Thời gian</span>
               <select
                 disabled={mode !== "crime"}
                 value={crimePeriod}
                 onChange={(event) => setCrimePeriod(event.target.value as CrimePeriod)}
               >
-                <option value="week">Tuan</option>
-                <option value="month">Thang</option>
-                <option value="year">Nam</option>
+                <option value="week">Tuần</option>
+                <option value="month">Tháng</option>
+                <option value="year">Năm</option>
               </select>
             </label>
             <label>
-              <span>Loai toi pham</span>
+              <span>Loại tội phạm</span>
               <select
                 disabled={mode !== "crime"}
                 value={crimeType}
                 onChange={(event) => setCrimeType(event.target.value)}
               >
-                <option value="all">Tat ca</option>
+                <option value="all">Tất cả</option>
                 {crimeTypes.map((type) => (
                   <option key={type} value={type}>
                     {type}
@@ -1956,7 +1956,7 @@ function MapView({
                 });
               }}
             >
-              Canh lai ban do
+              Căn lại bản đồ
             </button>
           </div>
         </div>

@@ -32,7 +32,7 @@ function useIdentityVerificationState(enabled: boolean) {
       const nextError =
         refreshError instanceof Error
           ? refreshError.message
-          : "Khong the tai trang thai xac thuc danh tinh.";
+          : "Không thể tải trạng thái xác thực danh tính.";
       setIdentityState(defaultIdentityVerificationState);
       setError(nextError);
       return defaultIdentityVerificationState;

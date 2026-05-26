@@ -11,7 +11,7 @@ function EntryRedirect() {
   );
 
   if (!isLoaded || isIdentityLoading) {
-    return <main className="auth-loading">Dang tai...</main>;
+    return <main className="auth-loading">Đang tải...</main>;
   }
 
   if (!isSignedIn) {

@@ -270,6 +270,19 @@ a {
   box-shadow: var(--shadow);
 }
 
+.select-role-card {
+  display: grid;
+  gap: 24px;
+}
+
+.select-role-card .field {
+  gap: 10px;
+}
+
+.select-role-card .btn {
+  margin-top: 4px;
+}
+
 .clerk-login-card {
   display: flex;
   flex-direction: column;
@@ -1270,13 +1283,16 @@ a {
 }
 
 .dashboard-shell.is-sidebar-collapsed .sidebar {
-  padding-inline: 20px;
+  padding-inline: 16px;
   box-shadow: 10px 0 28px rgba(0, 0, 0, 0.12);
 }
 
 .dashboard-shell.is-sidebar-collapsed .sidebar-brand {
+  flex-direction: column;
   justify-content: center;
-  gap: 0;
+  align-items: center;
+  padding-bottom: 18px;
+  gap: 12px;
 }
 
 .dashboard-shell.is-sidebar-collapsed .sidebar-brand strong,
@@ -1287,26 +1303,26 @@ a {
 }
 
 .dashboard-shell.is-sidebar-collapsed .sidebar-toggle {
-  position: absolute;
-  top: 72px;
-  left: 50%;
+  position: static;
   margin-left: 0;
-  transform: translateX(-50%);
+  margin-top: 12px;
+  transform: none;
 }
 
 .dashboard-shell.is-sidebar-collapsed .sidebar-toggle:hover,
 .dashboard-shell.is-sidebar-collapsed .sidebar-toggle:focus-visible {
-  transform: translateX(-50%) translateY(-1px);
+  transform: translateY(-1px);
 }
 
 .dashboard-shell.is-sidebar-collapsed .sidebar-nav {
-  margin-top: 58px;
+  margin-top: 18px;
 }
 
 .dashboard-shell.is-sidebar-collapsed .sidebar-nav a,
 .dashboard-shell.is-sidebar-collapsed .sidebar-logout {
   justify-content: center;
-  padding-inline: 9px;
+  padding-inline: 0;
+  gap: 0;
 }
 
 .dashboard-main {
@@ -3286,6 +3302,7 @@ tbody tr:hover {
   }
 
   .dashboard-shell.is-sidebar-collapsed .sidebar-brand {
+    flex-direction: row;
     justify-content: flex-start;
     gap: 12px;
   }
@@ -3300,6 +3317,7 @@ tbody tr:hover {
   .dashboard-shell.is-sidebar-collapsed .sidebar-toggle {
     position: static;
     margin-left: auto;
+    margin-top: 0;
     transform: none;
   }
 

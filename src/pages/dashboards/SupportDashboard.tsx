@@ -79,7 +79,7 @@ function getStoredStatus(action: string) {
     return "processing";
   }
 
-  return "Da tiep nhan";
+  return "Đã tiếp nhận";
 }
 
 function getActionLabel(action: string) {
@@ -229,7 +229,7 @@ function SupportDashboard() {
       await deleteSupportIncident(id);
       removeIncidentFromSupport(id);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Khong the xoa vu an.";
+      const message = error instanceof Error ? error.message : "Không thể xóa vụ án.";
       window.alert(message);
     }
   }

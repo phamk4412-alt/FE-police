@@ -276,7 +276,7 @@ function UserDashboard() {
     setFormMessage("");
 
     if (isOtherCategory && !normalizedCustomCategory) {
-      setFormMessage("Nhap loai vu viec khi chon Khac.");
+      setFormMessage("Nhập loại vụ việc khi chọn Khác.");
       return;
     }
 
@@ -371,12 +371,12 @@ function UserDashboard() {
 
               {isOtherCategory ? (
                 <label className="field" htmlFor="custom-category">
-                  <span>Nhap loai vu viec</span>
+                  <span>Nhập loại vụ việc</span>
                   <input
                     id="custom-category"
                     name="customCategory"
                     value={customCategory}
-                    placeholder="Vi du: Mat tre em"
+                    placeholder="Ví dụ: Mất trẻ em"
                     onChange={(event) => setCustomCategory(event.target.value)}
                   />
                 </label>

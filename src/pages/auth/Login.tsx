@@ -12,7 +12,7 @@ function Login() {
   );
 
   if (!isLoaded || (isSignedIn && isIdentityLoading)) {
-    return <main className="auth-loading">Dang tai...</main>;
+    return <main className="auth-loading">Đang tải...</main>;
   }
 
   if (isSignedIn) {
@@ -30,13 +30,13 @@ function Login() {
     <main className="login-page">
       <VietnameseDecor variant="auth" />
       <section className="login-hero">
-        <p className="eyebrow">Du an Canh sat</p>
+        <p className="eyebrow">Dự án Cảnh sát</p>
         <h1>{APP_NAME}</h1>
       </section>
 
       <section className="login-card clerk-login-card">
         <div className="section-heading">
-          <h2>Dang nhap</h2>
+          <h2>Đăng nhập</h2>
         </div>
 
         <SignIn fallbackRedirectUrl="/" signUpFallbackRedirectUrl="/" />

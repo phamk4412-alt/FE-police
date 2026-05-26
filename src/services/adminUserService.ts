@@ -27,7 +27,7 @@ type ClerkAccountResponse = {
 function mapClerkAccount(account: ClerkAccountResponse): UserAccount {
   return {
     id: account.id || account.Id || "",
-    name: account.name || account.Name || "Chua co ten",
+    name: account.name || account.Name || "Chưa có tên",
     email: account.email || account.Email || "",
     role: account.role || account.Role || "user",
     status: account.status || account.Status || "active",
