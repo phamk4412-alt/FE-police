@@ -1018,6 +1018,8 @@ function MapView({
   const [showPoliceReportsLayer, setShowPoliceReportsLayer] = useState(true);
 
   const isSupportMap = role === "support";
+  const showUserToolbarActions = role === "user" && showModeControls && mode === "normal";
+  const showPoliceToolbarActions = role === "police" && mode === "normal";
   const currentPoliceUsername = useMemo(
     () => user?.id || user?.primaryEmailAddress?.emailAddress || user?.username || "police-session",
     [user?.id, user?.primaryEmailAddress?.emailAddress, user?.username],
@@ -1802,28 +1804,29 @@ function MapView({
 
       {MAPBOX_TOKEN ? (
         <div className="map-stage">
-          <div
-            className="map-perspective-controls"
-            aria-label="Chế độ hiển thị bản đồ"
-            role="group"
-          >
-            <button
-              className={perspective === "2d" ? "is-active" : ""}
-              type="button"
-              onClick={() => setPerspective("2d")}
+          <div className="map-toolbar" aria-label="Map tools">
+            <div
+              className="map-perspective-controls"
+              aria-label="Chế độ hiển thị bản đồ"
+              role="group"
             >
-              2D
-            </button>
-            <button
-              className={perspective === "3d" ? "is-active" : ""}
-              type="button"
-              onClick={() => setPerspective("3d")}
-            >
-              3D
-            </button>
-          </div>
+              <button
+                className={perspective === "2d" ? "is-active" : ""}
+                type="button"
+                onClick={() => setPerspective("2d")}
+              >
+                2D
+              </button>
+              <button
+                className={perspective === "3d" ? "is-active" : ""}
+                type="button"
+                onClick={() => setPerspective("3d")}
+              >
+                3D
+              </button>
+            </div>
 
-          {role === "user" && showModeControls && mode === "normal" ? (
+          {showUserToolbarActions ? (
             <div className="map-quick-search-controls" aria-label="Tìm nhanh điểm hỗ trợ gần nhất">
               <button type="button" onClick={() => void focusNearestFacility("police")}>
                 Tìm C/A
@@ -1834,7 +1837,7 @@ function MapView({
             </div>
           ) : null}
 
-          {role === "police" && mode === "normal" ? (
+          {showPoliceToolbarActions ? (
             <div className="police-layer-controls" aria-label="Bật tắt lớp bản đồ">
               <button
                 className={showPoliceFacilitiesLayer ? "is-active" : ""}
@@ -1852,6 +1855,8 @@ function MapView({
               </button>
             </div>
           ) : null}
+
+          </div>
 
           <div aria-label={title} className="mapbox-container map-container" ref={mapContainerRef} role="region" />
           {canUseDirections && activeRoute ? (
