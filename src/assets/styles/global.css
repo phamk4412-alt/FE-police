@@ -702,7 +702,7 @@ a {
 }
 
 .didit-scan-layout {
-  grid-template-columns: minmax(210px, 0.38fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .didit-verification-panel {
@@ -723,8 +723,9 @@ a {
 
 .didit-embed-shell {
   display: grid;
-  grid-template-rows: auto minmax(520px, 68vh);
+  grid-template-rows: auto minmax(640px, 72vh);
   width: 100%;
+  max-width: 100%;
   min-width: 0;
   overflow: hidden;
   border: 1px solid rgba(56, 189, 248, 0.2);
@@ -3375,8 +3376,12 @@ tbody tr:hover {
     grid-template-columns: minmax(190px, 0.44fr) minmax(0, 1fr);
   }
 
+  .didit-scan-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .didit-embed-shell {
-    grid-template-rows: auto minmax(460px, 62vh);
+    grid-template-rows: auto minmax(560px, 68vh);
   }
 
   .vietnam-motif {
