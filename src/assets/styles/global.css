@@ -721,6 +721,39 @@ a {
   text-align: center;
 }
 
+.identity-panel-didit-active {
+  padding: 0;
+}
+
+.identity-panel-didit-active .didit-scan-layout,
+.identity-panel-didit-active .didit-verification-panel,
+.identity-panel-didit-active .didit-embed-shell {
+  width: 100%;
+  min-width: 0;
+}
+
+.identity-panel-didit-active .didit-scan-layout {
+  min-height: min(820px, calc(100vh - 132px));
+}
+
+.identity-panel-didit-active .didit-verification-panel {
+  align-content: stretch;
+  justify-items: stretch;
+  min-height: inherit;
+  border: 0;
+  padding: 0;
+}
+
+.identity-panel-didit-active .didit-embed-shell {
+  grid-template-rows: auto minmax(680px, 1fr);
+  border: 0;
+  border-radius: 8px;
+}
+
+.identity-panel-didit-active .didit-embed-frame {
+  min-height: 680px;
+}
+
 .didit-embed-shell {
   display: grid;
   grid-template-rows: auto minmax(640px, 72vh);
@@ -3384,6 +3417,18 @@ tbody tr:hover {
     grid-template-rows: auto minmax(560px, 68vh);
   }
 
+  .identity-panel-didit-active .didit-scan-layout {
+    min-height: min(760px, calc(100vh - 96px));
+  }
+
+  .identity-panel-didit-active .didit-embed-shell {
+    grid-template-rows: auto minmax(620px, 1fr);
+  }
+
+  .identity-panel-didit-active .didit-embed-frame {
+    min-height: 620px;
+  }
+
   .vietnam-motif {
     width: clamp(96px, 22vw, 180px);
     opacity: 0.055;
@@ -3555,6 +3600,18 @@ tbody tr:hover {
 
   .didit-embed-shell {
     grid-template-rows: auto minmax(480px, 70vh);
+  }
+
+  .identity-panel-didit-active .didit-scan-layout {
+    min-height: 70vh;
+  }
+
+  .identity-panel-didit-active .didit-embed-shell {
+    grid-template-rows: auto minmax(520px, 1fr);
+  }
+
+  .identity-panel-didit-active .didit-embed-frame {
+    min-height: 520px;
   }
 
   .scan-preview {

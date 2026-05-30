@@ -236,7 +236,10 @@ function FaceScan() {
           </div>
         </div>
 
-        <section className="identity-panel" aria-label="Quét khuôn mặt bằng Didit">
+        <section
+          className={`identity-panel ${embeddedDiditSession ? "identity-panel-didit-active" : ""}`}
+          aria-label="Quét khuôn mặt bằng Didit"
+        >
           <div className="face-scan-layout didit-scan-layout">
             <div className="didit-verification-panel">
               {embeddedDiditSession ? (
