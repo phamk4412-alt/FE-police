@@ -187,14 +187,6 @@ function FaceScan() {
     }
   }
 
-  function closeEmbeddedDiditSession() {
-    setEmbeddedDiditSession(null);
-    setIsStarting(false);
-    setIsCompleting(false);
-    setStatusTone("idle");
-    setStatusMessage("Dùng Didit để quét mặt và xác minh sinh trắc học.");
-  }
-
   function handleDiditFrameLoad(event: SyntheticEvent<HTMLIFrameElement>) {
     if (!embeddedDiditSession || isCompleting) {
       return;
@@ -227,9 +219,7 @@ function FaceScan() {
       <VietnameseDecor variant="auth" />
       <section className="identity-shell">
         <div className="identity-copy">
-          <span className="eyebrow">Xác thực demo</span>
           <h1>Quét khuôn mặt</h1>
-          <p>Xác minh khuôn mặt bằng Didit</p>
           <div className="identity-progress" aria-label="Tiến trình xác thực">
             <span className="is-active">Quét mặt</span>
             <span>Vai trò</span>
@@ -244,17 +234,6 @@ function FaceScan() {
             <div className="didit-verification-panel">
               {embeddedDiditSession ? (
                 <div className="didit-embed-shell">
-                  <div className="didit-embed-toolbar">
-                    <strong>Didit Face Verification</strong>
-                    <Button
-                      disabled={isCompleting}
-                      onClick={closeEmbeddedDiditSession}
-                      type="button"
-                      variant="ghost"
-                    >
-                      Đóng
-                    </Button>
-                  </div>
                   <iframe
                     allow="camera; microphone; fullscreen; autoplay; encrypted-media; clipboard-read; clipboard-write"
                     className="didit-embed-frame"

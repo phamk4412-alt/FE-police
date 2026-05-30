@@ -745,7 +745,7 @@ a {
 }
 
 .identity-panel-didit-active .didit-embed-shell {
-  grid-template-rows: auto minmax(680px, 1fr);
+  grid-template-rows: minmax(680px, 1fr);
   border: 0;
   border-radius: 8px;
 }
@@ -3422,7 +3422,7 @@ tbody tr:hover {
   }
 
   .identity-panel-didit-active .didit-embed-shell {
-    grid-template-rows: auto minmax(620px, 1fr);
+    grid-template-rows: minmax(620px, 1fr);
   }
 
   .identity-panel-didit-active .didit-embed-frame {
@@ -3607,7 +3607,7 @@ tbody tr:hover {
   }
 
   .identity-panel-didit-active .didit-embed-shell {
-    grid-template-rows: auto minmax(520px, 1fr);
+    grid-template-rows: minmax(520px, 1fr);
   }
 
   .identity-panel-didit-active .didit-embed-frame {
