@@ -1,6 +1,6 @@
 import { apiFetch } from "../services/api";
 
-export type IdentityVerificationRoute = "/verify-cccd" | "/face-scan";
+export type IdentityVerificationRoute = "/face-scan";
 
 export interface IdentityVerificationState {
   CccdVerified: boolean;
@@ -56,11 +56,7 @@ export async function resetIdentityVerificationState() {
 }
 
 export function getRequiredIdentityStep(state: IdentityVerificationState | null | undefined) {
-  if (!state?.CccdVerified) {
-    return "/verify-cccd" satisfies IdentityVerificationRoute;
-  }
-
-  if (!state.FaceScanned) {
+  if (!state?.FaceScanned) {
     return "/face-scan" satisfies IdentityVerificationRoute;
   }
 

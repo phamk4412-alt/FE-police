@@ -6,7 +6,6 @@ import useIdentityVerificationState from "../../hooks/useIdentityVerificationSta
 import Button from "../../components/common/Button";
 import VietnameseDecor from "../../components/common/VietnameseDecor";
 import { apiFetch } from "../../services/api";
-import { resetIdentityVerificationState } from "../../utils/identityVerification";
 
 interface DiditSessionResponse {
   SessionId: string;
@@ -25,6 +24,21 @@ type DiditStatusTone = "idle" | "loading" | "success" | "danger";
 interface EmbeddedDiditSession {
   sessionId: string;
   url: string;
+}
+
+function resolveDiditMessageSessionId(data: unknown) {
+  if (!data || typeof data !== "object") {
+    return "";
+  }
+
+  const message = data as {
+    sessionId?: unknown;
+    session_id?: unknown;
+    verificationSessionId?: unknown;
+  };
+  const sessionId = message.sessionId || message.session_id || message.verificationSessionId;
+
+  return typeof sessionId === "string" ? sessionId : "";
 }
 
 function resolveDiditSessionId(searchParams: URLSearchParams) {
@@ -99,16 +113,37 @@ function FaceScan() {
     return () => window.clearTimeout(timeoutId);
   }, [completeDiditSession, diditSessionId, identityState.FaceScanned, isCompleting, isSignedIn]);
 
+  useEffect(() => {
+    function handleDiditMessage(event: MessageEvent) {
+      if (event.origin !== "https://verify.didit.me" || isCompleting) {
+        return;
+      }
+
+      const messageType =
+        event.data && typeof event.data === "object" && "type" in event.data
+          ? String((event.data as { type?: unknown }).type)
+          : "";
+
+      if (messageType !== "verification_complete") {
+        return;
+      }
+
+      const callbackSessionId = resolveDiditMessageSessionId(event.data) || embeddedDiditSession?.sessionId;
+      if (callbackSessionId) {
+        void completeDiditSession(callbackSessionId);
+      }
+    }
+
+    window.addEventListener("message", handleDiditMessage);
+    return () => window.removeEventListener("message", handleDiditMessage);
+  }, [completeDiditSession, embeddedDiditSession?.sessionId, isCompleting]);
+
   if (!isLoaded || isIdentityLoading) {
     return <main className="auth-loading">Đang tải...</main>;
   }
 
   if (!isSignedIn || !user) {
     return <Navigate to="/login" replace />;
-  }
-
-  if (!identityState.CccdVerified) {
-    return <Navigate to="/verify-cccd" replace />;
   }
 
   if (identityState.FaceScanned) {
@@ -165,11 +200,6 @@ function FaceScan() {
     }
   }
 
-  async function returnToCccd() {
-    await resetIdentityVerificationState();
-    navigate("/verify-cccd", { replace: true });
-  }
-
   return (
     <main className="identity-page">
       <VietnameseDecor variant="auth" />
@@ -179,7 +209,6 @@ function FaceScan() {
           <h1>Quét khuôn mặt</h1>
           <p>Xác minh khuôn mặt bằng Didit</p>
           <div className="identity-progress" aria-label="Tiến trình xác thực">
-            <span>CCCD</span>
             <span className="is-active">Quét mặt</span>
             <span>Vai trò</span>
           </div>
@@ -187,20 +216,6 @@ function FaceScan() {
 
         <section className="identity-panel" aria-label="Quét khuôn mặt bằng Didit">
           <div className="face-scan-layout didit-scan-layout">
-            <aside className="cccd-reference-panel" aria-label="Ảnh trên CCCD">
-              <h2>Ảnh trên CCCD</h2>
-              <div className="cccd-reference-thumb">
-                {identityState.CccdImage ? (
-                  <img src={identityState.CccdImage} alt="Ảnh CCCD đã lưu" />
-                ) : (
-                  <div className="cccd-reference-placeholder">
-                    <span>Chưa có ảnh</span>
-                  </div>
-                )}
-              </div>
-              <p>Didit sẽ mở luồng xác minh sinh trắc học bảo mật.</p>
-            </aside>
-
             <div className="didit-verification-panel">
               {embeddedDiditSession ? (
                 <div className="didit-embed-shell">
@@ -216,7 +231,7 @@ function FaceScan() {
                     </Button>
                   </div>
                   <iframe
-                    allow="camera; microphone; fullscreen; clipboard-read; clipboard-write"
+                    allow="camera; microphone; fullscreen; autoplay; encrypted-media; clipboard-read; clipboard-write"
                     className="didit-embed-frame"
                     onLoad={handleDiditFrameLoad}
                     src={embeddedDiditSession.url}
@@ -271,9 +286,6 @@ function FaceScan() {
           <div className="identity-actions identity-actions-face">
             <Button disabled type="button">
               Tiếp tục
-            </Button>
-            <Button onClick={() => void returnToCccd()} type="button" variant="secondary">
-              Quay lại CCCD
             </Button>
             <Button disabled type="button" variant="ghost">
               Bỏ qua

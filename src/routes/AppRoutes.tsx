@@ -4,7 +4,6 @@ import FaceScan from "../pages/auth/FaceScan";
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
 import SelectRole from "../pages/auth/SelectRole";
-import VerifyCccd from "../pages/auth/VerifyCccd";
 import AdminDashboard from "../pages/dashboards/AdminDashboard";
 import PoliceDashboard from "../pages/dashboards/PoliceDashboard";
 import SupportDashboard from "../pages/dashboards/SupportDashboard";
@@ -17,7 +16,7 @@ function AppRoutes() {
         <Route path="/" element={<EntryRedirect />} />
         <Route path="/login/*" element={<Login />} />
         <Route path="/sign-up/*" element={<Register />} />
-        <Route path="/verify-cccd" element={<VerifyCccd />} />
+        <Route path="/verify-cccd" element={<Navigate to="/face-scan" replace />} />
         <Route path="/face-scan" element={<FaceScan />} />
         <Route path="/select-role" element={<SelectRole />} />
         <Route
