@@ -6,7 +6,10 @@ import useIdentityVerificationState from "../../hooks/useIdentityVerificationSta
 import Button from "../../components/common/Button";
 import VietnameseDecor from "../../components/common/VietnameseDecor";
 import { apiFetch } from "../../services/api";
-import { saveFaceVerificationState } from "../../utils/identityVerification";
+import {
+  saveCccdVerificationState,
+  saveFaceVerificationState,
+} from "../../utils/identityVerification";
 
 interface DiditSessionResponse {
   SessionId: string;
@@ -157,6 +160,15 @@ function FaceScan() {
     setStatusMessage("Đang tạo phiên xác minh Didit...");
 
     try {
+      if (!identityState.CccdVerified) {
+        await saveCccdVerificationState({
+          CccdImage: undefined,
+          CccdSkipped: true,
+          CccdVerified: true,
+        });
+        await refreshIdentityState();
+      }
+
       const callbackUrl = `${window.location.origin}/face-scan`;
       const session = await apiFetch<DiditSessionResponse>("/api/identity/didit/session", {
         method: "POST",
