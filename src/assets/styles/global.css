@@ -2401,17 +2401,19 @@ tbody tr:hover {
   display: grid;
   gap: 6px;
   min-width: 170px;
-  color: #d8e1ea;
+  color: #0f172a;
+  font-weight: 500;
 }
 
 .police-location-popup strong {
-  color: #d8e1ea;
+  color: #0f172a;
   font-size: 1rem;
+  font-weight: 600;
 }
 
 .police-location-popup span {
-  color: #9ac6df;
-  font-weight: 800;
+  color: #1d4ed8;
+  font-weight: 600;
 }
 
 .admin-icon {
@@ -3063,7 +3065,8 @@ tbody tr:hover {
 }
 
 .police-location-popup small {
-  color: #98a6b6;
+  color: #475569;
+  font-weight: 500;
 }
 .incident-map-marker {
   position: relative;
@@ -3297,10 +3300,23 @@ tbody tr:hover {
 }
 
 .mapboxgl-popup-content {
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--surface);
-  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.34);
+  border: 1px solid rgba(15, 23, 42, 0.14) !important;
+  border-radius: 8px !important;
+  color: #0f172a !important;
+  background: #ffffff !important;
+  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.2) !important;
+  font-weight: 500;
+}
+
+.mapboxgl-popup-close-button {
+  color: #334155 !important;
+  font-weight: 600;
+}
+
+.mapboxgl-popup-close-button:hover,
+.mapboxgl-popup-close-button:focus-visible {
+  color: #0f172a !important;
+  background: rgba(15, 23, 42, 0.08) !important;
 }
 
 .facility-popup-shell-police .mapboxgl-popup-content {
@@ -3355,8 +3371,36 @@ tbody tr:hover {
   border-right-color: #0a1421 !important;
 }
 
-.mapboxgl-popup-tip {
-  border-top-color: var(--surface) !important;
+.mapboxgl-popup-anchor-top .mapboxgl-popup-tip {
+  border-bottom-color: #ffffff !important;
+}
+
+.mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip {
+  border-top-color: #ffffff !important;
+}
+
+.mapboxgl-popup-anchor-left .mapboxgl-popup-tip {
+  border-right-color: #ffffff !important;
+}
+
+.mapboxgl-popup-anchor-right .mapboxgl-popup-tip {
+  border-left-color: #ffffff !important;
+}
+
+.mapboxgl-popup-anchor-top-left .mapboxgl-popup-tip {
+  border-bottom-color: #ffffff !important;
+}
+
+.mapboxgl-popup-anchor-top-right .mapboxgl-popup-tip {
+  border-bottom-color: #ffffff !important;
+}
+
+.mapboxgl-popup-anchor-bottom-left .mapboxgl-popup-tip {
+  border-top-color: #ffffff !important;
+}
+
+.mapboxgl-popup-anchor-bottom-right .mapboxgl-popup-tip {
+  border-top-color: #ffffff !important;
 }
 
 .map-token-warning {
@@ -4330,21 +4374,24 @@ tbody tr:hover {
   display: grid;
   gap: 6px;
   min-width: 170px;
-  color: #d8e1ea;
+  color: #0f172a;
+  font-weight: 500;
 }
 
 .police-location-popup strong {
-  color: #d8e1ea;
+  color: #0f172a;
   font-size: 1rem;
+  font-weight: 600;
 }
 
 .police-location-popup span {
-  color: #9ac6df;
-  font-weight: 800;
+  color: #1d4ed8;
+  font-weight: 600;
 }
 
 .police-location-popup small {
-  color: #98a6b6;
+  color: #475569;
+  font-weight: 500;
 }
 @keyframes location-pulse {
   0% {
