@@ -1,5 +1,5 @@
 import { useClerk, useUser } from "@clerk/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import AdminIcon from "../admin/AdminIcons";
 import type { UserRole } from "../../types/user";
@@ -18,6 +18,7 @@ function Sidebar({ isCollapsed, onToggle, role }: SidebarProps) {
   const { user } = useUser();
   const [activeAdminItem, setActiveAdminItem] = useState("");
   const [activeRoleItem, setActiveRoleItem] = useState("");
+  const [currentTime, setCurrentTime] = useState(() => new Date());
   const hasMap = ROLES_WITH_MAP.includes(role);
   const adminMenu = [
     { id: "dashboard", href: "/admin", icon: "chart", label: "Bảng điều khiển" },
@@ -41,6 +42,21 @@ function Sidebar({ isCollapsed, onToggle, role }: SidebarProps) {
 
     void signOut(() => navigate("/login", { replace: true }));
   }
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => window.clearInterval(intervalId);
+  }, []);
+
+  const sidebarDate = new Intl.DateTimeFormat("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(currentTime);
+  const sidebarTime = new Intl.DateTimeFormat("vi-VN", {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(currentTime);
 
   return (
     <aside className="sidebar">
@@ -67,6 +83,7 @@ function Sidebar({ isCollapsed, onToggle, role }: SidebarProps) {
                 href={item.href}
                 key={item.id}
                 title={item.label}
+                data-tooltip={item.label}
                 onClick={() => setActiveAdminItem(item.id)}
               >
                 <span className="sidebar-nav-icon" aria-hidden="true">
@@ -80,6 +97,7 @@ function Sidebar({ isCollapsed, onToggle, role }: SidebarProps) {
                 href={item.href}
                 key={item.id}
                 title={item.label}
+                data-tooltip={item.label}
                 onClick={(event) => {
                   event.preventDefault();
                   setActiveAdminItem(item.id);
@@ -100,6 +118,7 @@ function Sidebar({ isCollapsed, onToggle, role }: SidebarProps) {
                 className={activeRoleItem === "dashboard" ? "is-active" : ""}
                 href={ROLE_HOME_PATHS[role]}
                 title="Bảng điều khiển"
+                data-tooltip="Bảng điều khiển"
                 onClick={(event) => {
                   event.preventDefault();
                   setActiveRoleItem("dashboard");
@@ -118,6 +137,7 @@ function Sidebar({ isCollapsed, onToggle, role }: SidebarProps) {
                   className={activeRoleItem === "map" ? "is-active" : ""}
                   href="#map"
                   title="Bản đồ"
+                  data-tooltip="Bản đồ"
                   onClick={() => setActiveRoleItem("map")}
                 >
                   <span className="sidebar-nav-icon" aria-hidden="true">
@@ -129,6 +149,7 @@ function Sidebar({ isCollapsed, onToggle, role }: SidebarProps) {
                   className={activeRoleItem === "incidents" ? "is-active" : ""}
                   href="#incidents"
                   title="Báo cáo / Vụ việc"
+                  data-tooltip="Báo cáo / Vụ việc"
                   onClick={() => setActiveRoleItem("incidents")}
                 >
                   <span className="sidebar-nav-icon" aria-hidden="true">
@@ -152,6 +173,7 @@ function Sidebar({ isCollapsed, onToggle, role }: SidebarProps) {
                     }
                     href="#map"
                     title="Bản đồ"
+                    data-tooltip="Bản đồ"
                     onClick={(event) => {
                       if (role === "support") {
                         event.preventDefault();
@@ -172,6 +194,7 @@ function Sidebar({ isCollapsed, onToggle, role }: SidebarProps) {
               className={activeRoleItem === "settings" ? "is-active" : ""}
               href="#settings"
               title="Cài đặt"
+              data-tooltip="Cài đặt"
               onClick={() => setActiveRoleItem("settings")}
             >
               <span className="sidebar-nav-icon" aria-hidden="true">
@@ -183,12 +206,21 @@ function Sidebar({ isCollapsed, onToggle, role }: SidebarProps) {
         )}
       </nav>
 
-      <button className="sidebar-logout" type="button" onClick={handleLogout}>
-        <span className="sidebar-nav-icon" aria-hidden="true">
-          X
-        </span>
-        <span className="sidebar-nav-label">Đăng xuất</span>
-      </button>
+      <div className="sidebar-footer">
+        <div className="sidebar-status-card" aria-label="Trạng thái hệ thống">
+          <span>TP.HCM</span>
+          <strong>{sidebarDate}</strong>
+          <time dateTime={currentTime.toISOString()}>{sidebarTime}</time>
+          <small>Hệ thống hoạt động</small>
+        </div>
+
+        <button className="sidebar-logout" type="button" data-tooltip="Đăng xuất" onClick={handleLogout}>
+          <span className="sidebar-nav-icon" aria-hidden="true">
+            X
+          </span>
+          <span className="sidebar-nav-label">Đăng xuất</span>
+        </button>
+      </div>
     </aside>
   );
 }

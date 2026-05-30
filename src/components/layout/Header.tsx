@@ -20,10 +20,10 @@ function Header({ activeSupportTab, activeUserTab, onSupportTabChange, onUserTab
       <header className="dashboard-header admin-topbar">
         <label className="admin-topbar-search">
           <AdminIcon name="search" />
-          <input type="search" placeholder="Tim kiem tai khoan, vai tro, trang thai..." />
+          <input type="search" placeholder="Tìm kiếm tài khoản, vai trò, trạng thái..." />
         </label>
         <div className="dashboard-header-actions admin-topbar-actions">
-          <button className="admin-notification-button" type="button" aria-label="Thong bao">
+          <button className="admin-notification-button" type="button" aria-label="Thông báo">
             <AdminIcon name="bell" />
             <span aria-hidden="true" />
           </button>
@@ -41,50 +41,50 @@ function Header({ activeSupportTab, activeUserTab, onSupportTabChange, onUserTab
   return (
     <header className="dashboard-header">
       <div>
-        <p className="eyebrow">Du an Canh sat</p>
+        <p className="eyebrow">Dự án Cảnh sát</p>
         <h1>{APP_NAME}</h1>
       </div>
       <div className="dashboard-header-actions">
         {role === "user" && activeUserTab && onUserTabChange ? (
-          <nav className="header-tabs" aria-label="Chuyen trang nguoi dan">
+          <nav className="header-tabs" aria-label="Chuyển trang người dân">
             <button
               className={activeUserTab === "home" ? "is-active" : ""}
               type="button"
               onClick={() => onUserTabChange("home")}
             >
-              Trang Chu
+              Trang chủ
             </button>
             <button
               className={activeUserTab === "map" ? "is-active" : ""}
               type="button"
               onClick={() => onUserTabChange("map")}
             >
-              Ban Do
+              Bản đồ
             </button>
             <button
               className={activeUserTab === "news" ? "is-active" : ""}
               type="button"
               onClick={() => onUserTabChange("news")}
             >
-              Tin Tuc
+              Tin tức
             </button>
           </nav>
         ) : null}
         {role === "support" && activeSupportTab && onSupportTabChange ? (
-          <nav className="header-tabs" aria-label="Chuyen trang ho tro">
+          <nav className="header-tabs" aria-label="Chuyển trang hỗ trợ">
             <button
               className={activeSupportTab === "duty" ? "is-active" : ""}
               type="button"
               onClick={() => onSupportTabChange("duty")}
             >
-              Thuong Truc
+              Thường trực
             </button>
             <button
               className={activeSupportTab === "news" ? "is-active" : ""}
               type="button"
               onClick={() => onSupportTabChange("news")}
             >
-              Tin Tuc
+              Tin tức
             </button>
           </nav>
         ) : null}

@@ -20,7 +20,7 @@ function SelectRole() {
   const [isSaving, setIsSaving] = useState(false);
 
   if (!isLoaded || isIdentityLoading) {
-    return <main className="auth-loading">Dang tai...</main>;
+    return <main className="auth-loading">Đang tải...</main>;
   }
 
   if (!isSignedIn) {
@@ -57,17 +57,17 @@ function SelectRole() {
     <main className="login-page">
       <VietnameseDecor variant="auth" />
       <section className="login-hero">
-        <h1>Chon vai tro tai khoan</h1>
+        <h1>Chọn vai trò tài khoản</h1>
       </section>
 
-      <section className="login-card">
+      <section className="login-card select-role-card">
         <div className="section-heading">
-          <span className="eyebrow">Phan quyen</span>
-          <h2>Thiet lap lan dau</h2>
+          <span className="eyebrow">Phân quyền</span>
+          <h2>Thiết lập lần đầu</h2>
         </div>
 
         <label className="field" htmlFor="role">
-          <span>Vai tro</span>
+          <span>Vai trò</span>
           <select id="role" onChange={(event) => setRole(event.target.value as UserRole)} value={role}>
             {roles.map((item) => (
               <option key={item} value={item}>
@@ -78,7 +78,7 @@ function SelectRole() {
         </label>
 
         <Button disabled={isSaving} onClick={handleSave} type="button">
-          {isSaving ? "Dang luu..." : "Tiep tuc"}
+          {isSaving ? "Đang lưu..." : "Tiếp tục"}
         </Button>
       </section>
     </main>

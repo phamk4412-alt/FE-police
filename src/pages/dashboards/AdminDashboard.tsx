@@ -36,7 +36,7 @@ function AdminDashboard() {
       })
       .catch((error: unknown) => {
         if (isMounted) {
-          setLoadError(error instanceof Error ? error.message : "Khong tai duoc tai khoan Clerk.");
+          setLoadError(error instanceof Error ? error.message : "Không tải được tài khoản Clerk.");
         }
       })
       .finally(() => {
