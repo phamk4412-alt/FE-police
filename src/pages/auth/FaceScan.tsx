@@ -6,6 +6,8 @@ import useIdentityVerificationState from "../../hooks/useIdentityVerificationSta
 import Button from "../../components/common/Button";
 import VietnameseDecor from "../../components/common/VietnameseDecor";
 import { apiFetch } from "../../services/api";
+import { syncAccountProfile } from "../../services/accountProfileService";
+import { buildClerkAccountSnapshot } from "../../utils/clerkAccountSnapshot";
 import {
   saveCccdVerificationState,
   saveFaceVerificationState,
@@ -83,8 +85,22 @@ function FaceScan() {
     try {
       const result = await apiFetch<DiditDecisionResponse>(
         `/api/identity/didit/session/${encodeURIComponent(sessionId)}/complete`,
-        { method: "POST" },
+        {
+          method: "POST",
+          body: JSON.stringify({
+            Clerk: buildClerkAccountSnapshot(user),
+          }),
+        },
       );
+
+      void syncAccountProfile({
+        ...buildClerkAccountSnapshot(user),
+        CccdVerified: identityState.CccdVerified,
+        DiditApproved: result.IsApproved,
+        DiditSessionId: result.SessionId,
+        DiditStatus: result.Status,
+        FaceScanned: result.IsApproved,
+      }).catch(() => undefined);
 
       if (!result.IsApproved) {
         setStatusTone("danger");
@@ -103,7 +119,7 @@ function FaceScan() {
       setIsCompleting(false);
       setIsStarting(false);
     }
-  }, [isCompleting, navigate, refreshIdentityState]);
+  }, [identityState.CccdVerified, isCompleting, navigate, refreshIdentityState, user]);
 
   useEffect(() => {
     if (!diditSessionId || !isSignedIn || identityState.FaceScanned || isCompleting) {
@@ -116,6 +132,18 @@ function FaceScan() {
 
     return () => window.clearTimeout(timeoutId);
   }, [completeDiditSession, diditSessionId, identityState.FaceScanned, isCompleting, isSignedIn]);
+
+  useEffect(() => {
+    if (!isSignedIn || !user || isIdentityLoading) {
+      return;
+    }
+
+    void syncAccountProfile({
+      ...buildClerkAccountSnapshot(user),
+      CccdVerified: identityState.CccdVerified,
+      FaceScanned: identityState.FaceScanned,
+    }).catch(() => undefined);
+  }, [identityState.CccdVerified, identityState.FaceScanned, isIdentityLoading, isSignedIn, user]);
 
   useEffect(() => {
     function handleDiditMessage(event: MessageEvent) {
@@ -172,7 +200,10 @@ function FaceScan() {
       const callbackUrl = `${window.location.origin}/face-scan`;
       const session = await apiFetch<DiditSessionResponse>("/api/identity/didit/session", {
         method: "POST",
-        body: JSON.stringify({ CallbackUrl: callbackUrl }),
+        body: JSON.stringify({
+          CallbackUrl: callbackUrl,
+          Clerk: buildClerkAccountSnapshot(user),
+        }),
       });
 
       setEmbeddedDiditSession({

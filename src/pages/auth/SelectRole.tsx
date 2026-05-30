@@ -5,7 +5,9 @@ import useIdentityVerificationState from "../../hooks/useIdentityVerificationSta
 import Button from "../../components/common/Button";
 import VietnameseDecor from "../../components/common/VietnameseDecor";
 import { getClerkUserRole } from "../../utils/clerkRole";
+import { buildClerkAccountSnapshot } from "../../utils/clerkAccountSnapshot";
 import { ROLE_HOME_PATHS, ROLE_LABELS } from "../../utils/constants";
+import { syncAccountProfile } from "../../services/accountProfileService";
 import type { UserRole } from "../../types/user";
 
 const roles: UserRole[] = ["admin", "police", "user", "support"];
@@ -50,6 +52,10 @@ function SelectRole() {
       },
     });
     await user.reload();
+    await syncAccountProfile({
+      ...buildClerkAccountSnapshot(user),
+      Role: role,
+    });
     navigate(ROLE_HOME_PATHS[role], { replace: true });
   }
 
