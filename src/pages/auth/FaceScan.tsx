@@ -62,7 +62,7 @@ function FaceScan() {
     refreshIdentityState,
   } = useIdentityVerificationState(isLoaded && isSignedIn);
   const [statusTone, setStatusTone] = useState<DiditStatusTone>("idle");
-  const [statusMessage, setStatusMessage] = useState("DÃ¹ng Didit Ä‘á»ƒ quÃ©t máº·t vÃ  xÃ¡c minh sinh tráº¯c há»c.");
+  const [statusMessage, setStatusMessage] = useState("Dùng Didit để quét mặt và xác minh sinh trắc học.");
   const [isStarting, setIsStarting] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
   const [embeddedDiditSession, setEmbeddedDiditSession] = useState<EmbeddedDiditSession | null>(null);
@@ -75,7 +75,7 @@ function FaceScan() {
 
     setIsCompleting(true);
     setStatusTone("loading");
-    setStatusMessage("Äang kiá»ƒm tra káº¿t quáº£ xÃ¡c minh tá»« Didit...");
+    setStatusMessage("Đang kiểm tra kết quả xác minh từ Didit...");
 
     try {
       const result = await apiFetch<DiditDecisionResponse>(
@@ -91,11 +91,11 @@ function FaceScan() {
 
       await refreshIdentityState();
       setStatusTone("success");
-      setStatusMessage("Didit Ä‘Ã£ xÃ¡c minh khuÃ´n máº·t thÃ nh cÃ´ng.");
+      setStatusMessage("Didit đã xác minh khuôn mặt thành công.");
       navigate("/select-role", { replace: true });
     } catch (error) {
       setStatusTone("danger");
-      setStatusMessage(error instanceof Error ? error.message : "KhÃ´ng thá»ƒ Ä‘á»c káº¿t quáº£ Didit.");
+      setStatusMessage(error instanceof Error ? error.message : "Không thể đọc kết quả Didit.");
     } finally {
       setIsCompleting(false);
       setIsStarting(false);
@@ -140,7 +140,7 @@ function FaceScan() {
   }, [completeDiditSession, embeddedDiditSession?.sessionId, isCompleting]);
 
   if (!isLoaded || isIdentityLoading) {
-    return <main className="auth-loading">Äang táº£i...</main>;
+    return <main className="auth-loading">Đang tải...</main>;
   }
 
   if (!isSignedIn || !user) {
@@ -154,7 +154,7 @@ function FaceScan() {
   async function startDiditVerification() {
     setIsStarting(true);
     setStatusTone("loading");
-    setStatusMessage("Äang táº¡o phiÃªn xÃ¡c minh Didit...");
+    setStatusMessage("Đang tạo phiên xác minh Didit...");
 
     try {
       const callbackUrl = `${window.location.origin}/face-scan`;
@@ -167,11 +167,11 @@ function FaceScan() {
         sessionId: session.SessionId,
         url: session.Url,
       });
-      setStatusMessage("HoÃ n táº¥t xÃ¡c minh ngay trong khung Didit bÃªn dÆ°á»›i.");
+      setStatusMessage("Hoàn tất xác minh ngay trong khung Didit bên dưới.");
     } catch (error) {
       setIsStarting(false);
       setStatusTone("danger");
-      setStatusMessage(error instanceof Error ? error.message : "KhÃ´ng thá»ƒ táº¡o phiÃªn Didit.");
+      setStatusMessage(error instanceof Error ? error.message : "Không thể tạo phiên Didit.");
     }
   }
 
@@ -180,7 +180,7 @@ function FaceScan() {
     setIsStarting(false);
     setIsCompleting(false);
     setStatusTone("idle");
-    setStatusMessage("DÃ¹ng Didit Ä‘á»ƒ quÃ©t máº·t vÃ  xÃ¡c minh sinh tráº¯c há»c.");
+    setStatusMessage("Dùng Didit để quét mặt và xác minh sinh trắc học.");
   }
 
   function handleDiditFrameLoad(event: SyntheticEvent<HTMLIFrameElement>) {
@@ -215,16 +215,16 @@ function FaceScan() {
       <VietnameseDecor variant="auth" />
       <section className="identity-shell">
         <div className="identity-copy">
-          <span className="eyebrow">XÃ¡c thá»±c demo</span>
-          <h1>QuÃ©t khuÃ´n máº·t</h1>
-          <p>XÃ¡c minh khuÃ´n máº·t báº±ng Didit</p>
-          <div className="identity-progress" aria-label="Tiáº¿n trÃ¬nh xÃ¡c thá»±c">
-            <span className="is-active">QuÃ©t máº·t</span>
-            <span>Vai trÃ²</span>
+          <span className="eyebrow">Xác thực demo</span>
+          <h1>Quét khuôn mặt</h1>
+          <p>Xác minh khuôn mặt bằng Didit</p>
+          <div className="identity-progress" aria-label="Tiến trình xác thực">
+            <span className="is-active">Quét mặt</span>
+            <span>Vai trò</span>
           </div>
         </div>
 
-        <section className="identity-panel" aria-label="QuÃ©t khuÃ´n máº·t báº±ng Didit">
+        <section className="identity-panel" aria-label="Quét khuôn mặt bằng Didit">
           <div className="face-scan-layout didit-scan-layout">
             <div className="didit-verification-panel">
               {embeddedDiditSession ? (
@@ -237,7 +237,7 @@ function FaceScan() {
                       type="button"
                       variant="ghost"
                     >
-                      ÄÃ³ng
+                      Đóng
                     </Button>
                   </div>
                   <iframe
@@ -262,7 +262,7 @@ function FaceScan() {
                     onClick={() => void startDiditVerification()}
                     type="button"
                   >
-                    {isStarting || isCompleting ? "Äang xá»­ lÃ½..." : "Báº¯t Ä‘áº§u quÃ©t máº·t"}
+                    {isStarting || isCompleting ? "Đang xử lý..." : "Bắt đầu quét mặt"}
                   </Button>
                 </>
               )}
@@ -282,12 +282,12 @@ function FaceScan() {
             <div>
               <strong>
                 {statusTone === "success"
-                  ? "XÃ¡c thá»±c Didit thÃ nh cÃ´ng"
+                  ? "Xác thực Didit thành công"
                   : statusTone === "danger"
-                    ? "Didit chÆ°a xÃ¡c minh thÃ nh cÃ´ng"
+                    ? "Didit chưa xác minh thành công"
                     : statusTone === "loading"
-                      ? "Äang xá»­ lÃ½ Didit"
-                      : "Sáºµn sÃ ng quÃ©t máº·t báº±ng Didit"}
+                      ? "Đang xử lý Didit"
+                      : "Sẵn sàng quét mặt bằng Didit"}
               </strong>
               <span>{statusMessage}</span>
             </div>
@@ -295,10 +295,10 @@ function FaceScan() {
 
           <div className="identity-actions identity-actions-face">
             <Button disabled type="button">
-              Tiáº¿p tá»¥c
+              Tiếp tục
             </Button>
             <Button onClick={() => void skipFaceScan()} type="button" variant="ghost">
-              Bá» qua
+              Bỏ qua
             </Button>
           </div>
         </section>
