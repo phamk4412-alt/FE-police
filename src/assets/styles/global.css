@@ -3309,14 +3309,21 @@ tbody tr:hover {
 }
 
 .mapboxgl-popup-close-button {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 6px;
+  box-shadow: none !important;
   color: #334155 !important;
   font-weight: 600;
+  appearance: none;
 }
 
 .mapboxgl-popup-close-button:hover,
 .mapboxgl-popup-close-button:focus-visible {
   color: #0f172a !important;
   background: rgba(15, 23, 42, 0.08) !important;
+  border: 0 !important;
+  box-shadow: none !important;
 }
 
 .facility-popup-shell-police .mapboxgl-popup-content {
