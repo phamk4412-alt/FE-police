@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { useAuth, useUser } from "@clerk/react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Button from "../../components/common/Button";
 import AdminIcon, { type AdminIconName } from "../../components/admin/AdminIcons";
@@ -6,6 +7,7 @@ import DashboardLayout from "../../components/layout/DashboardLayout";
 import MapView from "../../components/map/MapView";
 import UserNewsPage from "../news/UserNewsPage";
 import { createIncidentWithImages } from "../../services/userService";
+import { getClerkUserRole } from "../../utils/clerkRole";
 
 const MAX_IMAGES = 3;
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
@@ -60,6 +62,8 @@ type UserDashboardTab = "home" | "map" | "news";
 function UserDashboard() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { getToken } = useAuth();
+  const { isSignedIn, user } = useUser();
   const cameraInputRef = useRef<HTMLInputElement | null>(null);
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -301,7 +305,28 @@ function UserDashboard() {
     });
 
     try {
-      const result = await createIncidentWithImages(formData);
+      const token = await getToken();
+      const payload = {
+        category,
+        customCategory: isOtherCategory ? normalizedCustomCategory : undefined,
+        detail: description.trim(),
+        imageCount: images.length,
+        latitude: lat,
+        longitude: lng,
+        title: buildIncidentTitle(titleCategory, description),
+      };
+
+      console.log("token", token);
+      console.log("user", {
+        id: user?.id,
+        isSignedIn,
+        role: getClerkUserRole(user),
+        publicMetadata: user?.publicMetadata,
+        unsafeMetadata: user?.unsafeMetadata,
+      });
+      console.log("request payload", payload);
+
+      const result = await createIncidentWithImages(formData, token);
 
       setDescription("");
       setCustomCategory("");

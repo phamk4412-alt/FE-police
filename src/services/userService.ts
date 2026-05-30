@@ -28,10 +28,11 @@ export function createIncident(payload: CreateIncidentPayload) {
   });
 }
 
-export async function createIncidentWithImages(formData: FormData) {
+export async function createIncidentWithImages(formData: FormData, token?: string | null) {
   const res = await fetch(`${API_URL}/api/incidents`, {
     body: formData,
     credentials: "include",
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     method: "POST",
   });
 
