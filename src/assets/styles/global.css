@@ -303,6 +303,64 @@ a {
   width: 100%;
 }
 
+.clerk-login-card .cl-cardBox,
+.clerk-login-card .cl-card {
+  background: transparent;
+  box-shadow: none;
+}
+
+.clerk-login-card .cl-headerTitle,
+.clerk-login-card .cl-headerSubtitle,
+.clerk-login-card .cl-footer,
+.clerk-login-card .cl-footerAction,
+.clerk-login-card [class*="cl-footer"],
+.clerk-login-card [class*="development"],
+.clerk-login-card [class*="Development"],
+.clerk-login-card [data-localization-key*="footer"],
+.clerk-login-card [data-localization-key*="development"] {
+  display: none !important;
+}
+
+.clerk-login-card .cl-main {
+  gap: 18px;
+}
+
+.clerk-login-card .cl-form,
+.clerk-login-card .cl-formButtonPrimary,
+.clerk-login-card .cl-socialButtonsBlockButton {
+  width: 100%;
+}
+
+.clerk-login-card .cl-socialButtonsBlockButton,
+.clerk-login-card .cl-formFieldInput {
+  min-height: 44px;
+  border-radius: 8px;
+}
+
+.clerk-login-card .cl-socialButtonsBlockButton {
+  transition:
+    border-color 180ms ease,
+    background 180ms ease,
+    transform 180ms ease;
+}
+
+.clerk-login-card .cl-socialButtonsBlockButton:hover,
+.clerk-login-card .cl-socialButtonsBlockButton:focus-visible {
+  border-color: rgba(255, 70, 85, 0.5);
+  background: #1f2f3e;
+  transform: translateY(-1px);
+}
+
+.clerk-login-card .cl-formButtonPrimary {
+  min-height: 46px;
+  border-radius: 8px;
+}
+
+.clerk-login-card .cl-formButtonPrimary:hover,
+.clerk-login-card .cl-formButtonPrimary:focus-visible {
+  background: var(--primary-dark);
+}
+
 .auth-secondary-action {
   display: flex;
   align-items: center;
