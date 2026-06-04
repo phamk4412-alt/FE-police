@@ -1,5 +1,6 @@
 import type { AdminUserRole, AdminUserStatus, UserAccount } from "../types/adminUser";
 import { apiFetch } from "./api";
+import { withBackendRoleSession } from "./backendAuthService";
 
 type ClerkAccountResponse = {
   Id?: string;
@@ -40,29 +41,37 @@ function mapClerkAccount(account: ClerkAccountResponse): UserAccount {
 }
 
 export async function getUsers(): Promise<UserAccount[]> {
-  const users = await apiFetch<ClerkAccountResponse[]>("/api/admin/clerk/accounts");
+  const users = await withBackendRoleSession("admin", () =>
+    apiFetch<ClerkAccountResponse[]>("/api/admin/clerk/accounts"),
+  );
   return users.map(mapClerkAccount);
 }
 
 export async function updateUserRole(userId: string, role: AdminUserRole): Promise<UserAccount> {
-  const user = await apiFetch<ClerkAccountResponse>(`/api/admin/clerk/accounts/${userId}/role`, {
-    method: "PATCH",
-    body: JSON.stringify({ role }),
-  });
+  const user = await withBackendRoleSession("admin", () =>
+    apiFetch<ClerkAccountResponse>(`/api/admin/clerk/accounts/${userId}/role`, {
+      method: "PATCH",
+      body: JSON.stringify({ role }),
+    }),
+  );
   return mapClerkAccount(user);
 }
 
 export async function updateUserStatus(userId: string, status: AdminUserStatus): Promise<UserAccount> {
-  const user = await apiFetch<ClerkAccountResponse>(`/api/admin/clerk/accounts/${userId}/status`, {
-    method: "PATCH",
-    body: JSON.stringify({ status }),
-  });
+  const user = await withBackendRoleSession("admin", () =>
+    apiFetch<ClerkAccountResponse>(`/api/admin/clerk/accounts/${userId}/status`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    }),
+  );
   return mapClerkAccount(user);
 }
 
 export async function deleteUser(userId: string): Promise<{ id: string }> {
-  await apiFetch<void>(`/api/admin/clerk/accounts/${userId}`, {
-    method: "DELETE",
-  });
+  await withBackendRoleSession("admin", () =>
+    apiFetch<void>(`/api/admin/clerk/accounts/${userId}`, {
+      method: "DELETE",
+    }),
+  );
   return { id: userId };
 }

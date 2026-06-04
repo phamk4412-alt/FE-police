@@ -27,7 +27,9 @@ export async function apiFetch<T>(
     });
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") {
-      throw new Error("API quá thời gian phản hồi. Vui lòng thử lại.");
+      throw new Error("API quá thời gian phản hồi. Vui lòng thử lại.", {
+        cause: error,
+      });
     }
 
     throw error;

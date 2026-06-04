@@ -92,7 +92,8 @@ interface OverpassElement {
   tags?: Record<string, string>;
 }
 
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN as string | undefined;
+const MAPBOX_TOKEN = (import.meta.env.VITE_MAPBOX_TOKEN ||
+  import.meta.env.VITE_MAPBOX_ACCESS_TOKEN) as string | undefined;
 const HCM_WIKIDATA_ID = "Q1854";
 const HCM_BOUNDARY_URLS = ["/maps/hcm-boundary.geojson", `${API_URL}/api/maps/hcm-boundary`];
 const DEFAULT_MAP_CENTER: [number, number] = [106.88, 10.9];
