@@ -3,6 +3,85 @@ import AdminIcon from "../admin/AdminIcons";
 import type { UserRole } from "../../types/user";
 import { APP_NAME, ROLE_LABELS } from "../../utils/constants";
 
+const accountButtonAppearance = {
+  variables: {
+    colorBackground: "#ffffff",
+    colorInputBackground: "#ffffff",
+    colorInputText: "#111827",
+    colorNeutral: "#64748b",
+    colorPrimary: "#ff4655",
+    colorText: "#111827",
+    colorTextSecondary: "#4b5563",
+    borderRadius: "8px",
+    fontFamily:
+      'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+  },
+  elements: {
+    modalContent: {
+      backgroundColor: "#ffffff",
+      color: "#111827",
+    },
+    userProfileModal: {
+      backgroundColor: "#ffffff",
+      color: "#111827",
+    },
+    userProfileRoot: {
+      backgroundColor: "#ffffff",
+      color: "#111827",
+    },
+    userProfilePage: {
+      backgroundColor: "#ffffff",
+      color: "#111827",
+    },
+    navbar: {
+      backgroundColor: "#f8fafc",
+      borderRight: "1px solid #e5e7eb",
+    },
+    navbarButton: {
+      color: "#334155",
+      fontWeight: "700",
+    },
+    navbarButtonIcon: {
+      color: "#475569",
+    },
+    navbarButton__active: {
+      backgroundColor: "#fff1f2",
+      color: "#ff4655",
+    },
+    headerTitle: {
+      color: "#111827",
+    },
+    headerSubtitle: {
+      color: "#4b5563",
+    },
+    profileSectionTitleText: {
+      color: "#111827",
+    },
+    profileSectionContent: {
+      color: "#111827",
+    },
+    formFieldLabel: {
+      color: "#111827",
+      fontWeight: "700",
+    },
+    formFieldInput: {
+      backgroundColor: "#ffffff",
+      borderColor: "#cbd5e1",
+      color: "#111827",
+      boxShadow: "none",
+    },
+    formButtonPrimary: {
+      backgroundColor: "#ff4655",
+      color: "#ffffff",
+      fontWeight: "900",
+      boxShadow: "none",
+    },
+    footer: {
+      backgroundColor: "#ffffff",
+    },
+  },
+};
+
 interface HeaderProps {
   activeUserTab?: "home" | "map" | "news";
   activeSupportTab?: "duty" | "news";
@@ -29,7 +108,7 @@ function Header({ activeSupportTab, activeUserTab, onSupportTabChange, onUserTab
           </button>
           <div className="admin-profile-chip">
             <Show when="signed-in">
-              <UserButton />
+              <UserButton appearance={accountButtonAppearance} />
             </Show>
             <span>{adminName}</span>
           </div>
@@ -90,7 +169,7 @@ function Header({ activeSupportTab, activeUserTab, onSupportTabChange, onUserTab
         ) : null}
         <div className="role-badge">{ROLE_LABELS[role]}</div>
         <Show when="signed-in">
-          <UserButton />
+          <UserButton appearance={accountButtonAppearance} />
         </Show>
       </div>
     </header>
