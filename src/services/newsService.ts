@@ -14,20 +14,31 @@ export function resolveMediaUrl(url: string) {
   return `${API_URL}${url.startsWith("/") ? "" : "/"}${url}`;
 }
 
-function unwrapList<T>(payload: T[] | { data?: T[]; Data?: T[]; items?: T[]; Items?: T[] }) {
+type ListPayload<T> =
+  | T[]
+  | {
+      data?: T[];
+      Data?: T[];
+      items?: T[];
+      Items?: T[];
+      results?: T[];
+      Results?: T[];
+    };
+
+function unwrapList<T>(payload: ListPayload<T>) {
   if (Array.isArray(payload)) {
     return payload;
   }
 
-  return payload.data || payload.Data || payload.items || payload.Items || [];
+  return payload.items || payload.Items || payload.data || payload.Data || payload.results || payload.Results || [];
 }
 
 export async function getNews() {
-  return unwrapList(await apiFetch<NewsArticle[] | { data?: NewsArticle[]; Data?: NewsArticle[]; items?: NewsArticle[]; Items?: NewsArticle[] }>("/api/news"));
+  return unwrapList(await apiFetch<ListPayload<NewsArticle>>("/api/news"));
 }
 
 export async function getFeaturedNews() {
-  return unwrapList(await apiFetch<NewsArticle[] | { data?: NewsArticle[]; Data?: NewsArticle[]; items?: NewsArticle[]; Items?: NewsArticle[] }>("/api/news/featured"));
+  return unwrapList(await apiFetch<ListPayload<NewsArticle>>("/api/news/featured"));
 }
 
 export function getNewsById(id: string) {
@@ -37,9 +48,7 @@ export function getNewsById(id: string) {
 export async function getSupportNews() {
   return withBackendRoleSession("support", async () =>
     unwrapList(
-      await apiFetch<
-        NewsArticle[] | { data?: NewsArticle[]; Data?: NewsArticle[]; items?: NewsArticle[]; Items?: NewsArticle[] }
-      >("/api/support/news"),
+      await apiFetch<ListPayload<NewsArticle>>("/api/support/news"),
     ),
   );
 }

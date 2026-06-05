@@ -14,7 +14,6 @@ import {
   getIncidentId,
   getIncidentLocation,
   getIncidentReporterName,
-  getIncidentSeverity,
   getIncidentStatus,
   getIncidentTitle,
 } from "../../types/incident";
@@ -326,18 +325,6 @@ function appendPopupRow(container: HTMLElement, label: string, value: string) {
   container.appendChild(row);
 }
 
-function appendSeverityPopupRow(container: HTMLElement, severity: ReturnType<typeof getIncidentSeverity>) {
-  const row = document.createElement("div");
-  row.className = "incident-popup-severity-row";
-  const labelElement = document.createElement("span");
-  const valueElement = document.createElement("strong");
-  labelElement.textContent = "Mức độ";
-  valueElement.className = `incident-popup-severity-badge incident-popup-severity-${severity}`;
-  valueElement.textContent = getSeverityLabel(severity);
-  row.append(labelElement, valueElement);
-  container.appendChild(row);
-}
-
 function createFacilityPopup(
   facility: FacilityMarker,
   distanceMeters?: number,
@@ -469,23 +456,11 @@ function createPoliceLocationPopup(location: NonNullable<ReturnType<typeof norma
 }
 
 function createIncidentMarker(incident: Incident, isActive: boolean) {
-  const severity = getIncidentSeverity(incident);
   const markerElement = document.createElement("button");
   markerElement.type = "button";
-  markerElement.className = `${INCIDENT_MARKER_LAYER_ID} incident-map-marker incident-map-marker-${severity}${
-    isActive ? " is-active" : ""
-  }`;
+  markerElement.className = `${INCIDENT_MARKER_LAYER_ID} incident-map-marker${isActive ? " is-active" : ""}`;
   markerElement.setAttribute("aria-label", getIncidentTitle(incident));
   return markerElement;
-}
-
-function getSeverityLabel(severity: ReturnType<typeof getIncidentSeverity>) {
-  const labels = {
-    critical: "Khẩn cấp",
-    low: "Thấp",
-    medium: "Trung bình",
-  };
-  return labels[severity] || severity;
 }
 
 function createIncidentPopup(
@@ -493,9 +468,8 @@ function createIncidentPopup(
   onDirections?: (incident: Incident) => void,
   options: { includeReporter?: boolean } = {},
 ) {
-  const severity = getIncidentSeverity(incident);
   const popupContent = document.createElement("div");
-  popupContent.className = `incident-map-popup incident-map-popup-${severity}`;
+  popupContent.className = "incident-map-popup";
 
   const title = document.createElement("strong");
   title.className = "incident-map-popup-title";
@@ -510,7 +484,6 @@ function createIncidentPopup(
   }
   appendPopupRow(details, "Loại", getIncidentCategory(incident));
   appendPopupRow(details, "Thời gian", formatPopupDateTime(getIncidentCreatedAt(incident)));
-  appendSeverityPopupRow(details, severity);
   appendPopupRow(details, "Địa chỉ", getIncidentLocation(incident));
   appendPopupRow(details, "Trạng thái", getIncidentStatus(incident));
   body.appendChild(details);
@@ -706,17 +679,7 @@ function addCrimeLayers(map: mapboxgl.Map, data: CrimeFeatureCollection) {
       layout: { visibility: "none" },
       minzoom: 10,
       paint: {
-        "circle-color": [
-          "match",
-          ["get", "severity"],
-          "critical",
-          "#ff4655",
-          "medium",
-          "#f59e0b",
-          "low",
-          "#21c55d",
-          "#ff4655",
-        ],
+        "circle-color": "#ff4655",
         "circle-opacity": 0.88,
         "circle-radius": 7,
         "circle-stroke-color": "#ffffff",
@@ -770,7 +733,7 @@ function isIncidentInPeriod(incident: Incident, period: CrimePeriod) {
 }
 
 function getIncidentType(incident: Incident) {
-  return incident.Category || incident.Level || getIncidentTitle(incident);
+  return incident.Category || incident.category || getIncidentTitle(incident);
 }
 
 function buildCrimeGeoJson(incidents: Incident[]): CrimeFeatureCollection {
@@ -785,7 +748,6 @@ function buildCrimeGeoJson(incidents: Incident[]): CrimeFeatureCollection {
       return {
         geometry: { coordinates, type: "Point" as const },
         properties: {
-          severity: getIncidentSeverity(incident),
           status: getIncidentStatus(incident),
           title: getIncidentTitle(incident),
           type: getIncidentType(incident),
@@ -1584,7 +1546,7 @@ function MapView({
         .setLngLat(coordinates)
         .setPopup(
           new mapboxgl.Popup({
-            className: `map-dark-popup incident-popup-shell incident-popup-shell-${getIncidentSeverity(incident)}`,
+            className: "map-dark-popup incident-popup-shell",
             maxWidth: "320px",
             offset: 28,
           }).setDOMContent(
@@ -1622,7 +1584,7 @@ function MapView({
 
     popupRef.current?.remove();
     popupRef.current = new mapboxgl.Popup({
-      className: `map-dark-popup incident-popup-shell incident-popup-shell-${getIncidentSeverity(incident)}`,
+      className: "map-dark-popup incident-popup-shell",
       maxWidth: "320px",
       offset: 28,
     })
@@ -1779,7 +1741,7 @@ function MapView({
 
       popupRef.current?.remove();
       popupRef.current = new mapboxgl.Popup({
-        className: `map-dark-popup incident-popup-shell incident-popup-shell-${getIncidentSeverity(incident)}`,
+        className: "map-dark-popup incident-popup-shell",
         maxWidth: "320px",
         offset: 16,
       })

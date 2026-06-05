@@ -3,9 +3,6 @@ export interface Incident {
   Title?: string;
   Detail?: string;
   Category?: string;
-  Level?: string;
-  UrgencyScore?: number;
-  ClassificationReason?: string;
   Latitude?: number;
   Longitude?: number;
   District?: string;
@@ -16,7 +13,6 @@ export interface Incident {
   ReporterPhone?: string;
   Phone?: string;
   LastUpdatedBy?: string;
-  InternalNote?: string;
   CreatedAt?: string;
   UpdatedAt?: string;
   ImageUrls?: string[];
@@ -24,7 +20,6 @@ export interface Incident {
   title?: string;
   detail?: string;
   category?: string;
-  level?: string;
   latitude?: number;
   longitude?: number;
   location?: string;
@@ -35,8 +30,6 @@ export interface Incident {
   reporterPhone?: string;
   imageUrls?: string[];
 }
-
-export type IncidentSeverity = "critical" | "medium" | "low";
 
 export function getIncidentId(incident: Incident) {
   return incident.Id || incident.id || `${getIncidentTitle(incident)}-${getIncidentCreatedAt(incident)}`;
@@ -51,7 +44,7 @@ export function getIncidentDetail(incident: Incident) {
 }
 
 export function getIncidentCategory(incident: Incident) {
-  return incident.Category || incident.category || incident.Level || incident.level || getIncidentTitle(incident);
+  return incident.Category || incident.category || getIncidentTitle(incident);
 }
 
 export function getIncidentStatus(incident: Incident) {
@@ -87,19 +80,4 @@ export function getIncidentPhone(incident: Incident) {
 
 export function getIncidentImageUrls(incident: Incident) {
   return incident.ImageUrls || incident.imageUrls || [];
-}
-
-export function getIncidentSeverity(incident: Incident): IncidentSeverity {
-  const rawLevel = `${incident.Level || incident.level || incident.Status || incident.status || ""}`.toLowerCase();
-  const score = incident.UrgencyScore;
-
-  if (rawLevel.includes("cao") || rawLevel.includes("khẩn") || rawLevel.includes("khan") || (score ?? 0) >= 8) {
-    return "critical";
-  }
-
-  if (rawLevel.includes("trung") || (typeof score === "number" && score >= 4)) {
-    return "medium";
-  }
-
-  return "low";
 }

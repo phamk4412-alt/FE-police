@@ -6,7 +6,7 @@ import MapView from "../../components/map/MapView";
 import SupportNewsManager from "../news/SupportNewsManager";
 import { API_URL } from "../../services/api";
 import { deleteSupportIncident, getSupportIncidents, updateSupportIncidentStatus } from "../../services/supportIncidentService";
-import type { Incident, IncidentSeverity } from "../../types/incident";
+import type { Incident } from "../../types/incident";
 import { loadSupportCases, saveSupportCases } from "../../utils/supportCasesStorage";
 import {
   getIncidentCategory,
@@ -17,7 +17,6 @@ import {
   getIncidentImageUrls,
   getIncidentPhone,
   getIncidentReporterName,
-  getIncidentSeverity,
   getIncidentStatus,
   getIncidentTitle,
 } from "../../types/incident";
@@ -25,12 +24,6 @@ import {
 const statusActions = ["Nhận xử lý", "Đang xử lý", "Hoàn thành"];
 
 const completedStatuses = ["completed", "done", "resolved", "Hoàn thành", "Đã hoàn thành"];
-
-const severityLabels: Record<IncidentSeverity, string> = {
-  critical: "Khẩn cấp",
-  low: "Thấp",
-  medium: "Trung bình",
-};
 
 function formatDateTime(value: string) {
   if (!value) {
@@ -60,10 +53,6 @@ function resolveImageUrl(url: string) {
 function getCoordinateText(incident: Incident) {
   const coordinates = getIncidentCoordinates(incident);
   return coordinates ? `${coordinates[1].toFixed(6)}, ${coordinates[0].toFixed(6)}` : "Chưa có tọa độ";
-}
-
-function getSeverityClass(incident: Incident) {
-  return `support-severity-${getIncidentSeverity(incident)}`;
 }
 
 function isCompletedStatus(status: string) {
@@ -138,7 +127,6 @@ function SupportDashboard() {
       const status = statusByIncident[incidentId] || getIncidentStatus(incident);
       return !isCompletedStatus(status);
     }).length;
-    const criticalCount = incidents.filter((incident) => getIncidentSeverity(incident) === "critical").length;
     const completedCount = incidents.filter((incident) => {
       const incidentId = getIncidentId(incident);
       const status = statusByIncident[incidentId] || getIncidentStatus(incident);
@@ -148,7 +136,6 @@ function SupportDashboard() {
     return [
       { icon: "file", label: "Tổng báo cáo", note: "Đang có trong hàng đợi", tone: "blue", value: incidents.length },
       { icon: "activity", label: "Đang xử lý", note: "Cần theo dõi hiện trường", tone: "orange", value: activeCount },
-      { icon: "alert", label: "Khẩn cấp", note: "Ưu tiên điều phối", tone: "red", value: criticalCount },
       { icon: "shield", label: "Hoàn thành", note: "Có thể lưu hồ sơ", tone: "green", value: completedCount },
     ];
   }, [incidents, statusByIncident]);
@@ -280,7 +267,6 @@ function SupportDashboard() {
             <div className="support-report-list">
               {incidents.map((incident) => {
                 const incidentId = getIncidentId(incident);
-                const severity = getIncidentSeverity(incident);
                 const displayStatus = statusByIncident[incidentId] || getIncidentStatus(incident);
 
                 return (
@@ -290,16 +276,13 @@ function SupportDashboard() {
                     type="button"
                     onClick={() => handleSelectIncident(incident)}
                   >
-                    <span className={`support-status-icon ${getSeverityClass(incident)}`} aria-hidden="true" />
+                    <span className="support-status-icon" aria-hidden="true" />
                     <span className="support-report-main">
                       <strong>{getIncidentReporterName(incident)}</strong>
                       <small>{getIncidentCategory(incident)}</small>
                       <small>{getIncidentPhone(incident) || "Chưa có SĐT"}</small>
                     </span>
                     <span className="support-report-meta">
-                      <span className={`support-severity-badge ${getSeverityClass(incident)}`}>
-                        {severityLabels[severity]}
-                      </span>
                       <small>{formatDateTime(getIncidentCreatedAt(incident))}</small>
                       <small>{displayStatus}</small>
                     </span>
@@ -345,14 +328,6 @@ function SupportDashboard() {
                   <div>
                     <dt>Thời gian</dt>
                     <dd>{formatDateTime(getIncidentCreatedAt(selectedIncident))}</dd>
-                  </div>
-                  <div>
-                    <dt>Mức độ</dt>
-                    <dd>
-                      <span className={`support-severity-badge ${getSeverityClass(selectedIncident)}`}>
-                        {severityLabels[getIncidentSeverity(selectedIncident)]}
-                      </span>
-                    </dd>
                   </div>
                 </dl>
 

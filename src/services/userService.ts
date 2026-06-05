@@ -11,7 +11,6 @@ export function getIncidents() {
 
 export interface CreateIncidentPayload {
   Detail?: string;
-  Level?: string;
   Location: string;
   Title: string;
 }
