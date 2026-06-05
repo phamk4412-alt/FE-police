@@ -993,8 +993,22 @@ function MapView({
     [crimeDataIncidents, incidents, isSupportMap],
   );
   const markerIncidents = useMemo(
-    () => (isSupportMap || (role === "police" && mode === "normal" && showPoliceReportsLayer) ? incidents : []),
-    [incidents, isSupportMap, mode, role, showPoliceReportsLayer],
+    () => {
+      if (isSupportMap) {
+        return incidents;
+      }
+
+      if (role === "police" && mode === "normal" && showPoliceReportsLayer) {
+        return incidents;
+      }
+
+      if (role === "user" && mode === "normal") {
+        return crimeIncidents;
+      }
+
+      return [];
+    },
+    [crimeIncidents, incidents, isSupportMap, mode, role, showPoliceReportsLayer],
   );
   const displayedFacilities = useMemo(() => limitFacilitiesForDisplay(facilities), [facilities]);
   const showFacilityLayer =
@@ -1526,7 +1540,7 @@ function MapView({
 
     incidentMapMarkersRef.current.forEach((marker) => marker.remove());
 
-    if (!isSupportMap && !(role === "police" && mode === "normal" && showPoliceReportsLayer)) {
+    if (!markerIncidents.length) {
       incidentMapMarkersRef.current = [];
       return;
     }
