@@ -7,17 +7,18 @@ import { ROLE_HOME_PATHS, ROLES_WITH_MAP } from "../../utils/constants";
 
 interface SidebarProps {
   isCollapsed: boolean;
+  onNavigate?: () => void;
   onToggle: () => void;
   role: UserRole;
 }
 
-function Sidebar({ isCollapsed, onToggle, role }: SidebarProps) {
+function Sidebar({ isCollapsed, onNavigate, onToggle, role }: SidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { signOut } = useClerk();
   const { user } = useUser();
-  const [activeAdminItem, setActiveAdminItem] = useState("");
-  const [activeRoleItem, setActiveRoleItem] = useState("");
+  const [activeAdminItem, setActiveAdminItem] = useState("dashboard");
+  const [activeRoleItem, setActiveRoleItem] = useState(role === "support" ? "map" : "dashboard");
   const [currentTime, setCurrentTime] = useState(() => new Date());
   const hasMap = ROLES_WITH_MAP.includes(role);
   const adminMenu = [
@@ -61,8 +62,13 @@ function Sidebar({ isCollapsed, onToggle, role }: SidebarProps) {
   return (
     <aside className="sidebar">
       <div className="sidebar-brand">
-        <span aria-hidden="true">CS</span>
-        <strong>Trung tâm Cảnh sát</strong>
+        <span className="sidebar-brand-mark" aria-hidden="true">
+          <AdminIcon name="police" />
+        </span>
+        <span className="sidebar-brand-text">
+          <strong>Trung tâm Cảnh sát</strong>
+          <small>TP. Hồ Chí Minh</small>
+        </span>
         <button
           className="sidebar-toggle"
           type="button"
@@ -74,7 +80,7 @@ function Sidebar({ isCollapsed, onToggle, role }: SidebarProps) {
         </button>
       </div>
 
-      <nav className="sidebar-nav" aria-label="Điều hướng bảng điều khiển">
+      <nav className="sidebar-nav" aria-label="Điều hướng bảng điều khiển" onClick={onNavigate}>
         {role === "admin" ? (
           adminMenu.map((item) =>
             item.href.startsWith("#") ? (
@@ -141,7 +147,7 @@ function Sidebar({ isCollapsed, onToggle, role }: SidebarProps) {
                   onClick={() => setActiveRoleItem("map")}
                 >
                   <span className="sidebar-nav-icon" aria-hidden="true">
-                    M
+                    <AdminIcon name="map" />
                   </span>
                   <span className="sidebar-nav-label">Bản đồ</span>
                 </a>
@@ -153,7 +159,7 @@ function Sidebar({ isCollapsed, onToggle, role }: SidebarProps) {
                   onClick={() => setActiveRoleItem("incidents")}
                 >
                   <span className="sidebar-nav-icon" aria-hidden="true">
-                    !
+                    <AdminIcon name="alert" />
                   </span>
                   <span className="sidebar-nav-label">Báo cáo / Vụ việc</span>
                 </a>
@@ -183,7 +189,7 @@ function Sidebar({ isCollapsed, onToggle, role }: SidebarProps) {
                     }}
                   >
                     <span className="sidebar-nav-icon" aria-hidden="true">
-                      M
+                      <AdminIcon name="map" />
                     </span>
                     <span className="sidebar-nav-label">Bản đồ</span>
                   </a>
@@ -216,7 +222,7 @@ function Sidebar({ isCollapsed, onToggle, role }: SidebarProps) {
 
         <button className="sidebar-logout" type="button" data-tooltip="Đăng xuất" onClick={handleLogout}>
           <span className="sidebar-nav-icon" aria-hidden="true">
-            X
+            <AdminIcon name="logout" />
           </span>
           <span className="sidebar-nav-label">Đăng xuất</span>
         </button>
