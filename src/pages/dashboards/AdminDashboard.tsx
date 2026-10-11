@@ -14,6 +14,15 @@ import {
 } from "../../services/adminUserService";
 import type { AccountSortKey, AdminUserRole, AdminUserStatus, UserAccount } from "../../types/adminUser";
 
+function formatAdminDate(value: string) {
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) {
+    return "";
+  }
+
+  return new Intl.DateTimeFormat("vi-VN", { dateStyle: "short", timeStyle: "short" }).format(date);
+}
+
 function AdminDashboard() {
   const [users, setUsers] = useState<UserAccount[]>([]);
   const [search, setSearch] = useState("");
@@ -80,6 +89,14 @@ function AdminDashboard() {
       });
   }, [roleFilter, search, sortBy, statusFilter, users]);
 
+  const recentAccounts = useMemo(
+    () =>
+      [...users]
+        .sort((first, second) => new Date(second.createdAt).getTime() - new Date(first.createdAt).getTime())
+        .slice(0, 4),
+    [users],
+  );
+
   async function handleRoleChange(userId: string, role: AdminUserRole) {
     const updatedUser = await updateUserRole(userId, role);
     setUsers((current) => current.map((user) => (user.id === userId ? updatedUser : user)));
@@ -106,7 +123,7 @@ function AdminDashboard() {
     <DashboardLayout role="admin">
       <section className="admin-dashboard">
         <div className="admin-page-heading">
-          <span>Admin Dashboard</span>
+          <span>Quản trị hệ thống</span>
           <h2>Quản lý tài khoản và phân quyền hệ thống</h2>
           <p>Theo dõi trạng thái tài khoản, vai trò truy cập và tăng trưởng người dùng từ một màn hình tập trung.</p>
         </div>
@@ -146,9 +163,16 @@ function AdminDashboard() {
               <h2>Sự kiện quản trị gần đây</h2>
             </div>
             <div className="admin-log-list">
-              <p>Admin cập nhật phân quyền tài khoản cảnh sát trực.</p>
-              <p>Hệ thống ghi nhận 2 tài khoản chờ xác minh.</p>
-              <p>Chính sách khóa tài khoản được đồng bộ ở giao diện quản trị.</p>
+              {recentAccounts.length === 0 ? (
+                <p className="admin-log-empty">{isLoading ? "Đang tải hoạt động..." : "Chưa có hoạt động nào."}</p>
+              ) : (
+                recentAccounts.map((account) => (
+                  <p key={account.id}>
+                    <strong>{account.name || account.email}</strong> tạo tài khoản {roleLabels[account.role]}
+                    <small>{formatAdminDate(account.createdAt)}</small>
+                  </p>
+                ))
+              )}
             </div>
           </article>
           <article className="admin-panel" id="settings">
@@ -157,9 +181,9 @@ function AdminDashboard() {
               <h2>Cấu hình quản trị</h2>
             </div>
             <div className="admin-settings-list">
-              <span>Xác minh 2 lớp: Đang bật</span>
-              <span>Cảnh báo khóa tài khoản: Đang bật</span>
-              <span>Đồng bộ vai trò backend: Sẵn sàng tích hợp</span>
+              <span>Nguồn tài khoản: Clerk</span>
+              <span>Tổng số tài khoản: {isLoading ? "–" : users.length}</span>
+              <span>Chờ xác minh: {isLoading ? "–" : users.filter((user) => user.status === "pending").length}</span>
             </div>
           </article>
         </section>

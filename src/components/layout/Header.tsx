@@ -85,92 +85,97 @@ const accountButtonAppearance = {
 interface HeaderProps {
   activeUserTab?: "home" | "map" | "news";
   activeSupportTab?: "duty" | "news";
+  isMobileNavOpen?: boolean;
+  onMenuClick?: () => void;
   onSupportTabChange?: (tab: "duty" | "news") => void;
   onUserTabChange?: (tab: "home" | "map" | "news") => void;
   role: UserRole;
 }
 
-function Header({ activeSupportTab, activeUserTab, onSupportTabChange, onUserTabChange, role }: HeaderProps) {
-  const { user } = useUser();
-  const adminName = user?.fullName || user?.username || "Admin";
+const userTabs = [
+  { id: "home", label: "Trang chủ" },
+  { id: "map", label: "Bản đồ" },
+  { id: "news", label: "Tin tức" },
+] as const;
 
-  if (role === "admin") {
-    return (
-      <header className="dashboard-header admin-topbar">
-        <label className="admin-topbar-search">
-          <AdminIcon name="search" />
-          <input type="search" placeholder="Tìm kiếm tài khoản, vai trò, trạng thái..." />
-        </label>
-        <div className="dashboard-header-actions admin-topbar-actions">
-          <button className="admin-notification-button" type="button" aria-label="Thông báo">
-            <AdminIcon name="bell" />
-            <span aria-hidden="true" />
-          </button>
-          <div className="admin-profile-chip">
-            <Show when="signed-in">
-              <UserButton appearance={accountButtonAppearance} />
-            </Show>
-            <span>{adminName}</span>
-          </div>
-        </div>
-      </header>
-    );
-  }
+const supportTabs = [
+  { id: "duty", label: "Thường trực" },
+  { id: "news", label: "Tin tức" },
+] as const;
+
+function Header({
+  activeSupportTab,
+  activeUserTab,
+  isMobileNavOpen = false,
+  onMenuClick,
+  onSupportTabChange,
+  onUserTabChange,
+  role,
+}: HeaderProps) {
+  const { user } = useUser();
+  const displayName = user?.fullName || user?.username || ROLE_LABELS[role];
 
   return (
     <header className="dashboard-header">
-      <div>
-        <p className="eyebrow">Dự án Cảnh sát</p>
-        <h1>{APP_NAME}</h1>
+      <div className="dashboard-header-title">
+        <button
+          aria-expanded={isMobileNavOpen}
+          aria-label={isMobileNavOpen ? "Đóng menu" : "Mở menu"}
+          className="header-menu-button"
+          type="button"
+          onClick={onMenuClick}
+        >
+          <AdminIcon name={isMobileNavOpen ? "close" : "menu"} />
+        </button>
+        <div>
+          <p className="eyebrow">{ROLE_LABELS[role]}</p>
+          <h1>{APP_NAME}</h1>
+        </div>
       </div>
+
+      {role === "user" && activeUserTab && onUserTabChange ? (
+        <nav className="header-tabs" aria-label="Chuyển trang người dân">
+          {userTabs.map((tab) => (
+            <button
+              className={activeUserTab === tab.id ? "is-active" : ""}
+              key={tab.id}
+              type="button"
+              onClick={() => onUserTabChange(tab.id)}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </nav>
+      ) : null}
+      {role === "support" && activeSupportTab && onSupportTabChange ? (
+        <nav className="header-tabs" aria-label="Chuyển trang hỗ trợ">
+          {supportTabs.map((tab) => (
+            <button
+              className={activeSupportTab === tab.id ? "is-active" : ""}
+              key={tab.id}
+              type="button"
+              onClick={() => onSupportTabChange(tab.id)}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </nav>
+      ) : null}
+
       <div className="dashboard-header-actions">
-        {role === "user" && activeUserTab && onUserTabChange ? (
-          <nav className="header-tabs" aria-label="Chuyển trang người dân">
-            <button
-              className={activeUserTab === "home" ? "is-active" : ""}
-              type="button"
-              onClick={() => onUserTabChange("home")}
-            >
-              Trang chủ
-            </button>
-            <button
-              className={activeUserTab === "map" ? "is-active" : ""}
-              type="button"
-              onClick={() => onUserTabChange("map")}
-            >
-              Bản đồ
-            </button>
-            <button
-              className={activeUserTab === "news" ? "is-active" : ""}
-              type="button"
-              onClick={() => onUserTabChange("news")}
-            >
-              Tin tức
-            </button>
-          </nav>
-        ) : null}
-        {role === "support" && activeSupportTab && onSupportTabChange ? (
-          <nav className="header-tabs" aria-label="Chuyển trang hỗ trợ">
-            <button
-              className={activeSupportTab === "duty" ? "is-active" : ""}
-              type="button"
-              onClick={() => onSupportTabChange("duty")}
-            >
-              Thường trực
-            </button>
-            <button
-              className={activeSupportTab === "news" ? "is-active" : ""}
-              type="button"
-              onClick={() => onSupportTabChange("news")}
-            >
-              Tin tức
-            </button>
-          </nav>
-        ) : null}
-        <div className="role-badge">{ROLE_LABELS[role]}</div>
-        <Show when="signed-in">
-          <UserButton appearance={accountButtonAppearance} />
-        </Show>
+        <span className="header-live-indicator" title="Hệ thống đang hoạt động">
+          <span aria-hidden="true" />
+          Trực tuyến
+        </span>
+        <div className="header-profile-chip">
+          <Show when="signed-in">
+            <UserButton appearance={accountButtonAppearance} />
+          </Show>
+          <span className="header-profile-text">
+            <strong>{displayName}</strong>
+            <small>{ROLE_LABELS[role]}</small>
+          </span>
+        </div>
       </div>
     </header>
   );

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import DashboardStatCards, { type DashboardStatCardItem } from "../../components/common/DashboardStatCards";
 import DashboardLayout from "../../components/layout/DashboardLayout";
 import MapView from "../../components/map/MapView";
@@ -12,11 +12,12 @@ import {
   getIncidentTitle,
 } from "../../types/incident";
 
-const stats: DashboardStatCardItem[] = [
-  { icon: "bell", label: "Vụ việc mới", note: "Cần phản hồi ban đầu", tone: "red", value: 14 },
-  { icon: "activity", label: "Đang xử lý", note: "Đã phân công tuần tra", tone: "orange", value: 9 },
-  { icon: "mapPin", label: "Khu vực nóng", note: "Mật độ cảnh báo cao", tone: "purple", value: 4 },
-];
+const completedStatuses = ["completed", "done", "resolved", "hoàn thành", "đã hoàn thành", "đã xử lý"];
+const newStatuses = ["new", "pending", "mới tiếp nhận", "chờ xử lý"];
+
+function normalizeStatus(status: string) {
+  return status.trim().toLowerCase();
+}
 
 function formatIncidentTime(value: string) {
   const date = new Date(value);
@@ -32,6 +33,7 @@ function formatIncidentTime(value: string) {
 
 function PoliceDashboard() {
   const [incidents, setIncidents] = useState<Incident[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
@@ -43,7 +45,12 @@ function PoliceDashboard() {
             setIncidents(items);
           }
         })
-        .catch(() => undefined);
+        .catch(() => undefined)
+        .finally(() => {
+          if (isMounted) {
+            setIsLoading(false);
+          }
+        });
     }
 
     loadIncidents();
@@ -54,6 +61,25 @@ function PoliceDashboard() {
       window.clearInterval(intervalId);
     };
   }, []);
+
+  const stats = useMemo<DashboardStatCardItem[]>(() => {
+    const statuses = incidents.map((incident) => normalizeStatus(getIncidentStatus(incident)));
+    const newCount = statuses.filter((status) => newStatuses.includes(status)).length;
+    const completedCount = statuses.filter((status) => completedStatuses.includes(status)).length;
+    const display = (value: number) => (isLoading ? "–" : value);
+
+    return [
+      { icon: "bell", label: "Vụ việc mới", note: "Cần phản hồi ban đầu", tone: "red", value: display(newCount) },
+      {
+        icon: "activity",
+        label: "Đang xử lý",
+        note: "Đã tiếp nhận, chưa hoàn thành",
+        tone: "orange",
+        value: display(incidents.length - newCount - completedCount),
+      },
+      { icon: "shield", label: "Hoàn thành", note: "Đã xử lý xong", tone: "green", value: display(completedCount) },
+    ];
+  }, [incidents, isLoading]);
 
   return (
     <DashboardLayout role="police">
@@ -79,6 +105,10 @@ function PoliceDashboard() {
           <h2>Danh sách vụ việc được phân công</h2>
         </div>
         <div className="incident-list">
+          {isLoading ? <div className="empty-state is-loading">Đang tải danh sách vụ việc...</div> : null}
+          {!isLoading && incidents.length === 0 ? (
+            <div className="empty-state">Chưa có vụ việc nào được phân công.</div>
+          ) : null}
           {incidents.map((incident) => (
             <article className="incident-item" key={getIncidentId(incident)}>
               <div>

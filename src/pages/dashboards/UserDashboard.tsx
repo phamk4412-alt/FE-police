@@ -369,8 +369,10 @@ function UserDashboard() {
 
             <form className="panel report-form quick-report-form" onSubmit={handleSubmit}>
               <div className="section-heading">
-                <span className="eyebrow">Báo cáo</span>
-                <h2>Gửi vụ việc</h2>
+                <div>
+                  <span className="eyebrow">Báo cáo</span>
+                  <h2>Gửi vụ việc</h2>
+                </div>
               </div>
 
               <label className="field" htmlFor="incident-type">
@@ -431,10 +433,10 @@ function UserDashboard() {
 
               <div className="photo-actions">
                 <button className="btn btn-secondary" type="button" onClick={() => void openLiveCamera()}>
-                  📷 Chụp ảnh
+                  Chụp ảnh
                 </button>
                 <button className="btn btn-ghost" type="button" onClick={() => uploadInputRef.current?.click()}>
-                  📁 Chọn ảnh
+                  Chọn ảnh
                 </button>
                 <input
                   ref={cameraInputRef}
@@ -456,9 +458,7 @@ function UserDashboard() {
 
               <div className="camera-hint">
                 <span>{`Ảnh đã chọn: ${images.length}/${MAX_IMAGES}`}</span>
-                <small>
-                  `getUserMedia` dùng khi chạy trên HTTPS hoặc localhost. Nếu không được, nút chụp sẽ fallback sang input `capture="environment"`.
-                </small>
+                <small>Tối đa {MAX_IMAGES} ảnh JPG, PNG hoặc WEBP để hỗ trợ xác minh hiện trường.</small>
               </div>
 
               {isCameraOpen ? (

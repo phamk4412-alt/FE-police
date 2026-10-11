@@ -10,6 +10,10 @@ export type AdminIconName =
   | "file"
   | "flame"
   | "lock"
+  | "logout"
+  | "map"
+  | "menu"
+  | "close"
   | "mapPin"
   | "phone"
   | "police"
@@ -39,6 +43,10 @@ const paths: Record<AdminIconName, string> = {
   file: "M7 3h7l4 4v14H7z M14 3v5h5 M9 13h6 M9 17h6",
   flame: "M12 21c-4 0-7-3-7-7 0-3 2-5 4-7 0 2 1 3 2 4 1-3 2-5 5-8 1 4 4 6 4 11 0 4-3 7-8 7z",
   lock: "M7 10h10v9H7z M9 10V8a3 3 0 116 0v2",
+  logout: "M14 4h4a2 2 0 012 2v12a2 2 0 01-2 2h-4 M10 16l-4-4 4-4 M6 12h10",
+  map: "M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2z M9 4v14 M15 6v14",
+  menu: "M4 7h16 M4 12h16 M4 17h16",
+  close: "M6 6l12 12 M18 6L6 18",
   mapPin: "M12 21s7-5 7-11a7 7 0 10-14 0c0 6 7 11 7 11z M12 7a3 3 0 100 6 3 3 0 000-6z",
   phone: "M7 4l3 3-2 2c1 3 3 5 6 7l2-2 3 3-2 4c-7-1-13-7-14-14l4-3z",
   police: "M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6l7-3z M8 12h8",
