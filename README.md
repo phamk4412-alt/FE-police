@@ -4,7 +4,7 @@ React + Vite frontend for the police dashboard.
 
 ## Authentication
 
-The app signs in with Google directly (no Clerk):
+Users sign in with email and password or with Google (no Clerk). `/sign-up` creates an email/password account (`POST /api/auth/register`), `/login` signs in with it (`POST /api/auth/login`); both return the same backend token as Google.
 
 - `src/auth/GoogleSignInButton.tsx` loads Google Identity Services and gets an ID token.
 - `src/auth/AuthProvider.tsx` sends it to `POST /api/auth/google`; the backend verifies it, creates the account and returns its own token.

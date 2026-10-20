@@ -1,31 +1,39 @@
-import { useState } from "react";
-import { Navigate } from "react-router-dom";
+import { useState, type FormEvent } from "react";
+import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
 import GoogleSignInButton from "../../auth/GoogleSignInButton";
 import useIdentityVerificationState from "../../hooks/useIdentityVerificationState";
 import AdminIcon from "../../components/admin/AdminIcons";
+import Button from "../../components/common/Button";
 import VietnameseDecor from "../../components/common/VietnameseDecor";
 import { APP_NAME, ROLE_HOME_PATHS } from "../../utils/constants";
 
 function Login() {
-  const { isLoaded, isSignedIn, signInWithGoogle, user } = useAuth();
+  const { isLoaded, isSignedIn, signInWithGoogle, signInWithPassword, user } = useAuth();
   const { isLoading: isIdentityLoading, requiredIdentityStep } = useIdentityVerificationState(
     isLoaded && isSignedIn,
   );
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [signInError, setSignInError] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  async function handleCredential(credential: string) {
+  async function runSignIn(action: () => Promise<unknown>) {
     setIsSigningIn(true);
     setSignInError("");
 
     try {
-      await signInWithGoogle(credential);
+      await action();
     } catch (error) {
       setSignInError(error instanceof Error ? error.message : "Đăng nhập thất bại. Vui lòng thử lại.");
     } finally {
       setIsSigningIn(false);
     }
+  }
+
+  function handlePasswordSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    void runSignIn(() => signInWithPassword(email.trim(), password));
   }
 
   if (!isLoaded || (isSignedIn && isIdentityLoading)) {
@@ -67,11 +75,45 @@ function Login() {
           <p className="login-card-subtitle">Chào mừng trở lại. Đăng nhập để tiếp tục.</p>
         </div>
 
-        <GoogleSignInButton onCredential={(credential) => void handleCredential(credential)} />
-        {isSigningIn ? <p className="login-card-subtitle">Đang đăng nhập...</p> : null}
+        <form className="auth-form" onSubmit={handlePasswordSubmit}>
+          <label className="field" htmlFor="login-email">
+            <span>Email</span>
+            <input
+              autoComplete="email"
+              id="login-email"
+              onChange={(event) => setEmail(event.target.value)}
+              required
+              type="email"
+              value={email}
+            />
+          </label>
+          <label className="field" htmlFor="login-password">
+            <span>Mật khẩu</span>
+            <input
+              autoComplete="current-password"
+              id="login-password"
+              onChange={(event) => setPassword(event.target.value)}
+              required
+              type="password"
+              value={password}
+            />
+          </label>
+          <Button disabled={isSigningIn} type="submit">
+            {isSigningIn ? "Đang đăng nhập..." : "Đăng nhập"}
+          </Button>
+        </form>
         {signInError ? <p className="auth-error">{signInError}</p> : null}
-        <p className="login-card-subtitle">
-          Tài khoản mới được tạo tự động với vai trò người dân. Quản trị viên sẽ cấp vai trò khác nếu cần.
+
+        <div className="auth-divider">
+          <span>hoặc</span>
+        </div>
+
+        <GoogleSignInButton
+          onCredential={(credential) => void runSignIn(() => signInWithGoogle(credential))}
+        />
+
+        <p className="auth-secondary-action">
+          Chưa có tài khoản? <Link to="/sign-up">Tạo tài khoản</Link>
         </p>
       </section>
     </main>
