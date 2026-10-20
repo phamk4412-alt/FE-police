@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 
 const GOOGLE_SCRIPT_SRC = "https://accounts.google.com/gsi/client";
+// Public OAuth client ID (not a secret); VITE_GOOGLE_CLIENT_ID overrides it.
+const DEFAULT_GOOGLE_CLIENT_ID = "450302749040-c65e39lsa7g2b1r36i3rh1btminagss6.apps.googleusercontent.com";
 
 let googleScriptPromise: Promise<void> | null = null;
 
@@ -34,7 +36,7 @@ function GoogleSignInButton({ onCredential, text = "continue_with" }: GoogleSign
   const containerRef = useRef<HTMLDivElement | null>(null);
   const onCredentialRef = useRef(onCredential);
   const [loadError, setLoadError] = useState("");
-  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || DEFAULT_GOOGLE_CLIENT_ID;
 
   useEffect(() => {
     onCredentialRef.current = onCredential;
