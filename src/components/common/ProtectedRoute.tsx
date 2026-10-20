@@ -1,10 +1,9 @@
 import type { ReactNode } from "react";
-import { useUser } from "@clerk/react";
 import { Navigate } from "react-router-dom";
+import { useAuth } from "../../auth/AuthContext";
 import useIdentityVerificationState from "../../hooks/useIdentityVerificationState";
 import type { UserRole } from "../../types/user";
 import { ROLE_HOME_PATHS } from "../../utils/constants";
-import { getClerkUserRole } from "../../utils/clerkRole";
 
 interface ProtectedRouteProps {
   allowedRoles: UserRole[];
@@ -12,7 +11,7 @@ interface ProtectedRouteProps {
 }
 
 function ProtectedRoute({ allowedRoles, children }: ProtectedRouteProps) {
-  const { isLoaded, isSignedIn, user } = useUser();
+  const { isLoaded, isSignedIn, user } = useAuth();
   const { isLoading: isIdentityLoading, requiredIdentityStep } = useIdentityVerificationState(
     isLoaded && isSignedIn,
   );
@@ -21,22 +20,16 @@ function ProtectedRoute({ allowedRoles, children }: ProtectedRouteProps) {
     return <main className="auth-loading">Đang tải...</main>;
   }
 
-  if (!isSignedIn) {
+  if (!isSignedIn || !user) {
     return <Navigate to="/login" replace />;
   }
-
-  const role = getClerkUserRole(user);
 
   if (requiredIdentityStep) {
     return <Navigate to={requiredIdentityStep} replace />;
   }
 
-  if (!role) {
-    return <Navigate to="/select-role" replace />;
-  }
-
-  if (!allowedRoles.includes(role)) {
-    return <Navigate to={ROLE_HOME_PATHS[role]} replace />;
+  if (!allowedRoles.includes(user.role)) {
+    return <Navigate to={ROLE_HOME_PATHS[user.role]} replace />;
   }
 
   return children;

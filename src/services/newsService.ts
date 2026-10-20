@@ -1,5 +1,4 @@
 import { API_URL, apiFetch } from "./api";
-import { withBackendRoleSession } from "./backendAuthService";
 import type { NewsArticle, NewsPayload } from "../types/news";
 
 export function resolveMediaUrl(url: string) {
@@ -46,53 +45,41 @@ export function getNewsById(id: string) {
 }
 
 export async function getSupportNews() {
-  return withBackendRoleSession("support", async () =>
-    unwrapList(
-      await apiFetch<ListPayload<NewsArticle>>("/api/support/news"),
-    ),
+  return unwrapList(
+    await apiFetch<ListPayload<NewsArticle>>("/api/support/news"),
   );
 }
 
 export function createSupportNews(payload: NewsPayload) {
-  return withBackendRoleSession("support", () =>
-    apiFetch<NewsArticle>("/api/support/news", {
-      body: JSON.stringify(payload),
-      method: "POST",
-    }),
-  );
+  return apiFetch<NewsArticle>("/api/support/news", {
+    body: JSON.stringify(payload),
+    method: "POST",
+  });
 }
 
 export function updateSupportNews(id: string, payload: NewsPayload) {
-  return withBackendRoleSession("support", () =>
-    apiFetch<NewsArticle>(`/api/support/news/${encodeURIComponent(id)}`, {
-      body: JSON.stringify(payload),
-      method: "PUT",
-    }),
-  );
+  return apiFetch<NewsArticle>(`/api/support/news/${encodeURIComponent(id)}`, {
+    body: JSON.stringify(payload),
+    method: "PUT",
+  });
 }
 
 export function deleteSupportNews(id: string) {
-  return withBackendRoleSession("support", () =>
-    apiFetch<void>(`/api/support/news/${encodeURIComponent(id)}`, {
-      method: "DELETE",
-    }),
-  );
+  return apiFetch<void>(`/api/support/news/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+  });
 }
 
 export function updateSupportNewsStatus(id: string, status: string) {
-  return withBackendRoleSession("support", () =>
-    apiFetch<NewsArticle>(`/api/support/news/${encodeURIComponent(id)}/status`, {
-      body: JSON.stringify({ status }),
-      method: "PATCH",
-    }),
-  );
+  return apiFetch<NewsArticle>(`/api/support/news/${encodeURIComponent(id)}/status`, {
+    body: JSON.stringify({ status }),
+    method: "PATCH",
+  });
 }
 
 export function updateSupportNewsFeatured(id: string, isFeatured: boolean, featuredOrder: number | null) {
-  return withBackendRoleSession("support", () =>
-    apiFetch<NewsArticle>(`/api/support/news/${encodeURIComponent(id)}/featured`, {
-      body: JSON.stringify({ featuredOrder, isFeatured }),
-      method: "PATCH",
-    }),
-  );
+  return apiFetch<NewsArticle>(`/api/support/news/${encodeURIComponent(id)}/featured`, {
+    body: JSON.stringify({ featuredOrder, isFeatured }),
+    method: "PATCH",
+  });
 }

@@ -1,8 +1,7 @@
 import type { AdminUserRole, AdminUserStatus, UserAccount } from "../types/adminUser";
 import { apiFetch } from "./api";
-import { withBackendRoleSession } from "./backendAuthService";
 
-type ClerkAccountResponse = {
+type AccountResponse = {
   Id?: string;
   Name?: string;
   Email?: string;
@@ -25,7 +24,7 @@ type ClerkAccountResponse = {
   note?: string | null;
 };
 
-function mapClerkAccount(account: ClerkAccountResponse): UserAccount {
+function mapAccount(account: AccountResponse): UserAccount {
   return {
     id: account.id || account.Id || "",
     name: account.name || account.Name || "Chưa có tên",
@@ -41,37 +40,29 @@ function mapClerkAccount(account: ClerkAccountResponse): UserAccount {
 }
 
 export async function getUsers(): Promise<UserAccount[]> {
-  const users = await withBackendRoleSession("admin", () =>
-    apiFetch<ClerkAccountResponse[]>("/api/admin/clerk/accounts"),
-  );
-  return users.map(mapClerkAccount);
+  const users = await apiFetch<AccountResponse[]>("/api/admin/accounts");
+  return users.map(mapAccount);
 }
 
 export async function updateUserRole(userId: string, role: AdminUserRole): Promise<UserAccount> {
-  const user = await withBackendRoleSession("admin", () =>
-    apiFetch<ClerkAccountResponse>(`/api/admin/clerk/accounts/${userId}/role`, {
-      method: "PATCH",
-      body: JSON.stringify({ role }),
-    }),
-  );
-  return mapClerkAccount(user);
+  const user = await apiFetch<AccountResponse>(`/api/admin/accounts/${userId}/role`, {
+    method: "PATCH",
+    body: JSON.stringify({ role }),
+  });
+  return mapAccount(user);
 }
 
 export async function updateUserStatus(userId: string, status: AdminUserStatus): Promise<UserAccount> {
-  const user = await withBackendRoleSession("admin", () =>
-    apiFetch<ClerkAccountResponse>(`/api/admin/clerk/accounts/${userId}/status`, {
-      method: "PATCH",
-      body: JSON.stringify({ status }),
-    }),
-  );
-  return mapClerkAccount(user);
+  const user = await apiFetch<AccountResponse>(`/api/admin/accounts/${userId}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+  });
+  return mapAccount(user);
 }
 
 export async function deleteUser(userId: string): Promise<{ id: string }> {
-  await withBackendRoleSession("admin", () =>
-    apiFetch<void>(`/api/admin/clerk/accounts/${userId}`, {
-      method: "DELETE",
-    }),
-  );
+  await apiFetch<void>(`/api/admin/accounts/${userId}`, {
+    method: "DELETE",
+  });
   return { id: userId };
 }

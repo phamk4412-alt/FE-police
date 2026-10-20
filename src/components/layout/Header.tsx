@@ -1,86 +1,7 @@
-import { Show, UserButton, useUser } from "@clerk/react";
+import { useAuth } from "../../auth/AuthContext";
 import AdminIcon from "../admin/AdminIcons";
 import type { UserRole } from "../../types/user";
 import { APP_NAME, ROLE_LABELS } from "../../utils/constants";
-
-const accountButtonAppearance = {
-  variables: {
-    colorBackground: "#ffffff",
-    colorInputBackground: "#ffffff",
-    colorInputText: "#111827",
-    colorNeutral: "#64748b",
-    colorPrimary: "#ff4655",
-    colorText: "#111827",
-    colorTextSecondary: "#4b5563",
-    borderRadius: "8px",
-    fontFamily:
-      'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-  },
-  elements: {
-    modalContent: {
-      backgroundColor: "#ffffff",
-      color: "#111827",
-    },
-    userProfileModal: {
-      backgroundColor: "#ffffff",
-      color: "#111827",
-    },
-    userProfileRoot: {
-      backgroundColor: "#ffffff",
-      color: "#111827",
-    },
-    userProfilePage: {
-      backgroundColor: "#ffffff",
-      color: "#111827",
-    },
-    navbar: {
-      backgroundColor: "#f8fafc",
-      borderRight: "1px solid #e5e7eb",
-    },
-    navbarButton: {
-      color: "#334155",
-      fontWeight: "700",
-    },
-    navbarButtonIcon: {
-      color: "#475569",
-    },
-    navbarButton__active: {
-      backgroundColor: "#fff1f2",
-      color: "#ff4655",
-    },
-    headerTitle: {
-      color: "#111827",
-    },
-    headerSubtitle: {
-      color: "#4b5563",
-    },
-    profileSectionTitleText: {
-      color: "#111827",
-    },
-    profileSectionContent: {
-      color: "#111827",
-    },
-    formFieldLabel: {
-      color: "#111827",
-      fontWeight: "700",
-    },
-    formFieldInput: {
-      backgroundColor: "#ffffff",
-      borderColor: "#cbd5e1",
-      color: "#111827",
-      boxShadow: "none",
-    },
-    formButtonPrimary: {
-      backgroundColor: "#ff4655",
-      color: "#ffffff",
-      fontWeight: "900",
-      boxShadow: "none",
-    },
-    footer: {
-      backgroundColor: "#ffffff",
-    },
-  },
-};
 
 interface HeaderProps {
   activeUserTab?: "home" | "map" | "news";
@@ -112,8 +33,8 @@ function Header({
   onUserTabChange,
   role,
 }: HeaderProps) {
-  const { user } = useUser();
-  const displayName = user?.fullName || user?.username || ROLE_LABELS[role];
+  const { user } = useAuth();
+  const displayName = user?.name || ROLE_LABELS[role];
 
   return (
     <header className="dashboard-header">
@@ -168,9 +89,18 @@ function Header({
           Trực tuyến
         </span>
         <div className="header-profile-chip">
-          <Show when="signed-in">
-            <UserButton appearance={accountButtonAppearance} />
-          </Show>
+          {user?.avatarUrl ? (
+            <img
+              alt=""
+              className="header-profile-avatar"
+              referrerPolicy="no-referrer"
+              src={user.avatarUrl}
+            />
+          ) : (
+            <span aria-hidden="true" className="header-profile-avatar">
+              {displayName.charAt(0).toUpperCase()}
+            </span>
+          )}
           <span className="header-profile-text">
             <strong>{displayName}</strong>
             <small>{ROLE_LABELS[role]}</small>

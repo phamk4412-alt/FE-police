@@ -4,12 +4,12 @@ React + Vite frontend for the police dashboard.
 
 ## Authentication
 
-The app uses Clerk React:
+The app signs in with Google directly (no Clerk):
 
-- `@clerk/react`
-- `ClerkProvider` in `src/main.tsx`
-- Clerk sign-in UI in `src/pages/auth/Login.tsx`
-- Role-based redirects through Clerk user metadata
+- `src/auth/GoogleSignInButton.tsx` loads Google Identity Services and gets an ID token.
+- `src/auth/AuthProvider.tsx` sends it to `POST /api/auth/google`; the backend verifies it, creates the account and returns its own token.
+- The token is kept in `localStorage` and sent as `Authorization: Bearer ...` by `src/services/api.ts`.
+- The role comes from the backend database. New accounts are `user`; admins change roles on the admin page.
 
 After sign-in, users are routed by role:
 
@@ -20,19 +20,18 @@ After sign-in, users are routed by role:
 | `support` | `/#/support` |
 | `user` | `/#/user` |
 
-If a new Clerk user has no role yet, the app sends them to `/#/select-role` once.
 
 ## Environment
 
 For local development, create `.env.local`:
 
 ```text
-VITE_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key_here
+VITE_GOOGLE_CLIENT_ID=your_google_oauth_client_id.apps.googleusercontent.com
 VITE_API_URL=http://localhost:5055
 VITE_MAPBOX_TOKEN=your_mapbox_public_token_here
 ```
 
-For Vercel, `vercel.json` sets the Clerk publishable key used by this project.
+For Vercel, set `VITE_GOOGLE_CLIENT_ID` in Project Settings → Environment Variables. It must be the same Client ID as `GOOGLE_CLIENT_ID` on the backend.
 
 ## Commands
 
