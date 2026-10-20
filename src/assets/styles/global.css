@@ -300,6 +300,38 @@ a {
   font-size: 0.92rem;
 }
 
+.auth-secondary-action a {
+  color: var(--primary);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.auth-form {
+  display: grid;
+  gap: 14px;
+}
+
+.auth-form .btn {
+  width: 100%;
+  min-height: 46px;
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+  content: "";
+}
+
 .auth-secondary-action button {
   border: 0;
   background: transparent;

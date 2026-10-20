@@ -62,9 +62,9 @@ function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const signInWithGoogle = useCallback(async (credential: string) => {
-    const response = await apiFetch<LoginResponse>("/api/auth/google", {
-      body: JSON.stringify({ Credential: credential }),
+  const completeLogin = useCallback(async (endpoint: string, body: Record<string, string>) => {
+    const response = await apiFetch<LoginResponse>(endpoint, {
+      body: JSON.stringify(body),
       method: "POST",
     });
     setAuthToken(response.Token);
@@ -73,6 +73,22 @@ function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoaded(true);
     return nextUser;
   }, []);
+
+  const signInWithGoogle = useCallback(
+    (credential: string) => completeLogin("/api/auth/google", { Credential: credential }),
+    [completeLogin],
+  );
+
+  const signInWithPassword = useCallback(
+    (email: string, password: string) => completeLogin("/api/auth/login", { Email: email, Password: password }),
+    [completeLogin],
+  );
+
+  const register = useCallback(
+    (displayName: string, email: string, password: string) =>
+      completeLogin("/api/auth/register", { DisplayName: displayName, Email: email, Password: password }),
+    [completeLogin],
+  );
 
   const signOut = useCallback(async () => {
     try {
@@ -90,11 +106,13 @@ function AuthProvider({ children }: { children: ReactNode }) {
     () => ({
       isLoaded,
       isSignedIn: Boolean(user),
+      register,
       signInWithGoogle,
+      signInWithPassword,
       signOut,
       user,
     }),
-    [isLoaded, signInWithGoogle, signOut, user],
+    [isLoaded, register, signInWithGoogle, signInWithPassword, signOut, user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
