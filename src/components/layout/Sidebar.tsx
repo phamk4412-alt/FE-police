@@ -1,6 +1,6 @@
-import { useClerk, useUser } from "@clerk/react";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../../auth/AuthContext";
 import AdminIcon from "../admin/AdminIcons";
 import type { UserRole } from "../../types/user";
 import { ROLE_HOME_PATHS, ROLES_WITH_MAP } from "../../utils/constants";
@@ -15,8 +15,7 @@ interface SidebarProps {
 function Sidebar({ isCollapsed, onNavigate, onToggle, role }: SidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { signOut } = useClerk();
-  const { user } = useUser();
+  const { signOut, user } = useAuth();
   const [activeAdminItem, setActiveAdminItem] = useState("dashboard");
   const [activeRoleItem, setActiveRoleItem] = useState(role === "support" ? "map" : "dashboard");
   const [currentTime, setCurrentTime] = useState(() => new Date());
@@ -30,7 +29,7 @@ function Sidebar({ isCollapsed, onNavigate, onToggle, role }: SidebarProps) {
   ] as const;
 
   function handleLogout() {
-    const username = user?.id || user?.primaryEmailAddress?.emailAddress || user?.username;
+    const username = user?.id || user?.email;
     if (role === "police" && username) {
       const payload = JSON.stringify({ Username: username });
       if (navigator.sendBeacon) {
@@ -41,7 +40,7 @@ function Sidebar({ isCollapsed, onNavigate, onToggle, role }: SidebarProps) {
       }
     }
 
-    void signOut(() => navigate("/login", { replace: true }));
+    void signOut().then(() => navigate("/login", { replace: true }));
   }
 
   useEffect(() => {

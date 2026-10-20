@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useUser } from "@clerk/react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import hospitalLogo from "../../assets/logos/hospital-logo.svg";
 import policeStationLogo from "../../assets/logos/police-station-logo.svg";
 import policeCarMarker from "../../assets/police-car-marker.png";
+import { useAuth } from "../../auth/AuthContext";
 import { API_URL, apiFetch } from "../../services/api";
 import type { Incident } from "../../types/incident";
 import {
@@ -952,7 +952,7 @@ function MapView({
   variant = "full",
   zoom = DEFAULT_MAP_ZOOM,
 }: MapViewProps) {
-  const { user } = useUser();
+  const { user } = useAuth();
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const miniMapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
@@ -984,8 +984,8 @@ function MapView({
   const showUserToolbarActions = role === "user" && showModeControls && mode === "normal";
   const showPoliceToolbarActions = role === "police" && mode === "normal";
   const currentPoliceUsername = useMemo(
-    () => user?.id || user?.primaryEmailAddress?.emailAddress || user?.username || "police-session",
-    [user?.id, user?.primaryEmailAddress?.emailAddress, user?.username],
+    () => user?.id || user?.email || "police-session",
+    [user?.id, user?.email],
   );
   const canUseDirections = !isSupportMap && mode === "normal" && (role === "police" || (role === "user" && showModeControls));
   const crimeIncidents = useMemo(
@@ -1394,7 +1394,7 @@ function MapView({
     }
 
     const username = currentPoliceUsername;
-    const displayName = user?.fullName || user?.username || user?.primaryEmailAddress?.emailAddress || "Cảnh sát";
+    const displayName = user?.name || user?.email || "Cảnh sát";
     let lastSentAt = 0;
     let hasSharedLocation = false;
     let latestPosition: GeolocationPosition | null = null;
@@ -1457,7 +1457,7 @@ function MapView({
         void endPoliceShift(username).catch(() => undefined);
       }
     };
-  }, [currentPoliceUsername, role, user?.fullName, user?.primaryEmailAddress?.emailAddress, user?.username]);
+  }, [currentPoliceUsername, role, user?.name, user?.email]);
   useEffect(() => {
     const map = mapRef.current;
 

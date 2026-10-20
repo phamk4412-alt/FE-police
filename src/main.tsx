@@ -9,20 +9,14 @@ import '@fontsource/be-vietnam-pro/800.css'
 import './assets/styles/global.css'
 import './assets/styles/theme.css'
 import App from './App.tsx'
-import ClerkProviderWithRouter from './ClerkProviderWithRouter.tsx'
-
-const clerkPublishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-
-if (!clerkPublishableKey) {
-  throw new Error("Missing VITE_CLERK_PUBLISHABLE_KEY environment variable");
-}
+import AuthProvider from './auth/AuthProvider.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
-      <ClerkProviderWithRouter publishableKey={clerkPublishableKey}>
+      <AuthProvider>
         <App />
-      </ClerkProviderWithRouter>
+      </AuthProvider>
     </BrowserRouter>
   </StrictMode>,
 )

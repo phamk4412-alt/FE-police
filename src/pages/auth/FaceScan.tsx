@@ -1,13 +1,12 @@
 ﻿import { useCallback, useEffect, useMemo, useState } from "react";
 import type { SyntheticEvent } from "react";
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
-import { useUser } from "@clerk/react";
+import { useAuth } from "../../auth/AuthContext";
 import useIdentityVerificationState from "../../hooks/useIdentityVerificationState";
 import Button from "../../components/common/Button";
 import VietnameseDecor from "../../components/common/VietnameseDecor";
 import { apiFetch } from "../../services/api";
 import { syncAccountProfile } from "../../services/accountProfileService";
-import { buildClerkAccountSnapshot } from "../../utils/clerkAccountSnapshot";
 import {
   saveCccdVerificationState,
   saveFaceVerificationState,
@@ -60,7 +59,7 @@ function resolveDiditSessionId(searchParams: URLSearchParams) {
 function FaceScan() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { isLoaded, isSignedIn, user } = useUser();
+  const { isLoaded, isSignedIn } = useAuth();
   const {
     identityState,
     isLoading: isIdentityLoading,
@@ -85,22 +84,8 @@ function FaceScan() {
     try {
       const result = await apiFetch<DiditDecisionResponse>(
         `/api/identity/didit/session/${encodeURIComponent(sessionId)}/complete`,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            Clerk: buildClerkAccountSnapshot(user),
-          }),
-        },
+        { method: "POST" },
       );
-
-      void syncAccountProfile({
-        ...buildClerkAccountSnapshot(user),
-        CccdVerified: identityState.CccdVerified,
-        DiditApproved: result.IsApproved,
-        DiditSessionId: result.SessionId,
-        DiditStatus: result.Status,
-        FaceScanned: result.IsApproved,
-      }).catch(() => undefined);
 
       if (!result.IsApproved) {
         setStatusTone("danger");
@@ -111,7 +96,7 @@ function FaceScan() {
       await refreshIdentityState();
       setStatusTone("success");
       setStatusMessage("Didit đã xác minh khuôn mặt thành công.");
-      navigate("/select-role", { replace: true });
+      navigate("/", { replace: true });
     } catch (error) {
       setStatusTone("danger");
       setStatusMessage(error instanceof Error ? error.message : "Không thể đọc kết quả Didit.");
@@ -119,7 +104,7 @@ function FaceScan() {
       setIsCompleting(false);
       setIsStarting(false);
     }
-  }, [identityState.CccdVerified, isCompleting, navigate, refreshIdentityState, user]);
+  }, [isCompleting, navigate, refreshIdentityState]);
 
   useEffect(() => {
     if (!diditSessionId || !isSignedIn || identityState.FaceScanned || isCompleting) {
@@ -134,16 +119,15 @@ function FaceScan() {
   }, [completeDiditSession, diditSessionId, identityState.FaceScanned, isCompleting, isSignedIn]);
 
   useEffect(() => {
-    if (!isSignedIn || !user || isIdentityLoading) {
+    if (!isSignedIn || isIdentityLoading) {
       return;
     }
 
     void syncAccountProfile({
-      ...buildClerkAccountSnapshot(user),
       CccdVerified: identityState.CccdVerified,
       FaceScanned: identityState.FaceScanned,
     }).catch(() => undefined);
-  }, [identityState.CccdVerified, identityState.FaceScanned, isIdentityLoading, isSignedIn, user]);
+  }, [identityState.CccdVerified, identityState.FaceScanned, isIdentityLoading, isSignedIn]);
 
   useEffect(() => {
     function handleDiditMessage(event: MessageEvent) {
@@ -174,12 +158,12 @@ function FaceScan() {
     return <main className="auth-loading">Đang tải...</main>;
   }
 
-  if (!isSignedIn || !user) {
+  if (!isSignedIn) {
     return <Navigate to="/login" replace />;
   }
 
   if (identityState.FaceScanned) {
-    return <Navigate to="/select-role" replace />;
+    return <Navigate to="/" replace />;
   }
 
   async function startDiditVerification() {
@@ -202,7 +186,6 @@ function FaceScan() {
         method: "POST",
         body: JSON.stringify({
           CallbackUrl: callbackUrl,
-          Clerk: buildClerkAccountSnapshot(user),
         }),
       });
 
@@ -242,7 +225,7 @@ function FaceScan() {
       FaceScanned: true,
       FaceSkipped: true,
     });
-    navigate("/select-role", { replace: true });
+    navigate("/", { replace: true });
   }
 
   return (

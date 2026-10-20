@@ -766,6 +766,19 @@ textarea:focus {
   transition: border-color 200ms ease;
 }
 
+.header-profile-avatar {
+  display: grid;
+  flex: 0 0 32px;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #ffffff;
+  font-weight: 800;
+  object-fit: cover;
+}
+
 .header-profile-chip:hover {
   border-color: var(--line-strong);
 }

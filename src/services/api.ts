@@ -1,3 +1,5 @@
+import { getAuthToken } from "../auth/authToken";
+
 const isLocalHost =
   typeof window !== "undefined" &&
   (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
@@ -14,6 +16,8 @@ export async function apiFetch<T>(
   const controller = new AbortController();
   const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
 
+  const token = getAuthToken();
+
   let res: Response;
   try {
     res = await fetch(`${API_URL}${endpoint}`, {
@@ -21,6 +25,7 @@ export async function apiFetch<T>(
       credentials: "include",
       headers: {
         "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...(options.headers || {}),
       },
       signal: options.signal || controller.signal,

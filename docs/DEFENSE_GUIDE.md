@@ -46,13 +46,14 @@ Backend khong dat ten folder la `Repositories`, nhung hien co tang Server + Serv
 
 ## 3. Luong Dang Nhap Va Phan Quyen
 
-Frontend dung Clerk cho dang nhap UI:
+Frontend dang nhap bang Google truc tiep (khong dung Clerk):
 
-- `src/ClerkProviderWithRouter.tsx`
+- `src/auth/GoogleSignInButton.tsx`: nut Google, lay ID token tu Google.
+- `src/auth/AuthProvider.tsx`: gui token len `POST /api/auth/google`, luu token backend tra ve.
 - `src/pages/auth/Login.tsx`
 - `src/components/common/ProtectedRoute.tsx`
 
-Sau khi dang nhap, `ProtectedRoute` doc role tu Clerk metadata va chi cho vao route hop le:
+Backend kiem tra token voi Google, tao tai khoan trong bang `AccountProfiles` (mac dinh vai tro `user`) va tra ve JWT rieng. Vai tro do server quyet dinh, nguoi dung khong tu chon duoc. `ProtectedRoute` doc role tu backend va chi cho vao route hop le:
 
 - Admin: `/admin`
 - Police: `/police`
@@ -121,10 +122,11 @@ Code lien quan:
 - FE: `src/pages/dashboards/AdminDashboard.tsx`
 - FE service: `src/services/adminUserService.ts`
 - BE routes:
-  - `GET /api/admin/clerk/accounts`
-  - `PATCH /api/admin/clerk/accounts/{id}/role`
-  - `PATCH /api/admin/clerk/accounts/{id}/status`
-  - `DELETE /api/admin/clerk/accounts/{id}`
+  - `GET /api/admin/accounts`
+  - `PATCH /api/admin/accounts/{id}/role`
+  - `PATCH /api/admin/accounts/{id}/status`
+  - `DELETE /api/admin/accounts/{id}`
+  - Tat ca yeu cau vai tro admin.
 - BE: `AdminController`, `AuthService`
 
 ## 5. Ban Do Va Vi Tri Canh Sat
@@ -194,8 +196,8 @@ Ket qua gan nhat: ca lint FE, build FE va build BE deu thanh cong.
 
 1. Chay backend o cong `5055`.
 2. Chay frontend bang `npm run dev`.
-3. Dang nhap Clerk tren FE.
-4. Chon role va vao dashboard tuong ung.
+3. Dang nhap bang Google tren FE.
+4. Admin (email trong `POLICE_ADMIN_EMAILS`) cap vai tro cho tai khoan, roi vao dashboard tuong ung.
 5. Demo user tao bao cao su co.
 6. Demo support xem danh sach, cap nhat trang thai, xoa vu viec, quan ly tin tuc.
 7. Demo police xem ban do, danh sach su co va vi tri truc.

@@ -45,7 +45,7 @@ function AdminDashboard() {
       })
       .catch((error: unknown) => {
         if (isMounted) {
-          setLoadError(error instanceof Error ? error.message : "Không tải được tài khoản Clerk.");
+          setLoadError(error instanceof Error ? error.message : "Không tải được danh sách tài khoản.");
         }
       })
       .finally(() => {
@@ -181,7 +181,7 @@ function AdminDashboard() {
               <h2>Cấu hình quản trị</h2>
             </div>
             <div className="admin-settings-list">
-              <span>Nguồn tài khoản: Clerk</span>
+              <span>Nguồn tài khoản: Google</span>
               <span>Tổng số tài khoản: {isLoading ? "–" : users.length}</span>
               <span>Chờ xác minh: {isLoading ? "–" : users.filter((user) => user.status === "pending").length}</span>
             </div>

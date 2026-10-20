@@ -1,3 +1,4 @@
+import { getAuthToken } from "../auth/authToken";
 import { API_URL, apiFetch } from "./api";
 import type { Incident } from "../types/incident";
 
@@ -27,7 +28,8 @@ export function createIncident(payload: CreateIncidentPayload) {
   });
 }
 
-export async function createIncidentWithImages(formData: FormData, token?: string | null) {
+export async function createIncidentWithImages(formData: FormData) {
+  const token = getAuthToken();
   const res = await fetch(`${API_URL}/api/incidents`, {
     body: formData,
     credentials: "include",

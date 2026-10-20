@@ -1,11 +1,10 @@
 import { Navigate } from "react-router-dom";
-import { useUser } from "@clerk/react";
+import { useAuth } from "../auth/AuthContext";
 import useIdentityVerificationState from "../hooks/useIdentityVerificationState";
 import { ROLE_HOME_PATHS } from "../utils/constants";
-import { getClerkUserRole } from "../utils/clerkRole";
 
 function EntryRedirect() {
-  const { isLoaded, isSignedIn, user } = useUser();
+  const { isLoaded, isSignedIn, user } = useAuth();
   const { isLoading: isIdentityLoading, requiredIdentityStep } = useIdentityVerificationState(
     isLoaded && isSignedIn,
   );
@@ -14,21 +13,15 @@ function EntryRedirect() {
     return <main className="auth-loading">Đang tải...</main>;
   }
 
-  if (!isSignedIn) {
+  if (!isSignedIn || !user) {
     return <Navigate to="/login" replace />;
   }
-
-  const role = getClerkUserRole(user);
 
   if (requiredIdentityStep) {
     return <Navigate to={requiredIdentityStep} replace />;
   }
 
-  if (!role) {
-    return <Navigate to="/select-role" replace />;
-  }
-
-  return <Navigate to={ROLE_HOME_PATHS[role]} replace />;
+  return <Navigate to={ROLE_HOME_PATHS[user.role]} replace />;
 }
 
 export default EntryRedirect;
