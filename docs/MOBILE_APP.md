@@ -5,7 +5,7 @@ App được làm bằng [Capacitor](https://capacitorjs.com). Thư mục `ios/`
 ## Cách app hoạt động
 
 - App mở trang đã deploy `https://www.warteam.website` bên trong khung app (đặt ở `capacitor.config.ts`). Mỗi lần deploy Vercel, app tự có bản mới, không cần build lại app.
-- Backend vẫn thấy cùng origin với web, nên CORS, Didit và API không cần đổi gì.
+- Backend vẫn thấy cùng origin với web, nên CORS và API không cần đổi gì.
 - Google chặn đăng nhập web bên trong app, nên trong app nút Google dùng màn hình đăng nhập Google gốc của iOS/Android (`src/auth/nativeGoogle.ts`, plugin `@capgo/capacitor-social-login`). Token Google vẫn gửi vào `POST /api/auth/google` như web.
 - Camera, micro và vị trí đã khai báo quyền trong `ios/App/App/Info.plist` và `android/app/src/main/AndroidManifest.xml`.
 - Chỉ cần build lại app khi đổi code native, plugin, icon hoặc `capacitor.config.ts`.

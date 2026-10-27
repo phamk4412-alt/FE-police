@@ -50,7 +50,7 @@ function Register() {
     return <main className="auth-loading">Đang tải...</main>;
   }
 
-  // EntryRedirect sends the new account through identity verification and on to its dashboard.
+  // EntryRedirect sends the new account on to its dashboard.
   if (isSignedIn) {
     return <Navigate to="/" replace />;
   }

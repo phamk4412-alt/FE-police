@@ -31,7 +31,7 @@ Frontend:
 - `src/services`: lop goi API backend.
 - `src/routes`: dieu huong va bao ve route.
 - `src/types`: kieu du lieu dung chung.
-- `src/utils`: helper ve role, identity, constant.
+- `src/utils`: helper ve role, constant.
 
 Backend:
 
@@ -144,38 +144,19 @@ Backend route:
 
 Khi canh sat vao dashboard, FE lay vi tri trinh duyet va gui len backend. Khi dang xuat hoac roi trang, FE goi endpoint end de xoa vi tri truc.
 
-## 6. Xac Minh Danh Tinh
-
-Frontend:
-
-- `src/pages/auth/FaceScan.tsx`
-- `src/utils/identityVerification.ts`
-
-Backend demo endpoints:
-
-- `GET /api/identity/state`
-- `POST /api/identity/cccd`
-- `POST /api/identity/face`
-- `POST /api/identity/reset`
-- `POST /api/identity/didit/session`
-- `POST /api/identity/didit/session/{sessionId}/complete`
-
-Trong demo, Didit duoc mo phong approve de flow khong bi loi 404.
-
-## 7. Cac Loi Da Sua
+## 6. Cac Loi Da Sua
 
 - Doi update incident tu `PUT` sang `PATCH` de khop backend.
 - Them unwrap response `Incident` tu ket qua update status.
 - Them backend route xoa incident.
 - Them backend news CRUD.
-- Them backend identity/Didit demo endpoints.
 - Them backend police location endpoints.
 - Them backend admin account aliases.
 - Cho Mapbox doc duoc ca `VITE_MAPBOX_TOKEN` va `VITE_MAPBOX_ACCESS_TOKEN`.
 - Sua lint error trong `api.ts` bang cach gan `cause` cho error timeout.
 - Bo secret Clerk va password SQL khoi cau hinh local dang nho.
 
-## 8. Lenh Kiem Tra
+## 7. Lenh Kiem Tra
 
 Frontend:
 
@@ -192,7 +173,7 @@ dotnet build C:\Users\Hp\BE-police\BackEnd-Police.sln
 
 Ket qua gan nhat: ca lint FE, build FE va build BE deu thanh cong.
 
-## 9. Cach Demo De An
+## 8. Cach Demo De An
 
 1. Chay backend o cong `5055`.
 2. Chay frontend bang `npm run dev`.
@@ -203,7 +184,7 @@ Ket qua gan nhat: ca lint FE, build FE va build BE deu thanh cong.
 7. Demo police xem ban do, danh sach su co va vi tri truc.
 8. Demo admin xem thong ke, bang tai khoan, doi role/status, xoa tai khoan demo.
 
-## 10. Cach Tra Loi Khi Thay Hoi
+## 9. Cach Tra Loi Khi Thay Hoi
 
 Neu thay hoi "MVC/phan tang nam o dau?":
 
