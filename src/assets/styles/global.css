@@ -297,6 +297,22 @@ a {
   width: 100%;
 }
 
+.apple-signin-native {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #ffffff;
+  border-radius: 4px;
+  color: #000000;
+  cursor: pointer;
+  display: flex;
+  font: 600 15px var(--font-sans);
+  gap: 8px;
+  justify-content: center;
+  min-height: 44px;
+  width: 100%;
+}
+
+.apple-signin-native:disabled,
 .google-signin-native:disabled {
   cursor: wait;
   opacity: 0.7;
@@ -507,6 +523,84 @@ a {
   color: var(--text);
   background: rgba(236, 232, 225, 0.07);
   transform: translateX(2px);
+}
+
+.sidebar-delete-account {
+  min-height: 36px;
+  font-size: 0.82rem;
+}
+
+.sidebar-delete-account:hover,
+.sidebar-delete-account:focus-visible {
+  color: var(--danger);
+}
+
+.legal-links {
+  display: grid;
+  gap: 6px;
+  margin-top: 4px;
+  color: var(--subtle);
+  font-size: 0.78rem;
+  text-align: center;
+}
+
+.legal-links p {
+  margin: 0;
+}
+
+.legal-links nav {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.legal-links a {
+  color: var(--muted);
+}
+
+.legal-page {
+  min-height: 100vh;
+  padding: 32px 16px 48px;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.legal-card {
+  max-width: 720px;
+  margin: 0 auto;
+  line-height: 1.65;
+}
+
+.legal-card h1 {
+  margin: 16px 0 8px;
+  color: var(--ink);
+  font-size: 1.9rem;
+}
+
+.legal-card h2 {
+  margin: 28px 0 8px;
+  color: var(--ink);
+  font-size: 1.2rem;
+}
+
+.legal-card h3 {
+  margin: 18px 0 4px;
+  font-size: 1rem;
+}
+
+.legal-card a {
+  color: var(--primary);
+}
+
+.legal-back {
+  color: var(--muted) !important;
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+.legal-updated {
+  color: var(--subtle);
+  font-size: 0.85rem;
 }
 
 .sidebar-nav-icon {

@@ -1,7 +1,9 @@
 import { useState, type FormEvent } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
+import AppleSignInButton from "../../auth/AppleSignInButton";
 import GoogleSignInButton from "../../auth/GoogleSignInButton";
+import LegalLinks from "../legal/LegalLinks";
 import Button from "../../components/common/Button";
 import VietnameseDecor from "../../components/common/VietnameseDecor";
 import { APP_NAME } from "../../utils/constants";
@@ -9,7 +11,7 @@ import { APP_NAME } from "../../utils/constants";
 const MIN_PASSWORD_LENGTH = 8;
 
 function Register() {
-  const { isLoaded, isSignedIn, register, signInWithGoogle } = useAuth();
+  const { isLoaded, isSignedIn, register, signInWithApple, signInWithGoogle } = useAuth();
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -128,6 +130,12 @@ function Register() {
           <span>hoặc</span>
         </div>
 
+        <AppleSignInButton
+          onCredential={({ displayName, identityToken }) =>
+            void runSignUp(() => signInWithApple(identityToken, displayName))
+          }
+        />
+
         <GoogleSignInButton
           onCredential={(credential) => void runSignUp(() => signInWithGoogle(credential))}
           text="signup_with"
@@ -136,6 +144,8 @@ function Register() {
         <p className="auth-secondary-action">
           Đã có tài khoản? <Link to="/login">Đăng nhập</Link>
         </p>
+
+        <LegalLinks />
       </section>
     </main>
   );

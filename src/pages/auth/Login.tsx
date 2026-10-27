@@ -1,14 +1,16 @@
 import { useState, type FormEvent } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
+import AppleSignInButton from "../../auth/AppleSignInButton";
 import GoogleSignInButton from "../../auth/GoogleSignInButton";
+import LegalLinks from "../legal/LegalLinks";
 import AdminIcon from "../../components/admin/AdminIcons";
 import Button from "../../components/common/Button";
 import VietnameseDecor from "../../components/common/VietnameseDecor";
 import { APP_NAME, ROLE_HOME_PATHS } from "../../utils/constants";
 
 function Login() {
-  const { isLoaded, isSignedIn, signInWithGoogle, signInWithPassword, user } = useAuth();
+  const { isLoaded, isSignedIn, signInWithApple, signInWithGoogle, signInWithPassword, user } = useAuth();
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [signInError, setSignInError] = useState("");
   const [email, setEmail] = useState("");
@@ -104,6 +106,12 @@ function Login() {
           <span>hoặc</span>
         </div>
 
+        <AppleSignInButton
+          onCredential={({ displayName, identityToken }) =>
+            void runSignIn(() => signInWithApple(identityToken, displayName))
+          }
+        />
+
         <GoogleSignInButton
           onCredential={(credential) => void runSignIn(() => signInWithGoogle(credential))}
         />
@@ -111,6 +119,8 @@ function Login() {
         <p className="auth-secondary-action">
           Chưa có tài khoản? <Link to="/sign-up">Tạo tài khoản</Link>
         </p>
+
+        <LegalLinks />
       </section>
     </main>
   );

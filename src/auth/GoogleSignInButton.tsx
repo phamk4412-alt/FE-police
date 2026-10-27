@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { GOOGLE_CLIENT_ID, isNativeApp, signInWithNativeGoogle } from "./nativeGoogle";
+import { GOOGLE_CLIENT_ID, isNativeApp, signInWithNativeGoogle } from "./nativeAuth";
 
 const GOOGLE_SCRIPT_SRC = "https://accounts.google.com/gsi/client";
 

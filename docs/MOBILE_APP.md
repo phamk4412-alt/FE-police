@@ -6,7 +6,7 @@ App được làm bằng [Capacitor](https://capacitorjs.com). Thư mục `ios/`
 
 - App mở trang đã deploy `https://www.warteam.website` bên trong khung app (đặt ở `capacitor.config.ts`). Mỗi lần deploy Vercel, app tự có bản mới, không cần build lại app.
 - Backend vẫn thấy cùng origin với web, nên CORS và API không cần đổi gì.
-- Google chặn đăng nhập web bên trong app, nên trong app nút Google dùng màn hình đăng nhập Google gốc của iOS/Android (`src/auth/nativeGoogle.ts`, plugin `@capgo/capacitor-social-login`). Token Google vẫn gửi vào `POST /api/auth/google` như web.
+- Google chặn đăng nhập web bên trong app, nên trong app nút Google dùng màn hình đăng nhập Google gốc của iOS/Android (`src/auth/nativeAuth.ts`, plugin `@capgo/capacitor-social-login`). Token Google vẫn gửi vào `POST /api/auth/google` như web.
 - Camera, micro và vị trí đã khai báo quyền trong `ios/App/App/Info.plist` và `android/app/src/main/AndroidManifest.xml`.
 - Chỉ cần build lại app khi đổi code native, plugin, icon hoặc `capacitor.config.ts`.
 
@@ -76,8 +76,10 @@ CAP_SERVER_URL=http://<IP-máy-bạn>:5173 npx cap sync
 
 Rồi Run lại từ Xcode/Android Studio. Nhớ chạy `npx cap sync` không có `CAP_SERVER_URL` trước khi build bản thật.
 
+Đưa lên App Store: xem `docs/APP_STORE.md`.
+
 ## Giới hạn hiện tại
 
 - App cần mạng (vì mở trang live).
 - Cảnh sát chỉ gửi vị trí khi app đang mở; khi tắt màn hình hoặc chuyển app, iOS/Android dừng gửi.
-- Icon và màn hình chờ đang là mặc định của Capacitor. Muốn đổi: đặt ảnh 1024×1024 vào `assets/icon.png` rồi chạy `npx @capacitor/assets generate`.
+- Icon và màn hình chờ tạo từ `assets/icon.svg`. Muốn đổi: sửa `assets/icon-only.png` (1024×1024, không trong suốt) và `assets/splash.png`, rồi chạy `npx @capacitor/assets generate --ios --android --iconBackgroundColor '#070d14' --splashBackgroundColor '#070d14'`.
