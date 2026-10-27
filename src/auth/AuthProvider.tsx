@@ -3,6 +3,7 @@ import { apiFetch } from "../services/api";
 import type { UserRole } from "../types/user";
 import { AuthContext, type AuthContextValue, type AuthUser } from "./AuthContext";
 import { clearAuthToken, getAuthToken, setAuthToken } from "./authToken";
+import { signOutNativeGoogle } from "./nativeGoogle";
 
 interface CurrentUserResponse {
   AvatarUrl?: string | null;
@@ -99,6 +100,7 @@ function AuthProvider({ children }: { children: ReactNode }) {
 
     clearAuthToken();
     window.google?.accounts.id.disableAutoSelect();
+    void signOutNativeGoogle();
     setUser(null);
   }, []);
 

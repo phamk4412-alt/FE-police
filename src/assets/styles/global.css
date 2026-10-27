@@ -284,6 +284,26 @@ a {
   width: 100%;
 }
 
+.google-signin-native {
+  align-items: center;
+  background: #131314;
+  border: 1px solid #8e918f;
+  border-radius: 4px;
+  color: #e3e3e3;
+  cursor: pointer;
+  display: flex;
+  font: 500 15px var(--font-sans);
+  gap: 10px;
+  justify-content: center;
+  min-height: 44px;
+  width: 100%;
+}
+
+.google-signin-native:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
 .auth-error {
   margin: 0;
   color: var(--primary);
