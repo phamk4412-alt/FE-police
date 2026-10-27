@@ -15,7 +15,7 @@ interface SidebarProps {
 function Sidebar({ isCollapsed, onNavigate, onToggle, role }: SidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { signOut, user } = useAuth();
+  const { deleteAccount, signOut, user } = useAuth();
   const [activeAdminItem, setActiveAdminItem] = useState("dashboard");
   const [activeRoleItem, setActiveRoleItem] = useState(role === "support" ? "map" : "dashboard");
   const [currentTime, setCurrentTime] = useState(() => new Date());
@@ -41,6 +41,22 @@ function Sidebar({ isCollapsed, onNavigate, onToggle, role }: SidebarProps) {
     }
 
     void signOut().then(() => navigate("/login", { replace: true }));
+  }
+
+  async function handleDeleteAccount() {
+    const confirmed = window.confirm(
+      "Xóa vĩnh viễn tài khoản của bạn? Thông tin tài khoản sẽ bị xóa và không thể khôi phục.",
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await deleteAccount();
+      navigate("/login", { replace: true });
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "Không xóa được tài khoản. Vui lòng thử lại.");
+    }
   }
 
   useEffect(() => {
@@ -224,6 +240,18 @@ function Sidebar({ isCollapsed, onNavigate, onToggle, role }: SidebarProps) {
             <AdminIcon name="logout" />
           </span>
           <span className="sidebar-nav-label">Đăng xuất</span>
+        </button>
+
+        <button
+          className="sidebar-logout sidebar-delete-account"
+          type="button"
+          data-tooltip="Xóa tài khoản"
+          onClick={() => void handleDeleteAccount()}
+        >
+          <span className="sidebar-nav-icon" aria-hidden="true">
+            <AdminIcon name="delete" />
+          </span>
+          <span className="sidebar-nav-label">Xóa tài khoản</span>
         </button>
       </div>
     </aside>

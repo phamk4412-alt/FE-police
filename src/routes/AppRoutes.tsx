@@ -6,6 +6,8 @@ import AdminDashboard from "../pages/dashboards/AdminDashboard";
 import PoliceDashboard from "../pages/dashboards/PoliceDashboard";
 import SupportDashboard from "../pages/dashboards/SupportDashboard";
 import UserDashboard from "../pages/dashboards/UserDashboard";
+import PrivacyPolicy from "../pages/legal/PrivacyPolicy";
+import SupportPage from "../pages/legal/SupportPage";
 import EntryRedirect from "./EntryRedirect";
 
 function AppRoutes() {
@@ -14,6 +16,8 @@ function AppRoutes() {
         <Route path="/" element={<EntryRedirect />} />
         <Route path="/login/*" element={<Login />} />
         <Route path="/sign-up/*" element={<Register />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/help" element={<SupportPage />} />
         <Route
           path="/admin"
           element={

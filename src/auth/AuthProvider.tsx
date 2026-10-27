@@ -3,7 +3,7 @@ import { apiFetch } from "../services/api";
 import type { UserRole } from "../types/user";
 import { AuthContext, type AuthContextValue, type AuthUser } from "./AuthContext";
 import { clearAuthToken, getAuthToken, setAuthToken } from "./authToken";
-import { signOutNativeGoogle } from "./nativeGoogle";
+import { signOutNativeLogin } from "./nativeAuth";
 
 interface CurrentUserResponse {
   AvatarUrl?: string | null;
@@ -80,6 +80,12 @@ function AuthProvider({ children }: { children: ReactNode }) {
     [completeLogin],
   );
 
+  const signInWithApple = useCallback(
+    (identityToken: string, displayName: string) =>
+      completeLogin("/api/auth/apple", { DisplayName: displayName, IdentityToken: identityToken }),
+    [completeLogin],
+  );
+
   const signInWithPassword = useCallback(
     (email: string, password: string) => completeLogin("/api/auth/login", { Email: email, Password: password }),
     [completeLogin],
@@ -100,21 +106,31 @@ function AuthProvider({ children }: { children: ReactNode }) {
 
     clearAuthToken();
     window.google?.accounts.id.disableAutoSelect();
-    void signOutNativeGoogle();
+    void signOutNativeLogin();
+    setUser(null);
+  }, []);
+
+  const deleteAccount = useCallback(async () => {
+    await apiFetch("/api/auth/me", { method: "DELETE" });
+    clearAuthToken();
+    window.google?.accounts.id.disableAutoSelect();
+    void signOutNativeLogin();
     setUser(null);
   }, []);
 
   const value = useMemo<AuthContextValue>(
     () => ({
+      deleteAccount,
       isLoaded,
       isSignedIn: Boolean(user),
       register,
+      signInWithApple,
       signInWithGoogle,
       signInWithPassword,
       signOut,
       user,
     }),
-    [isLoaded, register, signInWithGoogle, signInWithPassword, signOut, user],
+    [deleteAccount, isLoaded, register, signInWithApple, signInWithGoogle, signInWithPassword, signOut, user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

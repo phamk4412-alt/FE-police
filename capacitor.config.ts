@@ -7,11 +7,13 @@ const serverUrl = process.env.CAP_SERVER_URL || "https://www.warteam.website";
 
 const config: CapacitorConfig = {
   appId: "website.warteam.police",
-  appName: "Cảnh sát",
+  appName: "Police Smart Hub",
   webDir: "dist",
   server: {
     url: serverUrl,
     cleartext: serverUrl.startsWith("http://"),
+    // Shown from the app bundle when the site cannot load (no network).
+    errorPath: "offline.html",
   },
   // Same color as the site background, shown behind the status bar and while the page loads.
   backgroundColor: "#070d14",
@@ -23,7 +25,7 @@ const config: CapacitorConfig = {
       providers: {
         google: true,
         facebook: false,
-        apple: false,
+        apple: true,
         twitter: false,
       },
     },

@@ -12,7 +12,9 @@ export interface AuthUser {
 export interface AuthContextValue {
   isLoaded: boolean;
   isSignedIn: boolean;
+  deleteAccount: () => Promise<void>;
   register: (displayName: string, email: string, password: string) => Promise<AuthUser>;
+  signInWithApple: (identityToken: string, displayName: string) => Promise<AuthUser>;
   signInWithGoogle: (credential: string) => Promise<AuthUser>;
   signInWithPassword: (email: string, password: string) => Promise<AuthUser>;
   signOut: () => Promise<void>;
