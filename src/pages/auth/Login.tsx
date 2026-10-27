@@ -2,7 +2,6 @@ import { useState, type FormEvent } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
 import GoogleSignInButton from "../../auth/GoogleSignInButton";
-import useIdentityVerificationState from "../../hooks/useIdentityVerificationState";
 import AdminIcon from "../../components/admin/AdminIcons";
 import Button from "../../components/common/Button";
 import VietnameseDecor from "../../components/common/VietnameseDecor";
@@ -10,9 +9,6 @@ import { APP_NAME, ROLE_HOME_PATHS } from "../../utils/constants";
 
 function Login() {
   const { isLoaded, isSignedIn, signInWithGoogle, signInWithPassword, user } = useAuth();
-  const { isLoading: isIdentityLoading, requiredIdentityStep } = useIdentityVerificationState(
-    isLoaded && isSignedIn,
-  );
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [signInError, setSignInError] = useState("");
   const [email, setEmail] = useState("");
@@ -36,12 +32,12 @@ function Login() {
     void runSignIn(() => signInWithPassword(email.trim(), password));
   }
 
-  if (!isLoaded || (isSignedIn && isIdentityLoading)) {
+  if (!isLoaded) {
     return <main className="auth-loading">Đang tải...</main>;
   }
 
   if (isSignedIn && user) {
-    return <Navigate to={requiredIdentityStep || ROLE_HOME_PATHS[user.role]} replace />;
+    return <Navigate to={ROLE_HOME_PATHS[user.role]} replace />;
   }
 
   return (
@@ -64,7 +60,7 @@ function Login() {
           </li>
           <li>
             <AdminIcon name="shield" />
-            <span>Xác minh danh tính, phân quyền theo vai trò</span>
+            <span>Phân quyền rõ ràng theo vai trò</span>
           </li>
         </ul>
       </section>

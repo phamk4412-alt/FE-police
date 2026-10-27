@@ -54,9 +54,7 @@
 		</dict>
 	</array>
 	<key>NSCameraUsageDescription</key>
-	<string>Ứng dụng dùng camera để chụp ảnh hiện trường khi báo cáo sự cố và để xác minh khuôn mặt.</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>Ứng dụng có thể dùng micro trong bước xác minh danh tính.</string>
+	<string>Ứng dụng dùng camera để chụp ảnh hiện trường khi báo cáo sự cố.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Ứng dụng dùng vị trí để gửi đúng địa điểm sự cố và hiển thị lực lượng gần bạn trên bản đồ.</string>
 	<key>UILaunchStoryboardName</key>

@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
-import useIdentityVerificationState from "../../hooks/useIdentityVerificationState";
 import type { UserRole } from "../../types/user";
 import { ROLE_HOME_PATHS } from "../../utils/constants";
 
@@ -12,20 +11,13 @@ interface ProtectedRouteProps {
 
 function ProtectedRoute({ allowedRoles, children }: ProtectedRouteProps) {
   const { isLoaded, isSignedIn, user } = useAuth();
-  const { isLoading: isIdentityLoading, requiredIdentityStep } = useIdentityVerificationState(
-    isLoaded && isSignedIn,
-  );
 
-  if (!isLoaded || isIdentityLoading) {
+  if (!isLoaded) {
     return <main className="auth-loading">Đang tải...</main>;
   }
 
   if (!isSignedIn || !user) {
     return <Navigate to="/login" replace />;
-  }
-
-  if (requiredIdentityStep) {
-    return <Navigate to={requiredIdentityStep} replace />;
   }
 
   if (!allowedRoles.includes(user.role)) {
