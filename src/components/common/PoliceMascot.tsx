@@ -292,47 +292,38 @@ function PoliceMascot() {
 
           <g className="mascot-figure">
             {/* Body */}
-            <path d="M34 112c0-14 11-22 26-22s26 8 26 22v22a8 8 0 0 1-8 8H42a8 8 0 0 1-8-8z" fill="#1f3366" />
-            <path d="M47 91l13 15 13-15z" fill="#d6e6fb" />
-            <path d="M57.5 96h5l1.5 4-4 12-4-12z" fill="#0d1a3d" />
-            <path d="M47 91l-5 10 9 3zM73 91l5 10-9 3z" fill="#2a4380" />
-            <path d="M36 99c4-4 9-6 14-6l-1 5c-5 0-9 1-13 3zM84 99c-4-4-9-6-14-6l1 5c5 0 9 1 13 3z" fill="#13224a" />
-            <path d="M70 110h8v3.5c0 3-1.8 4.8-4 6-2.2-1.2-4-3-4-6z" fill="#f2c94c" />
-            <rect fill="#0b1226" height="6" rx="2" width="52" x="34" y="124" />
-            <rect fill="#c9d3e3" height="8" rx="2" width="10" x="55" y="123" />
-            <circle cx="60" cy="116" fill="#c9d3e3" r="1.6" />
-            <path d="M42 108h9v6h-9z" fill="#2a4380" />
+            <path d="M34 112c0-14 11-22 26-22s26 8 26 22v22a8 8 0 0 1-8 8H42a8 8 0 0 1-8-8z" fill="#4d6b3c" />
+            <path d="M48 92l12 14 12-14" fill="#e9e2c8" />
+            <path d="M48 92l-6 10 8 2zM72 92l6 10-8 2z" fill="#d7263d" />
+            <rect fill="#2f3b25" height="6" rx="2" width="52" x="34" y="124" />
+            <rect fill="#f2c94c" height="8" rx="2" width="10" x="55" y="123" />
+            <circle cx="60" cy="113" fill="#f2c94c" r="2" />
+            <path d="M68 108h9v8h-9z" fill="#3e5730" />
 
             {/* Left arm */}
-            <path d="M36 104c-8 6-10 16-6 24" fill="none" stroke="#1f3366" strokeLinecap="round" strokeWidth="9" />
+            <path d="M36 104c-8 6-10 16-6 24" fill="none" stroke="#4d6b3c" strokeLinecap="round" strokeWidth="9" />
             <circle cx="30" cy="129" fill="#ffd6b0" r="5" />
 
             {/* Right arm, waves */}
             <g className="mascot-arm">
-              <path d="M84 104c8-4 13-12 14-22" fill="none" stroke="#1f3366" strokeLinecap="round" strokeWidth="9" />
+              <path d="M84 104c8-4 13-12 14-22" fill="none" stroke="#4d6b3c" strokeLinecap="round" strokeWidth="9" />
               <circle cx="98" cy="79" fill="#ffd6b0" r="5.5" />
             </g>
 
             {/* Head */}
             <g className="mascot-head">
-              <path d="M26 66c-3-22 12-38 34-38s37 16 34 38c-2-4-5-7-8-8H34c-3 1-6 4-8 8z" fill="#1a1a22" />
-              <circle cx="60" cy="64" fill="#ffd6b0" r="32" />
-              <ellipse cx="28" cy="66" fill="#ffc79b" rx="5" ry="7" />
-              <ellipse cx="92" cy="66" fill="#ffc79b" rx="5" ry="7" />
-              <path d="M29 52h62c1 5-1 9-3 11-2-3-5-4-8-4-3 2-7 3-11 2-4 2-9 2-13 0-4 2-8 2-12 0-3 1-6 2-9 1-3-2-5-6-6-10z" fill="#1a1a22" />
-              <path d="M30 56c-2 5-2 10 0 14l3-1c-1-4-1-8 0-12zM90 56c2 5 2 10 0 14l-3-1c1-4 1-8 0-12z" fill="#1a1a22" />
+              <circle cx="60" cy="62" fill="#ffd6b0" r="33" />
+              <ellipse cx="27" cy="64" fill="#ffc79b" rx="5" ry="7" />
+              <ellipse cx="93" cy="64" fill="#ffc79b" rx="5" ry="7" />
 
               {/* Cap */}
-              <path d="M17 38c0-14 19-25 43-25s43 11 43 25c0 4-4 6-9 6H26c-5 0-9-2-9-6z" fill="#1c2b5c" />
-              <path d="M30 22c8-5 18-7 30-7" fill="none" opacity="0.35" stroke="#ffffff" strokeLinecap="round" strokeWidth="2.5" />
-              <path d="M26 43h68v10H26z" fill="#0d1633" />
-              <path d="M26 46h68v1.6H26z" fill="#f2c94c" />
-              <path d="M28 53c10 7 54 7 64 0l-1 6c-14 6-48 6-62 0z" fill="#0a1433" />
-              <path d="M36 57c12 3 36 3 48 0" fill="none" opacity="0.45" stroke="#5f79b8" strokeLinecap="round" strokeWidth="1.4" />
-              <path d="M60 25l9 3.5v6c0 5-4 8.5-9 10.5-5-2-9-5.5-9-10.5v-6z" fill="#f2c94c" />
+              <path d="M24 46c2-22 18-34 36-34s34 12 36 34z" fill="#4d6b3c" />
+              <path d="M22 46h76v7H22z" fill="#d7263d" />
+              <path d="M26 53c10 6 58 6 68 0l-2 5c-14 6-50 6-64 0z" fill="#22301a" />
+              <circle cx="60" cy="33" fill="#f2c94c" r="9" />
               <path
-                d="M60 29.5l1.5 3.3 3.6.3-2.7 2.4.8 3.5-3.2-1.9-3.2 1.9.8-3.5-2.7-2.4 3.6-.3z"
-                fill="#1c2b5c"
+                d="M60 26.5l1.9 4.2 4.6.4-3.5 3 1.1 4.5-4.1-2.4-4.1 2.4 1.1-4.5-3.5-3 4.6-.4z"
+                fill="#d7263d"
               />
 
               {/* Eyes */}
@@ -362,17 +353,14 @@ function PoliceMascot() {
 
 function MascotFace() {
   return (
-    <svg aria-hidden="true" viewBox="16 10 88 90">
-      <path d="M26 66c-3-22 12-38 34-38s37 16 34 38c-2-4-5-7-8-8H34c-3 1-6 4-8 8z" fill="#1a1a22" />
-      <circle cx="60" cy="64" fill="#ffd6b0" r="32" />
-      <path d="M29 52h62c1 5-1 9-3 11-2-3-5-4-8-4-3 2-7 3-11 2-4 2-9 2-13 0-4 2-8 2-12 0-3 1-6 2-9 1-3-2-5-6-6-10z" fill="#1a1a22" />
-      <path d="M17 38c0-14 19-25 43-25s43 11 43 25c0 4-4 6-9 6H26c-5 0-9-2-9-6z" fill="#1c2b5c" />
-      <path d="M26 43h68v10H26z" fill="#0d1633" />
-      <path d="M28 53c10 7 54 7 64 0l-1 6c-14 6-48 6-62 0z" fill="#0a1433" />
-      <path d="M60 25l9 3.5v6c0 5-4 8.5-9 10.5-5-2-9-5.5-9-10.5v-6z" fill="#f2c94c" />
-      <ellipse cx="47" cy="70" fill="#1d1d24" rx="5" ry="6" />
-      <ellipse cx="73" cy="70" fill="#1d1d24" rx="5" ry="6" />
-      <path d="M53 82q7 7 14 0" fill="none" stroke="#7a3b2e" strokeLinecap="round" strokeWidth="2.6" />
+    <svg aria-hidden="true" viewBox="20 10 80 90">
+      <circle cx="60" cy="62" fill="#ffd6b0" r="33" />
+      <path d="M24 46c2-22 18-34 36-34s34 12 36 34z" fill="#4d6b3c" />
+      <path d="M22 46h76v7H22z" fill="#d7263d" />
+      <circle cx="60" cy="33" fill="#f2c94c" r="9" />
+      <ellipse cx="47" cy="68" fill="#1d1d24" rx="5" ry="6" />
+      <ellipse cx="73" cy="68" fill="#1d1d24" rx="5" ry="6" />
+      <path d="M53 81q7 7 14 0" fill="none" stroke="#7a3b2e" strokeLinecap="round" strokeWidth="2.6" />
     </svg>
   );
 }
