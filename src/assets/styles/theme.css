@@ -1266,7 +1266,7 @@ textarea:focus {
 }
 
 .mascot-head {
-  transform-origin: 60px 92px;
+  transform-origin: 60px 100px;
   transition: transform 300ms var(--ease-spring);
 }
 
@@ -1275,16 +1275,21 @@ textarea:focus {
 }
 
 .mascot-arm {
-  transform-origin: 84px 104px;
+  transform-origin: 92px 128px;
+}
+
+.mascot-turn {
+  transform-origin: 60px 100px;
+  transition: transform 280ms var(--ease-out);
+}
+
+.mascot-part {
+  transition: transform 280ms var(--ease-out);
 }
 
 .mascot-eyes {
-  transform-origin: 60px 68px;
+  transform-origin: 60px 75px;
   transition: transform 90ms ease;
-}
-
-.mascot-eyes > g {
-  transition: transform 120ms ease-out;
 }
 
 .mascot-eyes.is-blinking {
