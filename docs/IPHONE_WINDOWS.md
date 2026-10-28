@@ -22,6 +22,15 @@ Giới hạn của cách miễn phí:
 3. Bấm vào lần chạy có dấu ✅ → kéo xuống mục **Artifacts** → bấm **police-app-ipa** để tải về.
 4. Giải nén file `.zip` vừa tải, bên trong là **police-app.ipa**.
 
+Nếu GitHub báo *"account is locked due to a billing issue"*: vào https://github.com/settings/billing xử lý (thường là thẻ thanh toán lỗi hoặc hóa đơn chưa trả), hoặc dùng Codemagic bên dưới.
+
+### Cách khác: build bằng Codemagic (miễn phí 500 phút/tháng)
+
+1. Vào https://codemagic.io → **Sign up** bằng tài khoản GitHub.
+2. **Add application** → chọn GitHub → chọn repo **FE-police** → loại project **Other** (dùng `codemagic.yaml`).
+3. Bấm **Start new build** → chọn nhánh `main` và workflow **iOS unsigned ipa** → **Start new build**.
+4. Chờ khoảng 10 phút. Xong thì ở mục **Artifacts** bấm **police-app.ipa** để tải về.
+
 ## Bước 3. Chuẩn bị iPhone
 
 1. Cắm iPhone vào laptop bằng cáp. Trên iPhone bấm **Tin cậy** và nhập mật mã.
