@@ -1,0 +1,68 @@
+# Builds an unsigned iPhone app (.ipa) on a GitHub Mac, so it can be installed
+# from Windows with Sideloadly and a free Apple ID. See docs/IPHONE_WINDOWS.md.
+name: iOS build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "ios/**"
+      - "capacitor.config.ts"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/ios-build.yml"
+  pull_request:
+    paths:
+      - "ios/**"
+      - "capacitor.config.ts"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/ios-build.yml"
+
+jobs:
+  ipa:
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install and build web
+        run: |
+          npm ci
+          npm run build
+
+      - name: Sync iOS project
+        run: npx cap sync ios
+
+      - name: Build app without signing
+        run: |
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination "generic/platform=iOS" \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build
+
+      # An .ipa is a zip with the app inside a Payload folder; Sideloadly signs it on install.
+      - name: Package .ipa
+        run: |
+          mkdir Payload
+          cp -R build/Build/Products/Release-iphoneos/App.app Payload/
+          zip -qry police-app.ipa Payload
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: police-app-ipa
+          path: police-app.ipa
+          retention-days: 30

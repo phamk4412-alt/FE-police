@@ -1,0 +1,36 @@
+# Same unsigned iPhone build as .github/workflows/ios-build.yml, for Codemagic's free Mac builders.
+workflows:
+  ios-unsigned:
+    name: iOS unsigned ipa
+    instance_type: mac_mini_m2
+    max_build_duration: 30
+    environment:
+      node: 22
+      xcode: latest
+    scripts:
+      - name: Install and build web
+        script: |
+          npm ci
+          npm run build
+      - name: Sync iOS project
+        script: npx cap sync ios
+      - name: Build app without signing
+        script: |
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination "generic/platform=iOS" \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build
+      - name: Package .ipa
+        script: |
+          mkdir Payload
+          cp -R build/Build/Products/Release-iphoneos/App.app Payload/
+          zip -qry police-app.ipa Payload
+    artifacts:
+      - police-app.ipa
