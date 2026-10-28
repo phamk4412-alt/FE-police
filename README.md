@@ -67,4 +67,4 @@ This repo is ready for Vercel:
 
 ## Mobile app (iPhone / Android)
 
-`ios/` and `android/` are Capacitor projects that open the live site inside a native app, with native Google sign-in, camera and location permissions. See `docs/MOBILE_APP.md` for setup and build steps.
+`ios/` and `android/` are Capacitor projects that open the live site inside a native app, with native Google sign-in, camera and location permissions. See `docs/MOBILE_APP.md` for setup and build steps, and `docs/IPHONE_WINDOWS.md` to install it on an iPhone from Windows without a Mac.
