@@ -1213,3 +1213,272 @@ textarea:focus {
     padding: 24px 20px;
   }
 }
+
+/* Mascot: small police officer in the bottom-right corner. */
+.mascot {
+  position: fixed;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: max(16px, env(safe-area-inset-bottom));
+  z-index: 70;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  pointer-events: none;
+}
+
+.mascot > * {
+  pointer-events: auto;
+}
+
+.mascot-body {
+  display: block;
+  width: 92px;
+  border: 0;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mascot-body:focus-visible {
+  border-radius: 50%;
+  outline: 2px solid var(--primary);
+  outline-offset: 4px;
+}
+
+.mascot-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.45));
+}
+
+.mascot-shadow {
+  fill: rgba(0, 0, 0, 0.35);
+  transform-origin: 60px 144px;
+  animation: mascot-shadow 3.2s ease-in-out infinite;
+}
+
+.mascot-figure {
+  transform-origin: 60px 140px;
+  animation: mascot-bob 3.2s ease-in-out infinite;
+}
+
+.mascot-head {
+  transform-origin: 60px 92px;
+  transition: transform 300ms var(--ease-spring);
+}
+
+.mascot-body:hover .mascot-head {
+  transform: rotate(-6deg);
+}
+
+.mascot-arm {
+  transform-origin: 84px 104px;
+}
+
+.mascot-eyes {
+  transform-origin: 60px 68px;
+  transition: transform 90ms ease;
+}
+
+.mascot-eyes > g {
+  transition: transform 120ms ease-out;
+}
+
+.mascot-eyes.is-blinking {
+  transform: scaleY(0.1);
+}
+
+.mascot-dizzy-eyes,
+.mascot-mouth-open {
+  display: none;
+}
+
+.mascot.is-wave .mascot-arm {
+  animation: mascot-wave 0.45s ease-in-out 3;
+}
+
+.mascot.is-jump .mascot-figure {
+  animation: mascot-jump 0.6s var(--ease-out);
+}
+
+.mascot.is-dizzy .mascot-figure {
+  animation: mascot-dizzy 0.35s ease-in-out 4;
+}
+
+.mascot.is-dizzy .mascot-eyes,
+.mascot.is-dizzy .mascot-mouth,
+.mascot.is-jump .mascot-mouth,
+.mascot.is-wave .mascot-mouth {
+  display: none;
+}
+
+.mascot.is-dizzy .mascot-dizzy-eyes,
+.mascot.is-dizzy .mascot-mouth-open,
+.mascot.is-jump .mascot-mouth-open,
+.mascot.is-wave .mascot-mouth-open {
+  display: inline;
+}
+
+.mascot-bubble {
+  position: relative;
+  max-width: min(260px, calc(100vw - 48px));
+  margin: 0 18px 8px 0;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius) var(--radius) 4px var(--radius);
+  padding: 10px 14px 12px;
+  color: var(--ink);
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow);
+  animation: mascot-bubble-in 320ms var(--ease-spring);
+}
+
+.mascot-bubble::after {
+  position: absolute;
+  right: 22px;
+  bottom: -7px;
+  width: 12px;
+  height: 12px;
+  border-right: 1px solid var(--line-strong);
+  border-bottom: 1px solid var(--line-strong);
+  background: var(--surface-elevated);
+  transform: rotate(45deg);
+  content: "";
+}
+
+.mascot-bubble-name {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--primary);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.mascot-bubble p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.mascot-close {
+  position: absolute;
+  right: -4px;
+  bottom: 104px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  padding: 0;
+  color: var(--muted);
+  background: var(--surface);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+
+.mascot:hover .mascot-close,
+.mascot-close:focus-visible {
+  opacity: 1;
+}
+
+.mascot-restore {
+  position: fixed;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: max(16px, env(safe-area-inset-bottom));
+  z-index: 70;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  padding: 4px;
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  opacity: 0.75;
+  transition: opacity 200ms ease, transform 200ms var(--ease-spring);
+}
+
+.mascot-restore:hover {
+  opacity: 1;
+  transform: scale(1.08);
+}
+
+.mascot-restore svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+@media (max-width: 640px) {
+  .mascot-body {
+    width: 68px;
+  }
+
+  .mascot-close {
+    bottom: 78px;
+    opacity: 1;
+  }
+
+  .mascot-bubble {
+    max-width: min(230px, calc(100vw - 40px));
+  }
+
+  .mascot-bubble p {
+    font-size: 0.85rem;
+  }
+}
+
+/* Keep the corner clear while a sidebar drawer or the camera is open. */
+body.is-nav-locked .mascot,
+body.is-nav-locked .mascot-restore {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mascot *,
+  .mascot-bubble {
+    animation: none !important;
+  }
+}
+
+@keyframes mascot-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes mascot-shadow {
+  0%, 100% { transform: scaleX(1); }
+  50% { transform: scaleX(0.86); }
+}
+
+@keyframes mascot-wave {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-22deg); }
+}
+
+@keyframes mascot-jump {
+  0% { transform: translateY(0) scale(1, 1); }
+  20% { transform: translateY(0) scale(1.08, 0.9); }
+  50% { transform: translateY(-16px) scale(0.95, 1.06); }
+  80% { transform: translateY(0) scale(1.04, 0.96); }
+  100% { transform: translateY(0) scale(1, 1); }
+}
+
+@keyframes mascot-dizzy {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-8deg); }
+  75% { transform: rotate(8deg); }
+}
+
+@keyframes mascot-bubble-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.92); }
+  to { opacity: 1; transform: none; }
+}
