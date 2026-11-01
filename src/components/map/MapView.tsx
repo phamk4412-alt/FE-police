@@ -5,6 +5,7 @@ import hospitalLogo from "../../assets/logos/hospital-logo.svg";
 import policeStationLogo from "../../assets/logos/police-station-logo.svg";
 import policeCarMarker from "../../assets/police-car-marker.png";
 import { useAuth } from "../../auth/AuthContext";
+import { getAuthToken } from "../../auth/authToken";
 import { API_URL, apiFetch } from "../../services/api";
 import type { Incident } from "../../types/incident";
 import {
@@ -918,18 +919,12 @@ function sendEndPoliceShiftBeacon(username: string) {
   }
 
   const payload = JSON.stringify({ Username: username });
-  if (navigator.sendBeacon) {
-    navigator.sendBeacon(
-      `${API_URL}/api/police/me/location/end`,
-      new Blob([payload], { type: "application/json" }),
-    );
-    return;
-  }
-
+  const token = getAuthToken();
+  // sendBeacon cannot attach the Bearer token required by this endpoint.
   void fetch(`${API_URL}/api/police/me/location/end`, {
     body: payload,
     credentials: "include",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
     keepalive: true,
     method: "POST",
   });

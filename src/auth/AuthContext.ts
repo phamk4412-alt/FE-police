@@ -7,11 +7,14 @@ export interface AuthUser {
   id: string;
   name: string;
   role: UserRole;
+  roles: UserRole[];
 }
 
 export interface AuthContextValue {
   isLoaded: boolean;
   isSignedIn: boolean;
+  selectedRole: UserRole | null;
+  selectRole: (role: UserRole) => boolean;
   register: (displayName: string, email: string, password: string) => Promise<AuthUser>;
   signInWithGoogle: (credential: string) => Promise<AuthUser>;
   signInWithPassword: (email: string, password: string) => Promise<AuthUser>;

@@ -5,7 +5,7 @@ import GoogleSignInButton from "../../auth/GoogleSignInButton";
 import AdminIcon from "../../components/admin/AdminIcons";
 import Button from "../../components/common/Button";
 import VietnameseDecor from "../../components/common/VietnameseDecor";
-import { APP_NAME, ROLE_HOME_PATHS } from "../../utils/constants";
+import { APP_NAME } from "../../utils/constants";
 
 function Login() {
   const { isLoaded, isSignedIn, signInWithGoogle, signInWithPassword, user } = useAuth();
@@ -37,7 +37,7 @@ function Login() {
   }
 
   if (isSignedIn && user) {
-    return <Navigate to={ROLE_HOME_PATHS[user.role]} replace />;
+    return <Navigate to="/select-role" replace />;
   }
 
   return (

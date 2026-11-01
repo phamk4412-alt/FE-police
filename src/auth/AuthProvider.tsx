@@ -4,6 +4,7 @@ import type { UserRole } from "../types/user";
 import { AuthContext, type AuthContextValue, type AuthUser } from "./AuthContext";
 import { clearAuthToken, getAuthToken, setAuthToken } from "./authToken";
 import { signOutNativeGoogle } from "./nativeGoogle";
+import { clearSelectedRole, isUserRole, readSelectedRole, saveSelectedRole } from "./roleSelection";
 
 interface CurrentUserResponse {
   AvatarUrl?: string | null;
@@ -18,39 +19,52 @@ interface LoginResponse {
   User: CurrentUserResponse;
 }
 
-const VALID_ROLES: UserRole[] = ["admin", "police", "user", "support"];
-
 function toAuthUser(response: CurrentUserResponse): AuthUser {
-  const role = (response.Role || "").toLowerCase() as UserRole;
+  const role = (response.Role || "").trim().toLowerCase();
+  if (!response.Id || !isUserRole(role)) {
+    throw new Error("Tài khoản chưa có vai trò hợp lệ. Vui lòng liên hệ quản trị viên.");
+  }
 
   return {
     avatarUrl: response.AvatarUrl || null,
     email: response.Email || "",
     id: response.Id || "",
     name: response.DisplayName || response.Email || "",
-    role: VALID_ROLES.includes(role) ? role : "user",
+    role,
+    // The current backend stores one role per account. Never infer additional grants.
+    roles: [role],
   };
 }
 
 function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
   const [isLoaded, setIsLoaded] = useState(() => !getAuthToken());
 
   useEffect(() => {
-    if (!getAuthToken()) {
+    const token = getAuthToken();
+    if (!token) {
+      clearSelectedRole();
       return;
     }
 
     let isActive = true;
     apiFetch<CurrentUserResponse>("/api/auth/me")
       .then((response) => {
-        if (isActive) {
-          setUser(toAuthUser(response));
+        if (isActive && getAuthToken() === token) {
+          const restoredUser = toAuthUser(response);
+          setUser(restoredUser);
+          setSelectedRole(readSelectedRole(restoredUser.id, restoredUser.roles));
         }
       })
       .catch(() => {
         // Expired token, locked account or deleted account: start signed out.
-        clearAuthToken();
+        if (isActive && getAuthToken() === token) {
+          clearAuthToken();
+          clearSelectedRole();
+          setUser(null);
+          setSelectedRole(null);
+        }
       })
       .finally(() => {
         if (isActive) {
@@ -68,8 +82,10 @@ function AuthProvider({ children }: { children: ReactNode }) {
       body: JSON.stringify(body),
       method: "POST",
     });
-    setAuthToken(response.Token);
     const nextUser = toAuthUser(response.User);
+    setAuthToken(response.Token);
+    clearSelectedRole();
+    setSelectedRole(null);
     setUser(nextUser);
     setIsLoaded(true);
     return nextUser;
@@ -92,29 +108,44 @@ function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const signOut = useCallback(async () => {
+    // Start the request with the old token, then clear local state immediately.
+    const logoutRequest = apiFetch("/api/auth/logout", { method: "POST" });
+    clearAuthToken();
+    clearSelectedRole();
+    setSelectedRole(null);
+    setUser(null);
     try {
-      await apiFetch("/api/auth/logout", { method: "POST" });
+      await logoutRequest;
     } catch {
       // Signing out locally is enough; the token is simply discarded.
     }
 
-    clearAuthToken();
     window.google?.accounts.id.disableAutoSelect();
     void signOutNativeGoogle();
-    setUser(null);
   }, []);
+
+  const selectRole = useCallback((role: UserRole) => {
+    if (!user?.roles.includes(role)) {
+      return false;
+    }
+    saveSelectedRole(user.id, role);
+    setSelectedRole(role);
+    return true;
+  }, [user]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
       isLoaded,
       isSignedIn: Boolean(user),
+      selectedRole,
+      selectRole,
       register,
       signInWithGoogle,
       signInWithPassword,
       signOut,
       user,
     }),
-    [isLoaded, register, signInWithGoogle, signInWithPassword, signOut, user],
+    [isLoaded, register, selectedRole, selectRole, signInWithGoogle, signInWithPassword, signOut, user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import ProtectedRoute from "../components/common/ProtectedRoute";
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
+import RoleSelection from "../pages/auth/RoleSelection";
 import AdminDashboard from "../pages/dashboards/AdminDashboard";
 import PoliceDashboard from "../pages/dashboards/PoliceDashboard";
 import SupportDashboard from "../pages/dashboards/SupportDashboard";
@@ -14,6 +15,7 @@ function AppRoutes() {
         <Route path="/" element={<EntryRedirect />} />
         <Route path="/login/*" element={<Login />} />
         <Route path="/sign-up/*" element={<Register />} />
+        <Route path="/select-role" element={<RoleSelection />} />
         <Route
           path="/admin"
           element={

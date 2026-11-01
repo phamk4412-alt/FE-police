@@ -1,6 +1,5 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
-import { ROLE_HOME_PATHS } from "../utils/constants";
 
 function EntryRedirect() {
   const { isLoaded, isSignedIn, user } = useAuth();
@@ -13,7 +12,7 @@ function EntryRedirect() {
     return <Navigate to="/login" replace />;
   }
 
-  return <Navigate to={ROLE_HOME_PATHS[user.role]} replace />;
+  return <Navigate to="/select-role" replace />;
 }
 
 export default EntryRedirect;

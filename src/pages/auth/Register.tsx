@@ -50,9 +50,8 @@ function Register() {
     return <main className="auth-loading">Đang tải...</main>;
   }
 
-  // EntryRedirect sends the new account on to its dashboard.
   if (isSignedIn) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/select-role" replace />;
   }
 
   return (
