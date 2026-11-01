@@ -1,0 +1,12 @@
+import type { Incident } from "../../../types/incident";
+import { getIncidentCoordinates, getIncidentCreatedAt, getIncidentDetail, getIncidentId, getIncidentImageUrls, getIncidentLocation, getIncidentReporterName, getIncidentStatus, getIncidentTitle } from "../../../types/incident";
+import { API_URL } from "../../../services/api";
+import PoliceDialog from "./PoliceDialog";
+import { formatPoliceTime, getStatusGroup, statusLabels } from "./policeUtils";
+
+export default function PoliceIncidentDialog({ incident, onClose, onShowMap }: { incident: Incident; onClose: () => void; onShowMap: (incident: Incident) => void }) {
+  const coordinates = getIncidentCoordinates(incident);
+  const validCoordinates = coordinates && coordinates.every(Number.isFinite) && Math.abs(coordinates[0]) <= 180 && Math.abs(coordinates[1]) <= 90;
+  const group = getStatusGroup(getIncidentStatus(incident));
+  return <PoliceDialog title={getIncidentTitle(incident)} eyebrow="Chi tiết vụ việc" onClose={onClose}><div className="police-dialog-body"><span className={`police-badge police-tone-${group}`}>{statusLabels[group]}</span><dl className="police-detail-grid"><div><dt>Mã vụ việc</dt><dd>{getIncidentId(incident)}</dd></div><div><dt>Thời gian tiếp nhận</dt><dd>{formatPoliceTime(getIncidentCreatedAt(incident))}</dd></div><div><dt>Khu vực</dt><dd>{getIncidentLocation(incident) || "Chưa có địa chỉ"}</dd></div><div><dt>Người báo cáo</dt><dd>{getIncidentReporterName(incident)}</dd></div><div><dt>Cập nhật gần nhất</dt><dd>{incident.LastUpdatedBy || "Chưa ghi nhận"}</dd></div><div><dt>Tọa độ GPS</dt><dd>{validCoordinates ? `${coordinates[1]}, ${coordinates[0]}` : "Chưa có tọa độ hợp lệ"}</dd></div></dl><h3>Mô tả hiện trường</h3><p className="police-detail-description">{getIncidentDetail(incident) || "Chưa có mô tả chi tiết."}</p><div className="police-evidence">{getIncidentImageUrls(incident).map((url) => { const source = url.startsWith("/") && !url.startsWith("//") ? `${API_URL}${url}` : /^https?:\/\//i.test(url) ? url : null; return source ? <a key={url} href={source} target="_blank" rel="noreferrer"><img src={source} alt="Ảnh hiện trường vụ việc" loading="lazy" /></a> : null; })}</div></div><footer className="police-dialog-footer"><button className="police-button" type="button" onClick={onClose}>Đóng</button><button className="police-button police-button-primary" disabled={!validCoordinates} type="button" onClick={() => onShowMap(incident)}>Xem trên bản đồ</button></footer></PoliceDialog>;
+}
