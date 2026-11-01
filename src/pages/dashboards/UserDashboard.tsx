@@ -6,11 +6,11 @@ import DashboardLayout from "../../components/layout/DashboardLayout";
 import MapView from "../../components/map/MapView";
 import UserNewsPage from "../news/UserNewsPage";
 import { createIncidentWithImages } from "../../services/userService";
+import "../../assets/styles/citizen.css";
 
 const MAX_IMAGES = 3;
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
-const DEFAULT_HCM_LOCATION = { lat: 10.7769, lng: 106.7009 };
 
 const emergencyNumbers: Array<{
   icon: AdminIconName;
@@ -25,7 +25,9 @@ const emergencyNumbers: Array<{
 ];
 
 function getLocationText(lat: number | "", lng: number | "") {
-  return typeof lat === "number" && typeof lng === "number"
+  return typeof lat === "number" && typeof lng === "number" &&
+    Number.isFinite(lat) && Number.isFinite(lng) &&
+    Math.abs(lat) <= 90 && Math.abs(lng) <= 180
     ? `${lat.toFixed(6)}, ${lng.toFixed(6)}`
     : "";
 }
@@ -65,14 +67,16 @@ function UserDashboard() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const [tab, setTab] = useState<UserDashboardTab>("home");
+  const locationRequestIdRef = useRef(0);
   const [category, setCategory] = useState("Trộm cắp");
   const [customCategory, setCustomCategory] = useState("");
   const [description, setDescription] = useState("");
   const [lat, setLat] = useState<number | "">("");
   const [lng, setLng] = useState<number | "">("");
+  const [locationStatus, setLocationStatus] = useState<"loading" | "success" | "error">("loading");
+  const [locationError, setLocationError] = useState("");
   const [images, setImages] = useState<File[]>([]);
-  const [formMessage, setFormMessage] = useState("");
+  const [formMessage, setFormMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [canUseLiveCamera] = useState(canUseLiveCameraDevice);
@@ -84,9 +88,18 @@ function UserDashboard() {
   const isOtherCategory = category === "Khác";
   const normalizedCustomCategory = customCategory.trim();
   const titleCategory = isOtherCategory && normalizedCustomCategory ? normalizedCustomCategory : category;
+  const coordinatesText = getLocationText(lat, lng);
+  const hasValidLocation = locationStatus === "success" && coordinatesText !== "";
+  const locationText = locationStatus === "loading"
+    ? "Đang lấy vị trí..."
+    : hasValidLocation
+      ? `Đã có vị trí: ${coordinatesText}`
+      : "Chưa có vị trí hiện tại";
   const newsMatch = location.pathname.match(/^\/user\/news\/?([^/]*)?/);
   const isNewsRoute = location.pathname.startsWith("/user/news");
-  const activeUserTab = isNewsRoute ? "news" : tab;
+  const pathname = location.pathname.replace(/\/+$/, "");
+  const tab: UserDashboardTab = isNewsRoute ? "news" : pathname === "/user/map" ? "map" : "home";
+  const activeUserTab = tab;
   const newsArticleId = newsMatch?.[1] ? decodeURIComponent(newsMatch[1]) : undefined;
   const decorVariant = isNewsRoute
     ? newsArticleId
@@ -96,21 +109,17 @@ function UserDashboard() {
       ? "user-map"
       : "user-home";
 
-  function handleUserTabChange(nextTab: "home" | "map" | "news") {
-    if (nextTab === "news") {
-      navigate("/user/news");
-      return;
+  function handleUserTabChange(nextTab: UserDashboardTab) {
+    const tabPaths: Record<UserDashboardTab, string> = {
+      home: "/user",
+      map: "/user/map",
+      news: "/user/news",
+    };
+    const nextPath = tabPaths[nextTab];
+
+    if (pathname !== nextPath) {
+      navigate(nextPath);
     }
-
-    if (isNewsRoute) {
-      navigate("/user");
-    }
-
-    setTab(nextTab);
-  }
-
-  function handleEmergencyDial(number: string) {
-    window.location.href = `tel:${number}`;
   }
 
   useEffect(() => {
@@ -135,24 +144,49 @@ function UserDashboard() {
   }, [isCameraOpen]);
 
   function updateCurrentLocation() {
-    setFormMessage("");
+    const requestId = ++locationRequestIdRef.current;
+    setLocationStatus("loading");
+    setLocationError("");
+    setLat("");
+    setLng("");
+
+    function handleLocationError(message: string) {
+      if (requestId !== locationRequestIdRef.current) {
+        return;
+      }
+
+      setLat("");
+      setLng("");
+      setLocationStatus("error");
+      setLocationError(`${message} Hãy bật định vị trên thiết bị, cho phép website truy cập Vị trí trong cài đặt trình duyệt, rồi bấm Cập nhật vị trí để thử lại.`);
+    }
 
     if (!navigator.geolocation) {
-      setLat(DEFAULT_HCM_LOCATION.lat);
-      setLng(DEFAULT_HCM_LOCATION.lng);
-      setFormMessage("Trình duyệt không hỗ trợ định vị. Đã dùng vị trí trung tâm TP.HCM.");
+      handleLocationError("Trình duyệt không hỗ trợ định vị. Hãy sử dụng trình duyệt có hỗ trợ định vị.");
       return;
     }
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        if (requestId !== locationRequestIdRef.current) {
+          return;
+        }
+
+        if (!getLocationText(position.coords.latitude, position.coords.longitude)) {
+          handleLocationError("Tọa độ GPS không hợp lệ.");
+          return;
+        }
+
         setLat(position.coords.latitude);
         setLng(position.coords.longitude);
+        setLocationStatus("success");
       },
-      () => {
-        setLat(DEFAULT_HCM_LOCATION.lat);
-        setLng(DEFAULT_HCM_LOCATION.lng);
-        setFormMessage("Không lấy được GPS. Đã dùng vị trí trung tâm TP.HCM.");
+      (error) => {
+        handleLocationError(error.code === 1
+          ? "Quyền truy cập vị trí đã bị từ chối."
+          : error.code === 3
+            ? "Lấy vị trí quá thời gian chờ."
+            : "Không thể lấy vị trí GPS.");
       },
       { enableHighAccuracy: true, maximumAge: 60000, timeout: 10000 },
     );
@@ -180,7 +214,7 @@ function UserDashboard() {
       nextImages.push(image);
     }
 
-    setFormMessage(nextMessage);
+    setFormMessage(nextMessage ? { text: nextMessage, type: "error" } : null);
     setImages(nextImages);
   }
 
@@ -216,10 +250,10 @@ function UserDashboard() {
 
       streamRef.current = stream;
       setIsCameraOpen(true);
-      setFormMessage("");
+      setFormMessage(null);
     } catch {
       cameraInputRef.current?.click();
-      setFormMessage("Không mở được camera trực tiếp. Đã chuyển sang trình chọn ảnh/camera của thiết bị.");
+      setFormMessage({ text: "Không mở được camera trực tiếp. Đã chuyển sang trình chọn ảnh/camera của thiết bị.", type: "error" });
     }
   }
 
@@ -240,7 +274,7 @@ function UserDashboard() {
     const height = video.videoHeight;
 
     if (!width || !height) {
-      setFormMessage("Camera chưa sẵn sàng để chụp.");
+      setFormMessage({ text: "Camera chưa sẵn sàng để chụp.", type: "error" });
       return;
     }
 
@@ -250,7 +284,7 @@ function UserDashboard() {
     const context = canvas.getContext("2d");
 
     if (!context) {
-      setFormMessage("Không thể đọc dữ liệu từ camera.");
+      setFormMessage({ text: "Không thể đọc dữ liệu từ camera.", type: "error" });
       return;
     }
 
@@ -258,7 +292,7 @@ function UserDashboard() {
     canvas.toBlob(
       (blob) => {
         if (!blob) {
-          setFormMessage("Không thể tạo ảnh từ camera.");
+          setFormMessage({ text: "Không thể tạo ảnh từ camera.", type: "error" });
           return;
         }
 
@@ -273,23 +307,29 @@ function UserDashboard() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setFormMessage("");
+    setFormMessage(null);
 
-    if (isOtherCategory && !normalizedCustomCategory) {
-      setFormMessage("Nhập loại vụ việc khi chọn Khác.");
+    const normalizedDescription = description.trim();
+    if (!normalizedDescription) {
+      setFormMessage({ text: "Vui lòng nhập mô tả vụ việc.", type: "error" });
       return;
     }
 
-    if (typeof lat !== "number" || typeof lng !== "number") {
-      setFormMessage("Chưa có vị trí. Hãy bấm Cập nhật vị trí trước khi gửi.");
+    if (isOtherCategory && !normalizedCustomCategory) {
+      setFormMessage({ text: "Nhập loại vụ việc khi chọn Khác.", type: "error" });
+      return;
+    }
+
+    if (!hasValidLocation) {
+      setFormMessage({ text: "Chưa có vị trí. Hãy bấm Cập nhật vị trí trước khi gửi.", type: "error" });
       return;
     }
 
     setIsSubmitting(true);
 
     const formData = new FormData();
-    formData.append("title", buildIncidentTitle(titleCategory, description));
-    formData.append("detail", description.trim());
+    formData.append("title", buildIncidentTitle(titleCategory, normalizedDescription));
+    formData.append("detail", normalizedDescription);
     formData.append("category", category);
     if (isOtherCategory) {
       formData.append("customCategory", normalizedCustomCategory);
@@ -306,9 +346,9 @@ function UserDashboard() {
       setDescription("");
       setCustomCategory("");
       setImages([]);
-      setFormMessage(result?.Message || "Đã gửi báo cáo thành công.");
+      setFormMessage({ text: result?.Message || "Đã gửi báo cáo thành công.", type: "success" });
     } catch (error) {
-      setFormMessage(error instanceof Error ? error.message : "Không thể gửi báo cáo.");
+      setFormMessage({ text: error instanceof Error ? error.message : "Không thể gửi báo cáo.", type: "error" });
     } finally {
       setIsSubmitting(false);
     }
@@ -389,6 +429,7 @@ function UserDashboard() {
                 <textarea
                   id="description"
                   name="description"
+                  required
                   placeholder="Ví dụ: Có người giật túi trước cửa hàng, hướng chạy về..."
                   rows={4}
                   value={description}
@@ -401,9 +442,10 @@ function UserDashboard() {
                 <input
                   id="location"
                   readOnly
-                  value={getLocationText(lat, lng)}
-                  placeholder="Đang lấy vị trí..."
+                  value={locationText}
+                  aria-describedby={locationError ? "location-error" : undefined}
                 />
+                {locationError ? <small id="location-error">{locationError}</small> : null}
               </label>
 
               <div className="photo-actions">
@@ -467,7 +509,14 @@ function UserDashboard() {
               <Button disabled={isSubmitting} type="submit">
                 {isSubmitting ? "Đang gửi..." : "Gửi báo cáo"}
               </Button>
-              {formMessage ? <span className="form-message">{formMessage}</span> : null}
+              {formMessage ? (
+                <span
+                  className={`form-message is-${formMessage.type}`}
+                  role={formMessage.type === "success" ? "status" : "alert"}
+                >
+                  {formMessage.text}
+                </span>
+              ) : null}
             </form>
           </section>
 
@@ -479,7 +528,6 @@ function UserDashboard() {
                   className={`emergency-number-card emergency-tone-${item.tone}`}
                   href={`tel:${item.number}`}
                   key={item.number}
-                  onClick={() => handleEmergencyDial(item.number)}
                 >
                   <span className="emergency-icon">
                     <AdminIcon name={item.icon} />
@@ -494,10 +542,11 @@ function UserDashboard() {
             <article className="panel location-card">
               <div>
                 <span className="eyebrow">Định vị</span>
-                <h2>Cập nhật vị trí</h2>
-                <p>{getLocationText(lat, lng) || "Chưa có vị trí hiện tại."}</p>
+                <h2>Vị trí hiện tại</h2>
+                <p aria-live="polite">{locationText}</p>
+                {locationError ? <p>{locationError}</p> : null}
               </div>
-              <Button type="button" variant="secondary" onClick={updateCurrentLocation}>
+              <Button disabled={locationStatus === "loading"} type="button" variant="secondary" onClick={updateCurrentLocation}>
                 Cập nhật vị trí
               </Button>
             </article>
