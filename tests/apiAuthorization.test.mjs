@@ -53,6 +53,7 @@ test("login and backend role authorization against a disposable in-memory server
       });
       assert.equal(login.status, 200);
       assert.equal(login.data.User.Role, role);
+      assert.deepEqual([...login.data.User.Roles].sort(), ["admin", "police", "support", "user"]);
       account.Token = login.data.Token;
       const me = await request("/api/auth/me", { token: account.Token });
       assert.equal(me.status, 200);
@@ -69,7 +70,7 @@ test("login and backend role authorization against a disposable in-memory server
       assert.equal(wrongPassword.status, 401);
     });
   }
-  await t.test("anonymous access and citizen privilege escalation are blocked", async () => {
+  await t.test("anonymous access and requests without the matching session role are blocked", async () => {
     for (const path of [...Object.values(routes), "/api/incidents"]) {
       assert.equal((await request(path)).status, 401, path);
     }
@@ -80,6 +81,35 @@ test("login and backend role authorization against a disposable in-memory server
     assert.equal((await request("/api/support/news", { method: "POST", token, body: {} })).status, 403);
     assert.equal((await request(`/api/incidents/${id}/status`, { method: "PATCH", token, body: { Status: "resolved" } })).status, 403);
     assert.equal((await request("/hubs/incidents/negotiate?negotiateVersion=1", { method: "POST" })).status, 401);
+    assert.equal((await request("/api/auth/select-role", { method: "POST", body: { Role: "admin" } })).status, 401);
+  });
+  await t.test("the same citizen account can select each of the four roles without changing its database role", async () => {
+    const original = accounts.user;
+    for (const role of Object.keys(routes)) {
+      const selection = await request("/api/auth/select-role", {
+        method: "POST", token: original.Token, body: { Role: role },
+      });
+      assert.equal(selection.status, 200);
+      assert.equal(selection.data.User.Id, original.User.Id);
+      assert.equal(selection.data.User.Role, role);
+      const token = selection.data.Token;
+      assert.equal((await request("/api/auth/me", { token })).data.Role, role);
+      assert.equal((await request(routes[role], { token })).status, 200);
+      for (const [otherRole, path] of Object.entries(routes)) {
+        if (otherRole !== role) assert.equal((await request(path, { token })).status, 403);
+      }
+      if (role === "admin") {
+        const list = await request("/api/admin/accounts", { token });
+        assert.equal(list.data.find((account) => account.Id === original.User.Id).Role, "user");
+      }
+    }
+    assert.equal((await request("/api/auth/select-role", {
+      method: "POST", token: original.Token, body: { Role: "owner" },
+    })).status, 400);
+    const relogin = await request("/api/auth/login", {
+      method: "POST", body: { Email: original.email, Password: password },
+    });
+    assert.equal(relogin.data.User.Role, "user", "New login starts without a selected role");
   });
   await t.test("role changes and account locks apply to existing tokens", async () => {
     const temporary = await request("/api/auth/register", {

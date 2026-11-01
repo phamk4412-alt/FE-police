@@ -14,7 +14,7 @@ export interface AuthContextValue {
   isLoaded: boolean;
   isSignedIn: boolean;
   selectedRole: UserRole | null;
-  selectRole: (role: UserRole) => boolean;
+  selectRole: (role: UserRole) => Promise<boolean>;
   register: (displayName: string, email: string, password: string) => Promise<AuthUser>;
   signInWithGoogle: (credential: string) => Promise<AuthUser>;
   signInWithPassword: (email: string, password: string) => Promise<AuthUser>;

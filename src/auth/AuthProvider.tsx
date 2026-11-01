@@ -12,6 +12,7 @@ interface CurrentUserResponse {
   Email?: string;
   Id?: string;
   Role?: string;
+  Roles?: string[];
 }
 
 interface LoginResponse {
@@ -31,8 +32,7 @@ function toAuthUser(response: CurrentUserResponse): AuthUser {
     id: response.Id || "",
     name: response.DisplayName || response.Email || "",
     role,
-    // The current backend stores one role per account. Never infer additional grants.
-    roles: [role],
+    roles: [...new Set((response.Roles ?? [role]).map((item) => item.trim().toLowerCase()).filter(isUserRole))],
   };
 }
 
@@ -54,7 +54,14 @@ function AuthProvider({ children }: { children: ReactNode }) {
         if (isActive && getAuthToken() === token) {
           const restoredUser = toAuthUser(response);
           setUser(restoredUser);
-          setSelectedRole(readSelectedRole(restoredUser.id, restoredUser.roles));
+          const savedRole = readSelectedRole(restoredUser.id, restoredUser.roles);
+          // A saved UI preference is valid only when it matches the server's active role.
+          if (savedRole === restoredUser.role) {
+            setSelectedRole(savedRole);
+          } else {
+            clearSelectedRole();
+            setSelectedRole(null);
+          }
         }
       })
       .catch(() => {
@@ -124,10 +131,24 @@ function AuthProvider({ children }: { children: ReactNode }) {
     void signOutNativeGoogle();
   }, []);
 
-  const selectRole = useCallback((role: UserRole) => {
+  const selectRole = useCallback(async (role: UserRole) => {
     if (!user?.roles.includes(role)) {
       return false;
     }
+    const previousToken = getAuthToken();
+    const response = await apiFetch<LoginResponse>("/api/auth/select-role", {
+      method: "POST",
+      body: JSON.stringify({ Role: role }),
+    });
+    if (getAuthToken() !== previousToken) {
+      return false;
+    }
+    const nextUser = toAuthUser(response.User);
+    if (nextUser.id !== user.id || nextUser.role !== role) {
+      throw new Error("Không thể xác nhận vai trò đã chọn. Vui lòng đăng nhập lại.");
+    }
+    setAuthToken(response.Token);
+    setUser(nextUser);
     saveSelectedRole(user.id, role);
     setSelectedRole(role);
     return true;

@@ -1,3 +1,16 @@
+.login-page.role-selection-page {
+  grid-template-columns: minmax(0, 0.8fr) minmax(560px, 1.2fr);
+}
+
+.role-selection-page .login-hero {
+  padding: clamp(24px, 4vw, 64px);
+}
+
+.role-selection-page .role-selection-panel {
+  margin: 24px;
+  padding: 24px;
+}
+
 .role-selection-panel {
   display: grid;
   gap: 24px;
@@ -6,7 +19,7 @@
 
 .role-selection-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
 }
 
@@ -49,4 +62,30 @@
   padding-top: 8px;
   color: var(--text);
   font-weight: 700;
+}
+
+.role-selection-card:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+@media (max-width: 1000px) {
+  .login-page.role-selection-page {
+    grid-template-columns: 1fr;
+  }
+
+  .role-selection-page .login-hero {
+    min-height: 180px;
+  }
+}
+
+@media (max-width: 500px) {
+  .role-selection-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .role-selection-page .role-selection-panel {
+    margin: 16px;
+    padding: 20px;
+  }
 }

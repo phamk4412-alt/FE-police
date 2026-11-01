@@ -19,6 +19,7 @@ function RoleSelection() {
   const { isLoaded, isSignedIn, user, selectedRole, selectRole, signOut } = useAuth();
   const navigate = useNavigate();
   const [error, setError] = useState("");
+  const [isSelecting, setIsSelecting] = useState(false);
 
   if (!isLoaded) {
     return <main className="auth-loading">Đang tải...</main>;
@@ -27,11 +28,19 @@ function RoleSelection() {
     return <Navigate to="/login" replace />;
   }
 
-  function handleSelect(role: UserRole) {
-    if (selectRole(role)) {
-      navigate(ROLE_HOME_PATHS[role], { replace: true });
-    } else {
-      setError("Tài khoản không có quyền truy cập vai trò này.");
+  async function handleSelect(role: UserRole) {
+    setIsSelecting(true);
+    setError("");
+    try {
+      if (await selectRole(role)) {
+        navigate(ROLE_HOME_PATHS[role], { replace: true });
+      } else {
+        setError("Không thể chọn vai trò. Vui lòng đăng nhập lại.");
+      }
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Không thể chọn vai trò. Vui lòng thử lại.");
+    } finally {
+      setIsSelecting(false);
     }
   }
 
@@ -45,12 +54,12 @@ function RoleSelection() {
       </section>
       <section className="login-card role-selection-panel" aria-labelledby="role-selection-heading">
         <div className="section-heading">
-          <h2 id="role-selection-heading">Vai trò của bạn</h2>
-          <p className="login-card-subtitle">Các vai trò đã được cấp cho tài khoản {user.email}.</p>
+          <h2 id="role-selection-heading">Chọn vai trò truy cập</h2>
+          <p className="login-card-subtitle">Tài khoản {user.email} có thể chọn một trong bốn vai trò bên dưới.</p>
         </div>
         <div className="role-selection-grid">
           {user.roles.map((role) => (
-            <button className="role-selection-card" key={role} type="button" onClick={() => handleSelect(role)}>
+            <button className="role-selection-card" disabled={isSelecting} key={role} type="button" onClick={() => void handleSelect(role)}>
               <AdminIcon name={roleDetails[role].icon} />
               <strong>{ROLE_LABELS[role]}</strong>
               <span>{roleDetails[role].description}</span>
