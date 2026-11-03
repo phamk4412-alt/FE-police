@@ -127,3 +127,22 @@
   .police-form-grid, .police-detail-grid { grid-template-columns: 1fr; }
   .police-error { align-items: flex-start; flex-direction: column; }
 }
+.police-shift-panel { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 24px; background: #0e1720; border: 1px solid var(--line); border-radius: 16px; min-width: 0; }
+.police-shift-content { display: flex; align-items: flex-start; gap: 16px; min-width: 0; }
+.police-shift-content > div { min-width: 0; }
+.police-shift-icon { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 42px; height: 42px; color: var(--primary); background: var(--primary-soft); border-radius: 12px; }
+.police-shift-panel h3 { font-size: 18px; }
+.police-shift-panel .police-eyebrow { margin-bottom: 8px; }
+.police-shift-status { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
+.police-shift-badge { display: inline-flex; align-items: center; gap: 7px; padding: 5px 10px; border-radius: 20px; color: var(--muted); background: #ffffff08; font-size: 12px; font-weight: 700; }
+.police-shift-badge > span { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.police-shift-badge.is-active { color: #7ce4b0; background: #34d39912; }
+.police-shift-started { font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+.police-shift-started time { color: var(--text); font-variant-numeric: tabular-nums; }
+.police-shift-note { font-size: 11px; color: var(--muted); line-height: 1.7; margin: 12px 0 0; }
+.police-shift-panel > .police-button { flex-shrink: 0; }
+@media (max-width: 700px) {
+  .police-shift-panel { flex-direction: column; align-items: stretch; padding: 18px; gap: 18px; }
+  .police-shift-content { gap: 12px; }
+  .police-shift-icon { width: 34px; height: 34px; }
+}

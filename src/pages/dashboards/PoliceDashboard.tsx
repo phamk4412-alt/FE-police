@@ -8,6 +8,7 @@ import type { Incident } from "../../types/incident";
 import { getIncidentCoordinates, getIncidentCreatedAt, getIncidentId, getIncidentLocation, getIncidentStatus, getIncidentTitle } from "../../types/incident";
 import PoliceIncidentDialog from "./police/PoliceIncidentDialog";
 import PoliceReportDialog from "./police/PoliceReportDialog";
+import PoliceShiftPanel from "./police/PoliceShiftPanel";
 import { formatPoliceTime, getStatusGroup, isInPolicePeriod, matchesPoliceSearch, statusLabels, type PolicePeriod, type StatusGroup } from "./police/policeUtils";
 import "./police/police.css";
 
@@ -82,6 +83,7 @@ function PoliceDashboard() {
       <button type="button" aria-pressed={view === "history"} onClick={() => setView("history")}><AdminIcon name="clock" />Lịch sử vụ việc</button>
     </nav>
     <div className="police-page-heading"><div><p className="police-eyebrow">{view === "dashboard" ? "Bảng điều khiển cảnh sát" : "Hồ sơ công tác"}</p><h2>{view === "dashboard" ? "Điều hành vụ việc" : "Lịch sử vụ việc"}</h2><p>{view === "dashboard" ? "Theo dõi vụ việc mới, hồ sơ đang xử lý và khu vực ưu tiên." : "Tra cứu các vụ việc bạn là người cập nhật gần nhất."}</p></div><button className="police-button police-button-primary" type="button" onClick={() => setShowReport(true)}><span aria-hidden="true">＋</span>Tạo báo cáo hiện trường</button></div>
+    <PoliceShiftPanel />
     {notice ? <div className="police-notice" role="status">{notice}<button type="button" aria-label="Đóng thông báo" onClick={() => setNotice("")}><AdminIcon name="close" /></button></div> : null}
     {error ? <div className="police-error" role="alert"><div><strong>Không thể cập nhật vụ việc</strong><p>{error}</p>{incidents.length ? <small>Đang hiển thị dữ liệu tải thành công gần nhất.</small> : null}</div><button className="police-button" disabled={isLoading} type="button" onClick={() => { setIsLoading(true); void loadIncidents(); }}>{isLoading ? "Đang tải..." : "Thử lại"}</button></div> : null}
     {view === "dashboard" ? <>
