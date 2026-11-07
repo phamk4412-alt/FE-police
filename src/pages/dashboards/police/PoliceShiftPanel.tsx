@@ -2,14 +2,44 @@ import { useState } from "react";
 import AdminIcon from "../../../components/admin/AdminIcons";
 import PoliceDialog from "./PoliceDialog";
 
+type ShiftState =
+  | { status: "off-duty" }
+  | { status: "on-duty"; startedAt: Date }
+  | { status: "break"; startedAt: Date };
+
+const shiftLabels: Record<ShiftState["status"], string> = {
+  "off-duty": "Chưa vào ca",
+  "on-duty": "Đang trong ca",
+  break: "Tạm nghỉ",
+};
+
 export default function PoliceShiftPanel() {
-  const [startedAt, setStartedAt] = useState<Date | null>(null);
+  const [shift, setShift] = useState<ShiftState>({ status: "off-duty" });
   const [confirmEnd, setConfirmEnd] = useState(false);
 
   function endShift() {
-    setStartedAt(null);
+    setShift({ status: "off-duty" });
     setConfirmEnd(false);
   }
+
+  function startShift() {
+    setShift({ status: "on-duty", startedAt: new Date() });
+  }
+
+  function pauseShift() {
+    setShift((current) => current.status === "on-duty"
+      ? { status: "break", startedAt: current.startedAt }
+      : current);
+  }
+
+  function resumeShift() {
+    setShift((current) => current.status === "break"
+      ? { status: "on-duty", startedAt: current.startedAt }
+      : current);
+  }
+
+  const isOffDuty = shift.status === "off-duty";
+  const startedAt = isOffDuty ? null : shift.startedAt;
 
   return (
     <section className="police-shift-panel" aria-labelledby="police-shift-heading">
@@ -19,8 +49,8 @@ export default function PoliceShiftPanel() {
           <p className="police-eyebrow">Ca trực · Mô phỏng giao diện</p>
           <h3 id="police-shift-heading">Quản lý ca trực</h3>
           <div className="police-shift-status" role="status" aria-live="polite" aria-atomic="true">
-            <span className={`police-shift-badge ${startedAt ? "is-active" : ""}`}>
-              <span aria-hidden="true" />{startedAt ? "Đang trong ca" : "Chưa vào ca"}
+            <span className={`police-shift-badge is-${shift.status}`}>
+              <span aria-hidden="true" />{shiftLabels[shift.status]}
             </span>
             {startedAt ? (
               <span className="police-shift-started">
@@ -33,11 +63,18 @@ export default function PoliceShiftPanel() {
           <p className="police-shift-note">Chỉ mô phỏng trên giao diện, không lưu sau khi tải lại. Độc lập với kết nối và chia sẻ vị trí GPS.</p>
         </div>
       </div>
-      {startedAt ? (
-        <button className="police-button" type="button" onClick={() => setConfirmEnd(true)}>Kết thúc ca trực</button>
-      ) : (
-        <button className="police-button police-button-primary" type="button" onClick={() => setStartedAt(new Date())}>Bắt đầu ca trực</button>
-      )}
+      <div className="police-shift-actions">
+        {shift.status === "off-duty" ? (
+          <button className="police-button police-button-primary" type="button" onClick={startShift}>Bắt đầu ca trực</button>
+        ) : shift.status === "on-duty" ? (
+          <>
+            <button className="police-button police-button-pause" type="button" onClick={pauseShift}>Tạm nghỉ</button>
+            <button className="police-button police-button-end" type="button" onClick={() => setConfirmEnd(true)}>Kết thúc ca trực</button>
+          </>
+        ) : (
+          <button className="police-button police-button-resume" type="button" onClick={resumeShift}>Tiếp tục ca trực</button>
+        )}
+      </div>
       {confirmEnd ? (
         <PoliceDialog title="Kết thúc ca trực?" eyebrow="Xác nhận thao tác" onClose={() => setConfirmEnd(false)}>
           <div className="police-dialog-body">

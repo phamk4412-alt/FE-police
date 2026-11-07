@@ -136,13 +136,22 @@
 .police-shift-status { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
 .police-shift-badge { display: inline-flex; align-items: center; gap: 7px; padding: 5px 10px; border-radius: 20px; color: var(--muted); background: #ffffff08; font-size: 12px; font-weight: 700; }
 .police-shift-badge > span { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-.police-shift-badge.is-active { color: #7ce4b0; background: #34d39912; }
+.police-shift-badge.is-on-duty { color: #7ce4b0; background: #34d39912; }
+.police-shift-badge.is-break { color: #f4bf69; background: #f59e0b16; }
+.police-shift-badge.is-off-duty { color: #a9b4c1; background: #ffffff08; }
 .police-shift-started { font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
 .police-shift-started time { color: var(--text); font-variant-numeric: tabular-nums; }
 .police-shift-note { font-size: 11px; color: var(--muted); line-height: 1.7; margin: 12px 0 0; }
-.police-shift-panel > .police-button { flex-shrink: 0; }
+.police-shift-actions { display: flex; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; gap: 9px; }
+.police-shift-actions .police-button { min-height: 44px; white-space: nowrap; }
+.police-shift-actions .police-button-pause { border-color: #d69b3e70; color: #f4bf69; background: #f59e0b12; }
+.police-shift-actions .police-button-end { border-color: #ff405d88; color: #ff8093; background: #ff405d13; }
+.police-shift-actions .police-button-resume { border-color: #37bb856e; color: #7ce4b0; background: #34d39916; }
 @media (max-width: 700px) {
   .police-shift-panel { flex-direction: column; align-items: stretch; padding: 18px; gap: 18px; }
   .police-shift-content { gap: 12px; }
   .police-shift-icon { width: 34px; height: 34px; }
+  .police-shift-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
+  .police-shift-actions .police-button { min-width: 0; padding: 11px 8px; font-size: 11px; }
+  .police-shift-actions .police-button:only-child { grid-column: 1 / -1; }
 }
