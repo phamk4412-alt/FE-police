@@ -4,6 +4,7 @@ import DashboardStatCards, { type DashboardStatCardItem } from "../../components
 import DashboardLayout from "../../components/layout/DashboardLayout";
 import MapView from "../../components/map/MapView";
 import SupportNewsManager from "../news/SupportNewsManager";
+import SupportOfficerTracking from "./support/SupportOfficerTracking";
 import { API_URL } from "../../services/api";
 import { deleteSupportIncident, getSupportIncidents, updateSupportIncidentStatus } from "../../services/supportIncidentService";
 import type { Incident } from "../../types/incident";
@@ -92,6 +93,10 @@ function SupportDashboard() {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   useEffect(() => {
+    if (location.pathname.startsWith("/support/officers")) {
+      return;
+    }
+
     let isMounted = true;
 
     getSupportIncidents()
@@ -109,7 +114,7 @@ function SupportDashboard() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [location.pathname]);
 
   const selectedIncident = useMemo(
     () => incidents.find((incident) => getIncidentId(incident) === selectedIncidentId) || incidents[0] || null,
@@ -205,18 +210,23 @@ function SupportDashboard() {
     }
   }
 
-  function handleSupportTabChange(tab: "duty" | "news") {
-    navigate(tab === "news" ? "/support/news" : "/support");
+  function handleSupportTabChange(tab: "duty" | "tracking" | "news") {
+    navigate(tab === "news" ? "/support/news" : tab === "tracking" ? "/support/officers" : "/support");
   }
+
+  const isTrackingRoute = location.pathname.startsWith("/support/officers");
+  const isNewsRoute = location.pathname.startsWith("/support/news");
 
   return (
     <DashboardLayout
-      activeSupportTab={location.pathname.startsWith("/support/news") ? "news" : "duty"}
-      decorVariant={location.pathname.startsWith("/support/news") ? "support-news" : "support-duty"}
+      activeSupportTab={isNewsRoute ? "news" : isTrackingRoute ? "tracking" : "duty"}
+      decorVariant={isNewsRoute ? "support-news" : "support-duty"}
       onSupportTabChange={handleSupportTabChange}
       role="support"
     >
-      {location.pathname.startsWith("/support/news") ? (
+      {isTrackingRoute ? (
+        <SupportOfficerTracking />
+      ) : isNewsRoute ? (
         <SupportNewsManager />
       ) : (
       <>

@@ -12,11 +12,11 @@ const defaultDecorByRole: Record<UserRole, VietnameseDecorVariant> = {
 };
 
 interface DashboardLayoutProps {
-  activeSupportTab?: "duty" | "news";
+  activeSupportTab?: "duty" | "tracking" | "news";
   activeUserTab?: "home" | "map" | "news";
   children: ReactNode;
   decorVariant?: VietnameseDecorVariant;
-  onSupportTabChange?: (tab: "duty" | "news") => void;
+  onSupportTabChange?: (tab: "duty" | "tracking" | "news") => void;
   onUserTabChange?: (tab: "home" | "map" | "news") => void;
   role: UserRole;
 }

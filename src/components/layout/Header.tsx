@@ -5,10 +5,10 @@ import { APP_NAME, ROLE_LABELS } from "../../utils/constants";
 
 interface HeaderProps {
   activeUserTab?: "home" | "map" | "news";
-  activeSupportTab?: "duty" | "news";
+  activeSupportTab?: "duty" | "tracking" | "news";
   isMobileNavOpen?: boolean;
   onMenuClick?: () => void;
-  onSupportTabChange?: (tab: "duty" | "news") => void;
+  onSupportTabChange?: (tab: "duty" | "tracking" | "news") => void;
   onUserTabChange?: (tab: "home" | "map" | "news") => void;
   role: UserRole;
 }
@@ -21,6 +21,7 @@ const userTabs = [
 
 const supportTabs = [
   { id: "duty", label: "Thường trực" },
+  { id: "tracking", label: "Theo dõi Công an" },
   { id: "news", label: "Tin tức" },
 ] as const;
 

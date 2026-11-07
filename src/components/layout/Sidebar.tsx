@@ -193,6 +193,55 @@ function Sidebar({ isCollapsed, onNavigate, onToggle, role }: SidebarProps) {
                     <span className="sidebar-nav-label">Bản đồ</span>
                   </a>
                 ) : null}
+                {role === "support" ? (
+                  <>
+                    <a
+                      className={location.pathname.startsWith("/support/officers") ? "is-active" : ""}
+                      href="/support/officers"
+                      title="Theo dõi Công an"
+                      data-tooltip="Theo dõi Công an"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        navigate("/support/officers");
+                      }}
+                    >
+                      <span className="sidebar-nav-icon" aria-hidden="true">
+                        <AdminIcon name="users" />
+                      </span>
+                      <span className="sidebar-nav-label">Theo dõi Công an</span>
+                    </a>
+                    <a
+                      className={location.pathname === "/support" ? "is-active" : ""}
+                      href="/support"
+                      title="Thường trực"
+                      data-tooltip="Thường trực"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        navigate("/support");
+                      }}
+                    >
+                      <span className="sidebar-nav-icon" aria-hidden="true">
+                        <AdminIcon name="activity" />
+                      </span>
+                      <span className="sidebar-nav-label">Thường trực</span>
+                    </a>
+                    <a
+                      className={location.pathname.startsWith("/support/news") ? "is-active" : ""}
+                      href="/support/news"
+                      title="Tin tức"
+                      data-tooltip="Tin tức"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        navigate("/support/news");
+                      }}
+                    >
+                      <span className="sidebar-nav-icon" aria-hidden="true">
+                        <AdminIcon name="file" />
+                      </span>
+                      <span className="sidebar-nav-label">Tin tức</span>
+                    </a>
+                  </>
+                ) : null}
               </>
             )}
             <a
