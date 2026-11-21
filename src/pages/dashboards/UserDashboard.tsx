@@ -367,8 +367,8 @@ function UserDashboard() {
         <>
           <section className="page-title citizen-title">
             <p className="eyebrow">Người dân</p>
-            <h2>Báo cáo nhanh trong vài giây</h2>
-            <span>Gửi báo cáo nhanh chóng và chính xác.</span>
+            <h2>Báo cáo sự cố</h2>
+            <span>Chọn loại vụ việc, mô tả ngắn gọn và gửi kèm vị trí hiện tại của bạn</span>
           </section>
 
           <section className="citizen-home-grid">
@@ -378,7 +378,7 @@ function UserDashboard() {
               defaultToCurrentLocation
               role="user"
               showPoiInNormal={false}
-              title="Vị trí hiện tại tại TP.HCM"
+              title="Vị trí của bạn tại TP.HCM"
               variant="compact"
             />
 
@@ -438,7 +438,7 @@ function UserDashboard() {
               </label>
 
               <label className="field" htmlFor="location">
-                <span>Vị trí (auto)</span>
+                <span>Vị trí (tự động)</span>
                 <input
                   id="location"
                   readOnly
@@ -557,7 +557,7 @@ function UserDashboard() {
           <section className="page-title citizen-title">
             <p className="eyebrow">Bản đồ TP.HCM</p>
             <h2>Theo dõi khu vực và vụ việc</h2>
-            <span>Theo dõi tình hình an ninh theo thời gian thực.</span>
+            <span>Theo dõi tình hình an ninh theo thời gian thực</span>
           </section>
 
           <section className="citizen-map-wrapper">

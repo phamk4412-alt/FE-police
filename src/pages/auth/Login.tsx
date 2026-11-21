@@ -68,7 +68,7 @@ function Login() {
       <section className="login-card google-login-card">
         <div className="section-heading">
           <h2>Đăng nhập</h2>
-          <p className="login-card-subtitle">Chào mừng trở lại. Đăng nhập để tiếp tục.</p>
+          <p className="login-card-subtitle">Dùng email hoặc tài khoản Google đã đăng ký</p>
         </div>
 
         <form className="auth-form" onSubmit={handlePasswordSubmit}>
