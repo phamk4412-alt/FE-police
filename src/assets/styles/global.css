@@ -919,7 +919,7 @@ a {
   display: grid;
   gap: 8px;
   color: var(--ink);
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .field span {
@@ -2810,116 +2810,16 @@ tbody tr:hover {
 }
 
 .quick-report-form {
-  gap: 14px;
-  border-color: rgba(255, 70, 85, 0.34);
-  background:
-    radial-gradient(circle at 100% 0%, rgba(255, 70, 85, 0.2), transparent 34%),
-    linear-gradient(145deg, rgba(45, 18, 27, 0.68), rgba(16, 27, 39, 0.96)),
-    var(--surface);
-  box-shadow:
-    0 18px 44px rgba(0, 0, 0, 0.3),
-    0 0 36px rgba(255, 70, 85, 0.1);
-}
-
-.quick-report-form::after {
-  position: absolute;
-  top: -1px;
-  right: 22px;
-  left: 22px;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 70, 85, 0.72), transparent);
-  content: "";
+  gap: 16px;
 }
 
 .quick-report-form .section-heading {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
-.quick-report-form .section-heading::before {
-  display: grid;
-  flex: 0 0 38px;
-  width: 38px;
-  height: 38px;
-  place-items: center;
-  border: 1px solid rgba(255, 70, 85, 0.44);
-  border-radius: 10px;
-  color: #ffffff;
-  background:
-    linear-gradient(135deg, rgba(255, 70, 85, 0.72), rgba(127, 29, 29, 0.82)),
-    rgba(255, 70, 85, 0.14);
-  box-shadow: 0 0 22px rgba(255, 70, 85, 0.24);
-  content: "!";
-  font-weight: 950;
-}
-
-.quick-report-form .section-heading::after {
-  align-self: flex-start;
-  margin-left: auto;
-  border: 1px solid rgba(74, 222, 128, 0.34);
-  border-radius: 999px;
-  padding: 5px 10px;
-  color: #bbf7d0;
-  background: rgba(22, 101, 52, 0.28);
-  box-shadow: 0 0 18px rgba(74, 222, 128, 0.12);
-  content: "Đang hoạt động";
-  font-size: 0.72rem;
-  font-weight: 900;
-  white-space: nowrap;
-}
-
-.quick-report-form .section-heading > div {
-  position: relative;
-}
-
-.quick-report-form .section-heading > div::after {
-  position: absolute;
-  right: -54px;
-  bottom: 8px;
-  left: 0;
-  height: 8px;
-  background: linear-gradient(90deg, rgba(255, 70, 85, 0.22), transparent);
-  content: "";
-  filter: blur(7px);
-}
-
-.quick-report-form :is(input, select, textarea) {
-  border-color: rgba(255, 255, 255, 0.11);
-  background:
-    linear-gradient(180deg, rgba(8, 17, 26, 0.96), rgba(13, 25, 36, 0.96)),
-    var(--bg-dark);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
-}
-
-.quick-report-form :is(input, select, textarea):focus {
-  border-color: rgba(255, 70, 85, 0.58);
-  box-shadow:
-    0 0 0 3px rgba(255, 70, 85, 0.16),
-    0 0 22px rgba(255, 70, 85, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
-}
-
-.quick-report-form > .btn[type="submit"],
-.support-news-form > .btn[type="submit"] {
-  background: linear-gradient(135deg, #ff4655, #b91c1c);
-  box-shadow:
-    0 12px 28px rgba(255, 70, 85, 0.24),
-    inset 0 1px 0 rgba(255, 255, 255, 0.16);
-}
-
-.quick-report-form > .btn[type="submit"]:hover,
-.support-news-form > .btn[type="submit"]:hover {
-  box-shadow:
-    0 16px 34px rgba(255, 70, 85, 0.34),
-    0 0 26px rgba(255, 70, 85, 0.18);
-}
-
-.quick-report-form > .btn[type="submit"]:active,
-.support-news-form > .btn[type="submit"]:active {
-  transform: translateY(1px) scale(0.99);
+.quick-report-form > .btn[type="submit"] {
+  min-height: 48px;
+  margin-top: 4px;
 }
 
 .photo-actions {
