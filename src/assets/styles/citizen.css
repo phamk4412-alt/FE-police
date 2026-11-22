@@ -351,6 +351,19 @@
   text-transform: uppercase;
 }
 
+.map-card-citizen :is(.map-toolbar button, .map-mode-controls button, .crime-view-controls button, .map-footer-actions button) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+
+.map-card-citizen .admin-icon {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+}
+
 .citizen-title h2 {
   max-width: 24ch;
   font-size: clamp(2rem, 3.2vw, 2.9rem);

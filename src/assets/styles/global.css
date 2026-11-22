@@ -102,11 +102,19 @@ a {
 
 /* Slow, low-contrast motion for Vietnamese cultural motifs in citizen pages. */
 .vietnam-decor-user-home .vietnam-motif-drum svg,
+.vietnam-decor-user-map .vietnam-motif-drum svg,
 .vietnam-decor-user-map .vietnam-motif-dongson svg,
 .vietnam-decor-user-news .vietnam-motif-dongson svg {
   transform-box: fill-box;
   transform-origin: center;
-  animation: vietnam-drum-rotate 88s linear infinite;
+  animation: vietnam-drum-rotate 42s linear infinite;
+}
+
+.vietnam-decor-user-home .vietnam-motif-drum,
+.vietnam-decor-user-map .vietnam-motif-drum {
+  width: clamp(180px, 19vw, 300px);
+  opacity: 0.17;
+  filter: drop-shadow(0 0 28px currentColor);
 }
 
 .vietnam-decor-user-home .vietnam-motif-lotus svg,
@@ -4955,6 +4963,7 @@ tbody tr:hover {
 
 @media (prefers-reduced-motion: reduce) {
   .vietnam-decor-user-home .vietnam-motif-drum svg,
+  .vietnam-decor-user-map .vietnam-motif-drum svg,
   .vietnam-decor-user-map .vietnam-motif-dongson svg,
   .vietnam-decor-user-news .vietnam-motif-dongson svg,
   .vietnam-decor-user-home .vietnam-motif-lotus svg,

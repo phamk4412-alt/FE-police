@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
+import AdminIcon from "../admin/AdminIcons";
 import hospitalLogo from "../../assets/logos/hospital-logo.svg";
 import policeStationLogo from "../../assets/logos/police-station-logo.svg";
 import policeCarMarker from "../../assets/police-car-marker.png";
@@ -976,6 +977,7 @@ function MapView({
   const [showPoliceReportsLayer, setShowPoliceReportsLayer] = useState(true);
 
   const isSupportMap = role === "support";
+  const isCitizenMap = role === "user";
   const showUserToolbarActions = role === "user" && showModeControls && mode === "normal";
   const showPoliceToolbarActions = role === "police" && mode === "normal";
   const currentPoliceUsername = useMemo(
@@ -1766,7 +1768,7 @@ function MapView({
   }, [filteredIncidents, isSupportMap, mode]);
 
   return (
-    <section className={`map-card map-card-${variant} map-wrapper ${className}`.trim()} id="map">
+    <section className={`map-card map-card-${variant} map-wrapper ${isCitizenMap ? "map-card-citizen" : ""} ${className}`.trim()} id="map">
       <div className="section-heading map-heading">
         <div>
           <span className="eyebrow">Bản đồ</span>
@@ -1787,6 +1789,7 @@ function MapView({
                 type="button"
                 onClick={() => setPerspective("2d")}
               >
+                {isCitizenMap ? <AdminIcon name="map" /> : null}
                 2D
               </button>
               <button
@@ -1794,6 +1797,7 @@ function MapView({
                 type="button"
                 onClick={() => setPerspective("3d")}
               >
+                {isCitizenMap ? <AdminIcon name="view" /> : null}
                 3D
               </button>
             </div>
@@ -1801,9 +1805,11 @@ function MapView({
           {showUserToolbarActions ? (
             <div className="map-quick-search-controls" aria-label="Tìm nhanh điểm hỗ trợ gần nhất">
               <button type="button" onClick={() => void focusNearestFacility("police")}>
+                <AdminIcon name="police" />
                 Tìm C/A
               </button>
               <button type="button" onClick={() => void focusNearestFacility("hospital")}>
+                <AdminIcon name="ambulance" />
                 Tìm B/V
               </button>
             </div>
@@ -1856,6 +1862,7 @@ function MapView({
               type="button"
               onClick={() => setMode("normal")}
             >
+                {isCitizenMap ? <AdminIcon name="map" /> : null}
               Bản đồ thường
             </button>
             <button
@@ -1866,6 +1873,7 @@ function MapView({
                 setMode("crime");
               }}
             >
+                {isCitizenMap ? <AdminIcon name="alert" /> : null}
               Vụ án
             </button>
           </div>
@@ -1878,6 +1886,7 @@ function MapView({
                 type="button"
                 onClick={() => setCrimeView("heatmap")}
               >
+                {isCitizenMap ? <AdminIcon name="activity" /> : null}
                 Heatmap
               </button>
               <button
@@ -1886,6 +1895,7 @@ function MapView({
                 type="button"
                 onClick={() => setCrimeView("point")}
               >
+                {isCitizenMap ? <AdminIcon name="mapPin" /> : null}
                 Chấm
               </button>
             </div>
@@ -1933,6 +1943,7 @@ function MapView({
                 });
               }}
             >
+              {isCitizenMap ? <AdminIcon name="mapPin" /> : null}
               Căn lại bản đồ
             </button>
           </div>

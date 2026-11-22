@@ -43,12 +43,12 @@ const motifsByVariant: Record<VietnameseDecorVariant, Motif[]> = {
     { name: "lotus", slot: "field" },
   ],
   "user-home": [
-    { name: "lotus", slot: "corner-a" },
+    { name: "drum", slot: "corner-a" },
     { name: "waves", slot: "corner-b" },
-    { name: "drum", slot: "field" },
+    { name: "lotus", slot: "field" },
   ],
   "user-map": [
-    { name: "rice", slot: "corner-a" },
+    { name: "drum", slot: "corner-a" },
     { name: "waves", slot: "corner-b" },
     { name: "lotus", slot: "field" },
   ],
