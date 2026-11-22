@@ -100,6 +100,32 @@ a {
   height: auto;
 }
 
+/* Slow, low-contrast motion for Vietnamese cultural motifs in citizen pages. */
+.vietnam-decor-user-home .vietnam-motif-drum svg,
+.vietnam-decor-user-map .vietnam-motif-dongson svg,
+.vietnam-decor-user-news .vietnam-motif-dongson svg {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: vietnam-drum-rotate 88s linear infinite;
+}
+
+.vietnam-decor-user-home .vietnam-motif-lotus svg,
+.vietnam-decor-user-map .vietnam-motif-lotus svg,
+.vietnam-decor-user-news-detail .vietnam-motif-lotus svg {
+  transform-box: fill-box;
+  transform-origin: 50% 92%;
+  animation: vietnam-lotus-sway 11s ease-in-out infinite;
+}
+
+@keyframes vietnam-drum-rotate {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes vietnam-lotus-sway {
+  0%, 100% { transform: rotate(-1deg); }
+  50% { transform: rotate(1deg); }
+}
+
 .vietnam-motif-corner-a {
   top: 86px;
   right: clamp(18px, 3vw, 48px);
@@ -4928,6 +4954,15 @@ tbody tr:hover {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .vietnam-decor-user-home .vietnam-motif-drum svg,
+  .vietnam-decor-user-map .vietnam-motif-dongson svg,
+  .vietnam-decor-user-news .vietnam-motif-dongson svg,
+  .vietnam-decor-user-home .vietnam-motif-lotus svg,
+  .vietnam-decor-user-map .vietnam-motif-lotus svg,
+  .vietnam-decor-user-news-detail .vietnam-motif-lotus svg {
+    animation: none !important;
+  }
+
   *,
   *::before,
   *::after {
