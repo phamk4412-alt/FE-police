@@ -1,10 +1,15 @@
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState, type MouseEvent } from "react";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
+import MascotChat from "./MascotChat";
 
 const HIDDEN_KEY = "mascot-hidden";
 const MASCOT_NAME = "Bé Còi";
 const SHAKE_THRESHOLD = 22;
+// Three taps within this window open the chat panel.
+const CHAT_TAPS = 3;
+const CHAT_TAP_WINDOW_MS = 1200;
+const CHAT_HINT = `Bấm liên tục ${CHAT_TAPS} lần vào mình để chat với trợ lý AI nhé!`;
 
 type Mood = "idle" | "wave" | "jump" | "dizzy";
 
@@ -20,7 +25,7 @@ function getTips(pathname: string, name?: string): string[] {
       `${hello} Mình là ${MASCOT_NAME}, trợ lý nhỏ của bạn.`,
       "Đăng nhập bằng Google cho nhanh, khỏi nhớ mật khẩu nhé.",
       "Chưa có tài khoản? Bấm Đăng ký, chỉ mất vài giây thôi.",
-      "Chọc mình thêm lần nữa xem nào!",
+      CHAT_HINT,
     ];
   }
 
@@ -35,6 +40,7 @@ function getTips(pathname: string, name?: string): string[] {
   if (pathname.startsWith("/user")) {
     return [
       `${hello} Gặp sự việc gì cứ báo cho mình nhé.`,
+      CHAT_HINT,
       "Chọn loại sự việc, mô tả ngắn gọn rồi chụp ảnh hiện trường.",
       "Nhớ cập nhật vị trí để cảnh sát tìm đến bạn nhanh hơn.",
       "Khẩn cấp thì gọi 113 ngay, đừng chần chừ!",
@@ -45,6 +51,7 @@ function getTips(pathname: string, name?: string): string[] {
   if (pathname.startsWith("/police")) {
     return [
       `${hello} Chúc đồng chí một ca trực an toàn.`,
+      CHAT_HINT,
       "Các vụ việc được phân công nằm trong danh sách bên dưới.",
       "Xem bản đồ để biết vụ nào gần mình nhất.",
     ];
@@ -53,6 +60,7 @@ function getTips(pathname: string, name?: string): string[] {
   if (pathname.startsWith("/support")) {
     return [
       `${hello} Có báo cáo mới đang chờ xử lý đấy.`,
+      CHAT_HINT,
       "Chọn một báo cáo để xem ảnh và vị trí chi tiết.",
       "Đừng quên đăng tin cảnh báo cho người dân nhé.",
     ];
@@ -61,12 +69,13 @@ function getTips(pathname: string, name?: string): string[] {
   if (pathname.startsWith("/admin")) {
     return [
       `${hello} Mọi tài khoản đều nằm trong tay bạn.`,
+      CHAT_HINT,
       "Lọc theo vai trò để tìm tài khoản nhanh hơn.",
       "Khoá tài khoản đáng ngờ trước khi xoá nhé.",
     ];
   }
 
-  return [`${hello} Mình là ${MASCOT_NAME}.`];
+  return [`${hello} Mình là ${MASCOT_NAME}.`, CHAT_HINT];
 }
 
 function readHidden() {
@@ -207,11 +216,13 @@ function PoliceMascot() {
   const [mood, setMood] = useState<Mood>("wave");
   const [isBlinking, setIsBlinking] = useState(false);
   const [look, setLook] = useState({ x: 0, y: 0 });
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   const svgRef = useRef<SVGSVGElement | null>(null);
   const moodTimer = useRef<number | undefined>(undefined);
   const bubbleTimer = useRef<number | undefined>(undefined);
   const askedSensors = useRef(false);
+  const tapTimes = useRef<number[]>([]);
 
   const say = useCallback((text: string, nextMood: Mood = "wave") => {
     setMessage(text);
@@ -347,17 +358,51 @@ function PoliceMascot() {
     motion?.requestPermission?.().catch(() => undefined);
   }
 
-  function handlePoke() {
+  function handlePoke(event: MouseEvent<HTMLButtonElement>) {
     askSensorPermission();
     setIsBlinking(true);
     window.setTimeout(() => setIsBlinking(false), 160);
+
+    if (isChatOpen) {
+      setMood("jump");
+      window.clearTimeout(moodTimer.current);
+      moodTimer.current = window.setTimeout(() => setMood("idle"), 700);
+      return;
+    }
+
+    const now = event.timeStamp;
+    tapTimes.current = [...tapTimes.current.filter((time) => now - time < CHAT_TAP_WINDOW_MS), now];
+    if (tapTimes.current.length >= CHAT_TAPS) {
+      tapTimes.current = [];
+      openChat();
+      return;
+    }
+
     say(tips[tipIndex % tips.length], "jump");
     setTipIndex((index) => index + 1);
   }
 
+  function openChat() {
+    window.clearTimeout(bubbleTimer.current);
+    setMessage(null);
+    setIsChatOpen(true);
+    setMood("wave");
+    window.clearTimeout(moodTimer.current);
+    moodTimer.current = window.setTimeout(() => setMood("idle"), 1400);
+  }
+
+  const closeChat = useCallback(() => setIsChatOpen(false), []);
+
+  const celebrateAnswer = useCallback(() => {
+    setMood("wave");
+    window.clearTimeout(moodTimer.current);
+    moodTimer.current = window.setTimeout(() => setMood("idle"), 1400);
+  }, []);
+
   function handleHide() {
     writeHidden(true);
     setIsHidden(true);
+    setIsChatOpen(false);
     setMessage(null);
   }
 
@@ -375,8 +420,10 @@ function PoliceMascot() {
   }
 
   return (
-    <div className={`mascot is-${mood}`}>
-      {message ? (
+    <div className={`mascot is-${mood}${isChatOpen ? " is-chatting" : ""}`}>
+      {isChatOpen ? <MascotChat name={MASCOT_NAME} onAnswer={celebrateAnswer} onClose={closeChat} /> : null}
+
+      {message && !isChatOpen ? (
         <div className="mascot-bubble" role="status">
           <span className="mascot-bubble-name">{MASCOT_NAME}</span>
           <p>{message}</p>
@@ -387,7 +434,7 @@ function PoliceMascot() {
         ×
       </button>
 
-      <button aria-label={`Chọc ${MASCOT_NAME} để nghe mẹo`} className="mascot-body" onClick={handlePoke} type="button">
+      <button aria-label={`Chọc ${MASCOT_NAME} để nghe mẹo, bấm ${CHAT_TAPS} lần liền để chat`} className="mascot-body" onClick={handlePoke} type="button">
         <svg aria-hidden="true" className="mascot-svg" ref={svgRef} viewBox="0 0 120 150">
           <ellipse className="mascot-shadow" cx="60" cy="146" rx="32" ry="4" />
 
