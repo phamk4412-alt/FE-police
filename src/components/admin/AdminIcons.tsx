@@ -2,6 +2,8 @@ export type AdminIconName =
   | "activity"
   | "admin"
   | "alert"
+  | "camera"
+  | "check"
   | "ambulance"
   | "bell"
   | "chart"
@@ -15,8 +17,10 @@ export type AdminIconName =
   | "menu"
   | "close"
   | "mapPin"
+  | "image"
   | "phone"
   | "police"
+  | "send"
   | "search"
   | "settings"
   | "shield"
@@ -35,6 +39,8 @@ const paths: Record<AdminIconName, string> = {
   activity: "M4 13h4l2-6 4 12 2-6h4",
   admin: "M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6l7-3z M9 11l2 2 4-4",
   alert: "M12 3l9 16H3l9-16z M12 9v4 M12 17h.01",
+  camera: "M4 8h3l1.5-2h7L17 8h3v11H4z M12 10a3.5 3.5 0 100 7 3.5 3.5 0 000-7z",
+  check: "M5 12l4 4L19 6",
   ambulance: "M4 7h10v9H4z M14 10h3l3 3v3h-6z M7 19a2 2 0 100-4 2 2 0 000 4z M17 19a2 2 0 100-4 2 2 0 000 4z M8 9v4 M6 11h4",
   bell: "M17 16H7l1.2-2.2V10a3.8 3.8 0 017.6 0v3.8L17 16z M10 18h4",
   chart: "M5 19V9 M12 19V5 M19 19v-7",
@@ -48,8 +54,10 @@ const paths: Record<AdminIconName, string> = {
   menu: "M4 7h16 M4 12h16 M4 17h16",
   close: "M6 6l12 12 M18 6L6 18",
   mapPin: "M12 21s7-5 7-11a7 7 0 10-14 0c0 6 7 11 7 11z M12 7a3 3 0 100 6 3 3 0 000-6z",
+  image: "M4 5h16v14H4z M8 10a1.5 1.5 0 100-3 1.5 1.5 0 000 3z M4 16l5-5 3 3 2-2 6 6",
   phone: "M7 4l3 3-2 2c1 3 3 5 6 7l2-2 3 3-2 4c-7-1-13-7-14-14l4-3z",
   police: "M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6l7-3z M8 12h8",
+  send: "M21 3L10 14 M21 3l-7 18-4-7-7-4 18-7z",
   search: "M11 5a6 6 0 104.2 10.2L19 19 M15.2 15.2l-1.4-1.4",
   settings: "M12 8a4 4 0 100 8 4 4 0 000-8z M4 12h2 M18 12h2 M12 4v2 M12 18v2 M6.3 6.3l1.4 1.4 M16.3 16.3l1.4 1.4 M17.7 6.3l-1.4 1.4 M7.7 16.3l-1.4 1.4",
   shield: "M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6l7-3z",

@@ -20,6 +20,7 @@ function Sidebar({ isCollapsed, onNavigate, onToggle, role }: SidebarProps) {
   const [activeRoleItem, setActiveRoleItem] = useState(role === "support" ? "map" : "dashboard");
   const [currentTime, setCurrentTime] = useState(() => new Date());
   const hasMap = ROLES_WITH_MAP.includes(role);
+  const isCitizen = role === "user";
   const adminMenu = [
     { id: "dashboard", href: "/admin", icon: "chart", label: "Bảng điều khiển" },
     { id: "statistics", href: "#statistics", icon: "activity", label: "Thống kê" },
@@ -80,7 +81,33 @@ function Sidebar({ isCollapsed, onNavigate, onToggle, role }: SidebarProps) {
       </div>
 
       <nav className="sidebar-nav" aria-label="Điều hướng bảng điều khiển" onClick={onNavigate}>
-        {role === "admin" ? (
+        {isCitizen ? (
+          <>
+            {([
+              { id: "dashboard", href: "/user", icon: "chart", label: "Bảng điều khiển" },
+              { id: "map", href: "/user/map", icon: "map", label: "Bản đồ" },
+              { id: "news", href: "/user/news", icon: "file", label: "Tin tức" },
+              { id: "settings", href: "#settings", icon: "settings", label: "Cài đặt" },
+            ] as const).map((item) => (
+              <a
+                className={(item.id === "dashboard" ? location.pathname === "/user" : item.id === "map" ? location.pathname === "/user/map" : item.id === "news" ? location.pathname.startsWith("/user/news") : false) ? "is-active" : ""}
+                href={item.href}
+                key={item.id}
+                title={item.label}
+                data-tooltip={item.label}
+                onClick={(event) => {
+                  if (item.href.startsWith("/")) {
+                    event.preventDefault();
+                    navigate(item.href);
+                  }
+                }}
+              >
+                <span className="sidebar-nav-icon" aria-hidden="true"><AdminIcon name={item.icon} /></span>
+                <span className="sidebar-nav-label">{item.label}</span>
+              </a>
+            ))}
+          </>
+        ) : role === "admin" ? (
           adminMenu.map((item) =>
             item.href.startsWith("#") ? (
               <a

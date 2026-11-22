@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../../auth/AuthContext";
 import Button from "../../components/common/Button";
 import AdminIcon, { type AdminIconName } from "../../components/admin/AdminIcons";
 import DashboardLayout from "../../components/layout/DashboardLayout";
@@ -62,6 +63,7 @@ type UserDashboardTab = "home" | "map" | "news";
 function UserDashboard() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const cameraInputRef = useRef<HTMLInputElement | null>(null);
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -366,26 +368,35 @@ function UserDashboard() {
       ) : tab === "home" ? (
         <>
           <section className="page-title citizen-title">
-            <p className="eyebrow">Người dân</p>
-            <h2>Báo cáo sự cố</h2>
-            <span>Chọn loại vụ việc, mô tả ngắn gọn và gửi kèm vị trí hiện tại của bạn</span>
+            <p className="eyebrow">Báo cáo sự cố</p>
+            <h2>Chụp ảnh. Chúng tôi hỗ trợ phần còn lại.</h2>
+            <span>Gửi thông tin hiện trường nhanh chóng, giảm thao tác nhập liệu.</span>
           </section>
 
-          <section className="citizen-home-grid">
-            <MapView
-              className="home-main-map"
-              currentLocationLabel="Vị trí hiện tại của bạn"
-              defaultToCurrentLocation
-              role="user"
-              showPoiInNormal={false}
-              title="Vị trí của bạn tại TP.HCM"
-              variant="compact"
-            />
+          <ol className="citizen-report-steps" aria-label="Các bước gửi báo cáo">
+            {["Chụp ảnh", "Thông tin", "Kiểm tra", "Hoàn tất"].map((label, index) => {
+              const currentStep = formMessage?.type === "success" ? 4 : images.length ? 2 : 1;
+              const complete = index + 1 < currentStep;
+              return (
+                <li className={index + 1 === currentStep ? "is-current" : complete ? "is-complete" : ""} key={label}>
+                  <span>{complete ? <AdminIcon name="check" /> : index + 1}</span>
+                  <strong>{label}</strong>
+                </li>
+              );
+            })}
+          </ol>
 
+          <section className="citizen-report-layout">
             <form className="panel report-form quick-report-form" onSubmit={handleSubmit}>
+              <div className="citizen-report-intro">
+                <span className="citizen-ai-badge"><AdminIcon name="activity" /> Hỗ trợ ghi nhận</span>
+                <h2>Ghi nhận hiện trường bằng hình ảnh</h2>
+                <p>Chụp ảnh và thêm thông tin cần thiết. Vị trí được lấy từ thiết bị; hệ thống chưa phân tích ảnh bằng AI.</p>
+              </div>
+              <div className="citizen-report-body">
               <div className="section-heading">
                 <div>
-                  <span className="eyebrow">Báo cáo</span>
+                  <span className="eyebrow">Thông tin sự cố</span>
                   <h2>Gửi vụ việc</h2>
                 </div>
               </div>
@@ -450,9 +461,11 @@ function UserDashboard() {
 
               <div className="photo-actions">
                 <button className="btn btn-secondary" type="button" onClick={() => void openLiveCamera()}>
+                  <AdminIcon name="camera" />
                   Chụp ảnh
                 </button>
                 <button className="btn btn-ghost" type="button" onClick={() => uploadInputRef.current?.click()}>
+                  <AdminIcon name="image" />
                   Chọn ảnh
                 </button>
                 <input
@@ -507,6 +520,7 @@ function UserDashboard() {
               ) : null}
 
               <Button disabled={isSubmitting} type="submit">
+                <AdminIcon name={isSubmitting ? "activity" : "send"} />
                 {isSubmitting ? "Đang gửi..." : "Gửi báo cáo"}
               </Button>
               {formMessage ? (
@@ -517,40 +531,21 @@ function UserDashboard() {
                   {formMessage.text}
                 </span>
               ) : null}
-            </form>
-          </section>
-
-          <section className="home-bottom-grid">
-            <article className="panel emergency-card">
-              <span className="eyebrow">Số khẩn cấp</span>
-              {emergencyNumbers.map((item) => (
-                <a
-                  className={`emergency-number-card emergency-tone-${item.tone}`}
-                  href={`tel:${item.number}`}
-                  key={item.number}
-                >
-                  <span className="emergency-icon">
-                    <AdminIcon name={item.icon} />
-                  </span>
-                  <span>{item.label}</span>
-                  <strong>{item.number}</strong>
-                  <small>{item.note}</small>
-                </a>
-              ))}
-            </article>
-
-            <article className="panel location-card">
-              <div>
-                <span className="eyebrow">Định vị</span>
-                <h2>Vị trí hiện tại</h2>
-                <p aria-live="polite">{locationText}</p>
-                {locationError ? <p>{locationError}</p> : null}
               </div>
-              <Button disabled={locationStatus === "loading"} type="button" variant="secondary" onClick={updateCurrentLocation}>
-                Cập nhật vị trí
-              </Button>
-            </article>
+            </form>
+
+            <aside className="citizen-support-panel">
+              <div className="citizen-support-heading"><span className="eyebrow">Thông tin tự động</span><h2>Hệ thống đang hỗ trợ bạn</h2></div>
+              <article className="citizen-support-item"><span className="citizen-support-icon"><AdminIcon name="user" /></span><div><small>Người báo cáo</small><strong>{user?.name || user?.email || "Người dân"}</strong><span>Từ tài khoản đang đăng nhập</span></div></article>
+              <article className="citizen-support-location">
+                <div className="citizen-support-item"><span className="citizen-support-icon is-location"><AdminIcon name="mapPin" /></span><div><small>Vị trí tự động</small><strong>{locationText}</strong></div><button type="button" disabled={locationStatus === "loading"} onClick={updateCurrentLocation}>Cập nhật</button></div>
+                <MapView className="citizen-mini-map" currentLocationLabel="Vị trí hiện tại của bạn" defaultToCurrentLocation role="user" showPoiInNormal={false} title="Vị trí hiện tại trên bản đồ" variant="compact" />
+              </article>
+              <article className="citizen-support-item"><span className="citizen-support-icon is-time"><AdminIcon name="clock" /></span><div><small>Thời gian tiếp nhận</small><strong>{new Intl.DateTimeFormat("vi-VN", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date())}</strong><span>Thời gian hệ thống ghi nhận khi gửi báo cáo</span></div></article>
+              <div className="citizen-emergency-links"><span className="eyebrow">Số khẩn cấp</span>{emergencyNumbers.map((item) => <a href={`tel:${item.number}`} key={item.number}><AdminIcon name={item.icon} /> {item.label} <strong>{item.number}</strong></a>)}</div>
+            </aside>
           </section>
+
         </>
       ) : tab === "map" ? (
         <>

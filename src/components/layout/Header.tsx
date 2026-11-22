@@ -14,9 +14,9 @@ interface HeaderProps {
 }
 
 const userTabs = [
-  { id: "home", label: "Trang chủ" },
-  { id: "map", label: "Bản đồ" },
-  { id: "news", label: "Tin tức" },
+  { id: "home", label: "Trang chủ", icon: "chart" },
+  { id: "map", label: "Bản đồ", icon: "map" },
+  { id: "news", label: "Tin tức", icon: "file" },
 ] as const;
 
 const supportTabs = [
@@ -64,6 +64,7 @@ function Header({
               type="button"
               onClick={() => onUserTabChange(tab.id)}
             >
+              <AdminIcon name={tab.icon} />
               {tab.label}
             </button>
           ))}

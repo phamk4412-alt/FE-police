@@ -334,3 +334,282 @@
   min-width: 0;
   max-width: 100%;
 }
+
+/* Citizen reporting flow, aligned with the supplied Figma screens. */
+.citizen-title {
+  gap: 5px;
+  padding: 10px 0 2px;
+}
+
+.citizen-title .eyebrow,
+.citizen-support-panel .eyebrow,
+.citizen-report-body .eyebrow {
+  color: var(--primary);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.citizen-title h2 {
+  max-width: 24ch;
+  font-size: clamp(2rem, 3.2vw, 2.9rem);
+  font-weight: 500;
+  letter-spacing: -0.045em;
+  line-height: 1.2;
+}
+
+.citizen-report-steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(13, 21, 30, 0.88);
+  list-style: none;
+}
+
+.citizen-report-steps li {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  color: #7e8b99;
+}
+
+.citizen-report-steps li:not(:last-child)::after {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  left: 42px;
+  height: 1px;
+  background: var(--line);
+  content: "";
+}
+
+.citizen-report-steps li > span {
+  z-index: 1;
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  place-items: center;
+  border: 1px solid #334252;
+  border-radius: 50%;
+  background: #101923;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.citizen-report-steps li strong {
+  z-index: 1;
+  padding-right: 10px;
+  background: #0d151e;
+  font-size: 0.76rem;
+  font-weight: 650;
+}
+
+.citizen-report-steps li.is-current,
+.citizen-report-steps li.is-complete { color: var(--ink); }
+
+.citizen-report-steps li.is-current > span,
+.citizen-report-steps li.is-complete > span {
+  border-color: var(--primary);
+  color: white;
+  background: var(--primary);
+  box-shadow: 0 0 0 5px rgba(255, 70, 85, 0.12);
+}
+
+.citizen-report-steps .admin-icon { width: 16px; height: 16px; }
+.dashboard-header .header-tabs[aria-label="Chuyển trang người dân"] button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.dashboard-header .header-tabs[aria-label="Chuyển trang người dân"] .admin-icon { width: 15px; height: 15px; }
+
+.citizen-report-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(310px, 0.82fr);
+  align-items: start;
+  gap: 18px;
+}
+
+.citizen-report-layout > .quick-report-form,
+.citizen-support-panel {
+  min-width: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(16, 26, 37, 0.98), rgba(9, 16, 24, 0.98));
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.22);
+}
+
+.citizen-report-intro {
+  position: relative;
+  overflow: hidden;
+  padding: 32px 34px 30px;
+  border-bottom: 1px solid var(--line);
+  background: radial-gradient(ellipse at 100% 30%, rgba(255, 70, 85, 0.13), transparent 42%), linear-gradient(110deg, rgba(73, 38, 55, 0.3), transparent 72%);
+}
+
+.citizen-ai-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 14px;
+  border: 1px solid rgba(255, 70, 85, 0.5);
+  border-radius: 999px;
+  padding: 6px 11px;
+  color: #ff8791;
+  background: rgba(255, 70, 85, 0.1);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.citizen-ai-badge .admin-icon { width: 15px; height: 15px; }
+
+.citizen-report-intro h2 {
+  margin: 0;
+  font-size: clamp(1.25rem, 2vw, 1.7rem);
+  font-weight: 550;
+  letter-spacing: -0.025em;
+  line-height: 1.35;
+}
+
+.citizen-report-intro p {
+  max-width: 80ch;
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.6;
+}
+
+.citizen-report-body {
+  display: grid;
+  gap: 16px;
+  padding: 26px 30px 30px;
+}
+
+.citizen-report-body .section-heading { margin: 0; }
+.citizen-report-body .section-heading h2 { margin: 2px 0 0; font-size: 1.12rem; }
+
+.citizen-report-body .field { gap: 7px; }
+.citizen-report-body .field > span { color: #9ca9b7; font-size: 0.8rem; }
+.citizen-report-body :is(input:not([type="file"]), select, textarea) {
+  border-color: #263443;
+  border-radius: 10px;
+  background: #0b121a;
+}
+
+.citizen-report-body .photo-actions { grid-template-columns: 1.35fr 1fr; gap: 10px; }
+.citizen-report-body .photo-actions .btn {
+  display: flex;
+  min-height: 76px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border-radius: 12px;
+  font-weight: 700;
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease, background 180ms ease;
+}
+
+.citizen-report-body .photo-actions .btn-secondary {
+  border-color: transparent;
+  color: white;
+  background: linear-gradient(110deg, #fa3855, #dc1736);
+  box-shadow: 0 12px 28px rgba(225, 32, 62, 0.2);
+}
+
+.citizen-report-body .photo-actions .btn-ghost {
+  border: 1px dashed #405062;
+  color: #c3ccd6;
+  background: rgba(8, 15, 22, 0.45);
+}
+
+.citizen-report-body .photo-actions .btn:hover { transform: translateY(-2px); }
+.citizen-report-body .photo-actions .admin-icon { width: 20px; height: 20px; }
+.citizen-report-body .quick-report-form > .btn[type="submit"] { justify-self: end; min-width: 190px; }
+.citizen-report-body > .btn[type="submit"] .admin-icon { width: 17px; height: 17px; margin-right: 7px; vertical-align: middle; }
+
+.citizen-support-panel {
+  display: grid;
+  gap: 10px;
+  padding: 20px;
+}
+
+.citizen-support-heading { padding: 8px 2px 6px; }
+.citizen-support-heading h2 { margin: 8px 0 0; font-size: 1.08rem; font-weight: 600; }
+
+.citizen-support-item,
+.citizen-support-location {
+  min-width: 0;
+  border: 1px solid #24313e;
+  border-radius: 12px;
+  background: rgba(9, 16, 23, 0.7);
+}
+
+.citizen-support-item { display: flex; align-items: center; gap: 12px; padding: 14px; }
+.citizen-support-icon { display: grid; width: 40px; height: 40px; flex: none; place-items: center; border-radius: 11px; color: #ff7887; background: rgba(255, 70, 85, 0.12); }
+.citizen-support-icon.is-location { color: #42c9e6; background: rgba(56, 189, 248, 0.1); }
+.citizen-support-icon.is-time { color: #ffb454; background: rgba(245, 158, 11, 0.1); }
+.citizen-support-icon .admin-icon { width: 20px; height: 20px; }
+.citizen-support-item > div { display: grid; min-width: 0; gap: 3px; }
+.citizen-support-item small { color: #8593a2; font-size: 0.63rem; font-weight: 750; letter-spacing: 0.04em; text-transform: uppercase; }
+.citizen-support-item strong { overflow-wrap: anywhere; font-size: 0.76rem; }
+.citizen-support-item > div > span { color: #738191; font-size: 0.66rem; line-height: 1.45; }
+.citizen-support-location { display: grid; gap: 10px; padding: 10px; }
+.citizen-support-location .citizen-support-item { border: 0; padding: 2px; background: transparent; }
+.citizen-support-location .citizen-support-item > button { margin-left: auto; border: 0; padding: 6px; color: #44c8e4; background: transparent; font-size: 0.68rem; font-weight: 700; cursor: pointer; }
+.citizen-support-location .citizen-support-item > button:disabled { opacity: 0.5; cursor: wait; }
+.citizen-mini-map { min-width: 0; }
+.citizen-mini-map .map-heading { display: none; }
+.citizen-mini-map .mapbox-container,
+.citizen-mini-map .map-token-warning { min-height: 150px; height: 150px; border-radius: 9px; }
+.citizen-mini-map .map-controls,
+.citizen-mini-map .map-legend { display: none; }
+.citizen-emergency-links { display: grid; gap: 7px; padding: 8px 2px 2px; }
+.citizen-emergency-links > .eyebrow { margin-bottom: 2px; }
+.citizen-emergency-links a { display: flex; align-items: center; gap: 8px; border: 1px solid #24313e; border-radius: 9px; padding: 8px 10px; color: #c5cfda; font-size: 0.73rem; transition: border-color 160ms ease, background 160ms ease; }
+.citizen-emergency-links a:hover { border-color: rgba(255, 70, 85, 0.55); background: rgba(255, 70, 85, 0.07); }
+.citizen-emergency-links a .admin-icon { width: 16px; height: 16px; color: var(--primary); }
+.citizen-emergency-links a strong { margin-left: auto; color: #ff6371; }
+
+.citizen-report-layout .image-preview-grid figure { animation: citizen-image-in 220ms ease both; }
+.citizen-report-layout .image-preview-grid button { transition: transform 160ms ease, background 160ms ease; }
+.citizen-report-layout .image-preview-grid button:hover { transform: scale(1.04); background: var(--primary-dark); }
+.citizen-report-layout .camera-capture-panel { animation: citizen-panel-in 220ms ease both; }
+
+@keyframes citizen-image-in { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: none; } }
+@keyframes citizen-panel-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+@media (max-width: 1050px) {
+  .citizen-report-layout { grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.8fr); gap: 14px; }
+  .citizen-report-body { padding: 22px; }
+}
+
+@media (max-width: 760px) {
+  .citizen-report-layout { grid-template-columns: minmax(0, 1fr); }
+  .citizen-report-steps { gap: 5px; padding: 12px 9px; }
+  .citizen-report-steps li { gap: 6px; }
+  .citizen-report-steps li:not(:last-child)::after { left: 32px; }
+  .citizen-report-steps li > span { width: 28px; height: 28px; font-size: 0.68rem; }
+  .citizen-report-steps li strong { padding-right: 2px; font-size: 0.62rem; }
+  .citizen-report-intro { padding: 22px 18px; }
+  .citizen-report-body { padding: 18px; }
+  .citizen-report-body .photo-actions { grid-template-columns: minmax(0, 1fr); }
+  .citizen-report-body .photo-actions .btn { min-height: 54px; }
+  .citizen-support-panel { padding: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .citizen-report-layout *,
+  .citizen-report-steps * { scroll-behavior: auto !important; animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
