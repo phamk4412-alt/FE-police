@@ -3,6 +3,22 @@
     gap: 10px;
     padding: 10px 12px;
   }
+.quick-report-form .capture-fields {
+  margin: 0;
+  border: 0;
+  min-inline-size: 0;
+}
+
+.capture-fields .section-heading p,
+.capture-fields figcaption,
+.capture-preview dt { color: var(--muted); font-size: 0.8rem; }
+
+.capture-fields figcaption { padding: 8px; overflow-wrap: anywhere; }
+.capture-fields .image-preview-grid button { top: 8px; bottom: auto; }
+.capture-confirm { display: flex; align-items: center; gap: 10px; }
+.capture-preview { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); margin: 0; }
+.capture-preview > div { min-width: 0; padding: 12px; border: 1px solid var(--line); border-radius: 10px; }
+.capture-preview dd { margin: 4px 0 0; overflow-wrap: anywhere; }
 
   .dashboard-header:has(.header-tabs[aria-label="Chuyển trang người dân"]) h1 {
     font-size: 0.9375rem;
