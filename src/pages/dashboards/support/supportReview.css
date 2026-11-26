@@ -17,38 +17,8 @@
 }
 
 .dashboard-content:has(> .support-review) > .support-review { animation: none; }
-.dashboard-shell:has(.support-review) .dashboard-main { background: #0a0f15; }
-.dashboard-shell:has(.support-review) .dashboard-header .eyebrow { color: #ff4964; }
+.dashboard-shell:has(.support-review) .dashboard-header { position: sticky; top: 0; z-index: 30; }
 .dashboard-shell:has(.support-review) .sidebar-nav a[aria-current="page"] { background: #261721; border-color: #803246; }
-.dashboard-header .header-tabs[aria-label="Chuyển trang hỗ trợ"] button .admin-icon {
-  vertical-align: -3px;
-  margin-right: 4px;
-  width: 15px;
-  height: 15px;
-}
-
-.review-decor {
-  position: absolute;
-  z-index: -1;
-  inset: -24px -24px 0;
-  overflow: clip;
-  pointer-events: none;
-  background: radial-gradient(ellipse at 88% 5%, #47263826, transparent 59%);
-}
-.review-drum, .review-orbits, .review-lotus { position: absolute; color: #a87139; }
-.review-drum { width: clamp(380px, 52vw, 1000px); top: 14px; right: -14%; opacity: .20; animation: review-spin 140s linear infinite; }
-.review-orbits {
-  width: clamp(290px, 48vw, 850px);
-  aspect-ratio: 1;
-  top: 9%;
-  right: -10%;
-  border: 1px solid currentColor;
-  border-radius: 50%;
-  box-shadow: 0 0 0 38px #a8713940, inset 0 0 0 28px #a871391f;
-  opacity: .10;
-  animation: review-orbit 19s ease-in-out infinite alternate;
-}
-.review-lotus { width: clamp(250px, 39vw, 730px); bottom: 0; left: 1%; opacity: .16; animation: review-drift 24s ease-in-out infinite alternate; }
 .review-content { position: relative; display: grid; gap: 18px; }
 .review-heading { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 20px; padding: 12px 0 6px; }
 .review-heading h2 { margin: 6px 0; font-size: clamp(1.85rem, 3.4vw, 3rem); line-height: 1.12; letter-spacing: -.045em; }
@@ -192,9 +162,9 @@ body:has(.review-dialog[open]) { overflow: hidden; }
 }
 .review-drawer::backdrop { backdrop-filter: blur(4px); }
 @media (min-width: 1101px) {
-  .review-drawer { top: 76px; height: calc(100dvh - 76px); }
-  .review-drawer::backdrop { clip-path: inset(76px 0 0 272px); }
-  .is-sidebar-collapsed .review-drawer::backdrop { clip-path: inset(76px 0 0 84px); }
+  .review-drawer { top: var(--support-header-height); height: calc(100dvh - var(--support-header-height)); }
+  .review-drawer::backdrop { clip-path: inset(var(--support-header-height) 0 0 272px); }
+  .is-sidebar-collapsed .review-drawer::backdrop { clip-path: inset(var(--support-header-height) 0 0 84px); }
 }
 .review-modal { width: min(560px, calc(100% - 24px)); max-height: calc(100dvh - 28px); border-radius: 14px; transform: translateY(10px) scale(.98); }
 @starting-style {
@@ -266,9 +236,6 @@ body:has(.review-dialog[open]) { overflow: hidden; }
 .review-modal-head { border-bottom: 1px solid var(--review-edge); }
 .review-modal-head h3, .review-modal-body > :first-child { margin: 0; }
 
-@keyframes review-spin { to { transform: rotate(360deg); } }
-@keyframes review-orbit { to { opacity: .22; transform: translate(10px, 10px) scale(1.03); } }
-@keyframes review-drift { to { opacity: .24; transform: translateY(-10px) rotate(2deg); } }
 @keyframes review-enter { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
 @media (max-width: 900px) {
@@ -281,7 +248,6 @@ body:has(.review-dialog[open]) { overflow: hidden; }
   .review-stat { padding: 11px; min-height: 110px; }
   .review-stat-icon { width: 34px; height: 34px; right: 8px; }
   .review-content { gap: 13px; }
-  .review-decor { inset-inline: 0; }
   .review-tabs { gap: 9px; }
   .review-tabs button { min-height: 44px; }
   .review-tabs button > .admin-icon { display: none; }

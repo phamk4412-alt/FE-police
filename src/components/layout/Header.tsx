@@ -20,10 +20,10 @@ const userTabs = [
 ] as const;
 
 const supportTabs = [
-  { id: "duty", label: "Thường trực" },
-  { id: "tracking", label: "Theo dõi Công an" },
+  { id: "duty", label: "Thường trực", icon: "activity" },
+  { id: "tracking", label: "Theo dõi Công an", icon: "users" },
   { id: "review", label: "Duyệt vụ việc", icon: "review" },
-  { id: "news", label: "Tin tức" },
+  { id: "news", label: "Tin tức", icon: "file" },
 ] as const;
 
 function Header({
@@ -81,7 +81,7 @@ function Header({
               onClick={() => onSupportTabChange(tab.id)}
               aria-current={activeSupportTab === tab.id ? "page" : undefined}
             >
-              {"icon" in tab && <AdminIcon name={tab.icon} />}
+              <AdminIcon name={tab.icon} />
               {tab.label}
             </button>
           ))}

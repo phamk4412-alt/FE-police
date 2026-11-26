@@ -61,6 +61,8 @@
 .support-officer-filters { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-width: 0; border-top: 1px solid #202e3b; border-bottom: 1px solid #202e3b; padding: 11px 16px; }
 .support-officer-shift-filters,
 .support-officer-connection-filter { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.support-officer-filters, .support-officer-shift-filters { flex-wrap: wrap; }
+.support-officer-connection-filter { flex: none; }
 .support-officer-shift-filters > span,
 .support-officer-connection-filter > span { margin-right: 2px; color: #83909f; font-size: 10px; font-weight: 700; white-space: nowrap; }
 .support-officer-shift-filters button { min-height: 31px; border: 1px solid #243341; border-radius: 8px; padding: 0 9px; color: #a5afbb; background: #0b141d; font-size: 9px; font-weight: 650; white-space: nowrap; cursor: pointer; }

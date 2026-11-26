@@ -6,6 +6,10 @@ export type AdminIconName =
   | "check"
   | "chevronRight"
   | "filter"
+  | "edit"
+  | "refresh"
+  | "star"
+  | "layers"
   | "review"
   | "vehicle"
   | "tree"
@@ -48,6 +52,10 @@ const paths: Record<AdminIconName, string> = {
   check: "M5 12l4 4L19 6",
   chevronRight: "M9 5l7 7-7 7",
   filter: "M4 5h16l-6 7v6l-4 2v-8z",
+  edit: "M13 6l5 5M4 20l5-1L20 8l-5-5L4 14z",
+  refresh: "M20 5v5h-5 M20 10a8 8 0 1 0 .7 5",
+  star: "M12 3l2.8 5.8 6.4.9-4.6 4.5 1.1 6.3-5.7-3-5.7 3 1.1-6.3-4.6-4.5 6.4-.9z",
+  layers: "M12 3l9 5-9 5-9-5z M3 12l9 5 9-5 M3 16l9 5 9-5",
   review: "M9 5H5v16h14V5h-4 M9 3h6v5H9z M8 14l3 3 5-5",
   vehicle: "M5 17v2m14-2v2M4 12l2-6h12l2 6v5H4z M4 12h16 M7 15h1m8 0h1",
   tree: "M12 15v6 M12 3l6 7h-3l5 6H4l5-6H6z",

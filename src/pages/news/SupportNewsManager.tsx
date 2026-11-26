@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import AdminIcon from "../../components/admin/AdminIcons";
 import {
   createSupportNews,
   deleteSupportNews,
@@ -265,16 +266,16 @@ function SupportNewsManager() {
     <>
       {toast ? (
         <div className={`support-news-toast ${toast.tone === "success" ? "is-success" : "is-error"}`} role="alert">
-          <strong>!</strong>
+          <strong><AdminIcon name={toast.tone === "success" ? "check" : "alert"} /></strong>
           <span>{toast.text}</span>
           <button type="button" aria-label="Đóng thông báo" onClick={() => setToast(null)}>
-            Đóng
+            <AdminIcon name="close" /> Đóng
           </button>
         </div>
       ) : null}
 
       <section className="page-title support-title">
-        <p className="eyebrow">Tin tức</p>
+        <p className="eyebrow support-icon-label"><AdminIcon name="file" /> Tin tức</p>
         <h2>Quản lý bản tin người dân</h2>
         <span>Tạo, chỉnh sửa, publish và sắp xếp tin nổi bật thật nhanh.</span>
       </section>
@@ -283,12 +284,12 @@ function SupportNewsManager() {
         <form className="panel support-news-form" onSubmit={handleSubmit}>
           <div className="section-heading support-news-form-heading">
             <div>
-              <span className="eyebrow">{editingId ? "Chỉnh sửa" : "Tạo tin"}</span>
+              <span className="eyebrow support-icon-label"><AdminIcon name={editingId ? "edit" : "file"} /> {editingId ? "Chỉnh sửa" : "Tạo tin"}</span>
               <h2>{editingId ? "Cập nhật bài viết" : "Bài viết mới"}</h2>
             </div>
             {editingId ? (
               <button className="btn btn-ghost" type="button" onClick={resetForm}>
-                Hủy
+                <AdminIcon name="close" /> Hủy
               </button>
             ) : null}
           </div>
@@ -318,7 +319,7 @@ function SupportNewsManager() {
 
           <div className="support-news-field-row">
             <label className="field" htmlFor="news-thumbnail">
-              <span>Thumbnail image</span>
+              <span className="support-icon-label"><AdminIcon name="image" /> Thumbnail image</span>
               <input
                 id="news-thumbnail"
                 placeholder="https://..."
@@ -328,7 +329,7 @@ function SupportNewsManager() {
             </label>
 
             <label className="field" htmlFor="news-category">
-              <span>Category</span>
+              <span className="support-icon-label"><AdminIcon name="filter" /> Category</span>
               <input
                 id="news-category"
                 value={form.category}
@@ -339,7 +340,7 @@ function SupportNewsManager() {
 
           <div className="support-news-field-row">
             <label className="field" htmlFor="news-status">
-              <span>Trạng thái</span>
+              <span className="support-icon-label"><AdminIcon name="activity" /> Trạng thái</span>
               <select
                 id="news-status"
                 value={form.status}
@@ -352,7 +353,7 @@ function SupportNewsManager() {
             </label>
 
             <label className="field" htmlFor="featured-order">
-              <span>Thứ tự nổi bật</span>
+              <span className="support-icon-label"><AdminIcon name="star" /> Thứ tự nổi bật</span>
               <select
                 id="featured-order"
                 disabled={!form.isFeatured}
@@ -377,6 +378,7 @@ function SupportNewsManager() {
           </label>
 
           <button className="btn btn-primary" disabled={isSubmitting} type="submit">
+            <AdminIcon name={isSubmitting ? "activity" : editingId ? "check" : "file"} />
             {isSubmitting ? "Đang lưu..." : editingId ? "Lưu thay đổi" : "Tạo tin"}
           </button>
         </form>
@@ -384,17 +386,17 @@ function SupportNewsManager() {
         <section className="support-news-right-column">
           <div className="support-news-stats" aria-label="Thống kê tin tức">
             <article className="support-news-stat is-priority">
-              <span>Tin đáng chú ý</span>
+              <span className="support-icon-label"><AdminIcon name="bell" /> Tin đáng chú ý</span>
               <strong>{stats.priority}</strong>
               <small>Tối đa 1 bài</small>
             </article>
             <article className="support-news-stat is-featured">
-              <span>Tin nổi bật</span>
+              <span className="support-icon-label"><AdminIcon name="star" /> Tin nổi bật</span>
               <strong>{stats.featured}</strong>
               <small>Tối đa 3 bài</small>
             </article>
             <article className="support-news-stat is-regular">
-              <span>Tin thường</span>
+              <span className="support-icon-label"><AdminIcon name="file" /> Tin thường</span>
               <strong>{stats.regular}</strong>
               <small>Không giới hạn</small>
             </article>
@@ -407,7 +409,7 @@ function SupportNewsManager() {
                 <h2>Bài viết đã tạo</h2>
               </div>
               <button className="btn btn-secondary" type="button" onClick={reloadNews}>
-                Tải lại
+                <AdminIcon name="refresh" /> Tải lại
               </button>
             </div>
 
@@ -446,7 +448,7 @@ function SupportNewsManager() {
                         </div>
                         <strong>{getTitle(article)}</strong>
                         <span>{getCategory(article)}</span>
-                        <small>{formatDate(getDate(article))}</small>
+                        <small className="support-icon-label"><AdminIcon name="clock" /> {formatDate(getDate(article))}</small>
                       </div>
                       <div className="support-news-actions">
                         <button
@@ -457,16 +459,16 @@ function SupportNewsManager() {
                             setForm(buildFormFromArticle(article));
                           }}
                         >
-                          Sửa
+                          <AdminIcon name="edit" /> Sửa
                         </button>
                         <button className="btn btn-secondary" type="button" onClick={() => handleStatus(id, "published")}>
-                          Publish
+                          <AdminIcon name="send" /> Publish
                         </button>
                         <button className="btn btn-ghost" type="button" onClick={() => handleStatus(id, "hidden")}>
-                          Ẩn
+                          <AdminIcon name="lock" /> Ẩn
                         </button>
                         <button className="btn delete-button" type="button" onClick={() => handleDelete(id)}>
-                          Xóa
+                          <AdminIcon name="delete" /> Xóa
                         </button>
                       </div>
                     </article>

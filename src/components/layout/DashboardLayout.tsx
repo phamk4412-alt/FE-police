@@ -1,14 +1,14 @@
 import { useEffect, useState, type ReactNode } from "react";
 import VietnameseDecor, { type VietnameseDecorVariant } from "../common/VietnameseDecor";
+import SupportDecor from "../common/SupportDecor";
 import type { UserRole } from "../../types/user";
 import type { SupportTab } from "../../utils/constants";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 
-const defaultDecorByRole: Record<UserRole, VietnameseDecorVariant> = {
+const defaultDecorByRole: Record<Exclude<UserRole, "support">, VietnameseDecorVariant> = {
   admin: "admin",
   police: "police",
-  support: "support-duty",
   user: "user-home",
 };
 
@@ -56,7 +56,7 @@ function DashboardLayout({
 
   return (
     <div
-      className={`dashboard-shell ${isSidebarCollapsed ? "is-sidebar-collapsed" : ""} ${
+      className={`dashboard-shell ${role === "support" ? "is-support" : ""} ${isSidebarCollapsed ? "is-sidebar-collapsed" : ""} ${
         isMobileNavOpen ? "is-mobile-nav-open" : ""
       }`}
     >
@@ -75,7 +75,7 @@ function DashboardLayout({
         onClick={() => setIsMobileNavOpen(false)}
       />
       <div className="dashboard-main">
-        <VietnameseDecor variant={decorVariant || defaultDecorByRole[role]} />
+        {role === "support" ? <SupportDecor /> : <VietnameseDecor variant={decorVariant || defaultDecorByRole[role]} />}
         <Header
           activeSupportTab={activeSupportTab}
           activeUserTab={activeUserTab}

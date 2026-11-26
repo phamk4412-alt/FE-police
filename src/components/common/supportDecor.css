@@ -1,0 +1,86 @@
+.support-decor {
+  position: absolute;
+  z-index: 0;
+  inset: var(--support-header-height, 76px) 0 0;
+  overflow: clip;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 88% 5%, #47263826, transparent 59%);
+}
+.support-drum, .support-orbits, .support-lotus { position: absolute; color: #a87139; }
+.support-drum { width: clamp(380px, 52vw, 1000px); top: 14px; right: -14%; opacity: .20; animation: support-spin 140s linear infinite; }
+.support-orbits {
+  width: clamp(290px, 48vw, 850px);
+  aspect-ratio: 1;
+  top: 9%;
+  right: -10%;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  box-shadow: 0 0 0 38px #a8713940, inset 0 0 0 28px #a871391f;
+  opacity: .10;
+  animation: support-orbit 19s ease-in-out infinite alternate;
+}
+.support-lotus { width: clamp(250px, 39vw, 730px); top: max(530px, 71vh); left: 1%; opacity: .16; animation: support-drift 24s ease-in-out infinite alternate; }
+@keyframes support-spin { to { transform: rotate(360deg); } }
+@keyframes support-orbit { to { opacity: .22; transform: translate(10px, 10px) scale(1.03); } }
+@keyframes support-drift { to { opacity: .24; transform: translateY(-10px) rotate(2deg); } }
+
+.dashboard-shell.is-support { --support-header-height: 76px; }
+.dashboard-shell.is-support .dashboard-main { background: #0a0f15; }
+.dashboard-shell.is-support .dashboard-header .eyebrow { color: #ff4964; }
+
+.is-support .header-tabs button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.is-support :is(.support-icon-label, .support-actions .btn, .support-side-panel .delete-button,
+  .support-news-workspace .btn, .support-modal-close, .support-officer-shift-filters button,
+  .support-map .map-perspective-controls button) {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.is-support :is(.support-actions .btn, .support-side-panel .delete-button, .support-news-workspace .btn,
+  .support-modal-close, .support-officer-shift-filters button, .support-map .map-perspective-controls button) {
+  justify-content: center;
+}
+
+.is-support :is(.support-icon-label, .header-tabs button, .support-news-workspace .btn,
+  .support-side-panel .delete-button, .support-officer-row-arrow, .support-officer-drawer-header button,
+  .support-empty-state, .support-modal-close, .support-news-toast button, .support-news-toast strong) > .admin-icon,
+.is-support :is(.support-actions, .support-officer-shift-filters, .support-map .map-perspective-controls) button > .admin-icon {
+  width: 1em;
+  height: 1em;
+  flex: none;
+  vertical-align: -.12em;
+}
+
+@media (max-width: 760px) {
+  .is-support .header-tabs button { white-space: normal; }
+  .support-decor { inset-block-start: 105px; }
+  .support-drum { right: -38%; }
+}
+
+@media (min-width: 981px) and (max-width: 1500px) {
+  .dashboard-shell.is-support { --support-header-height: 132px; }
+  .is-support .dashboard-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    min-height: var(--support-header-height);
+    gap: 8px 16px;
+    padding-block: 10px;
+  }
+  .is-support .dashboard-header-actions { grid-area: 1 / 2; }
+  .is-support .header-tabs { grid-area: 2 / 1 / 3 / -1; justify-self: center; }
+}
+
+@media (max-width: 480px) {
+  .is-support .header-tabs button { flex-direction: column; gap: 3px; padding-inline: 5px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .support-decor > * { animation: none; }
+}

@@ -120,19 +120,20 @@ function SupportOfficerTracking() {
 
           <div className="support-officer-filters">
             <div className="support-officer-shift-filters" role="group" aria-label="Lọc theo ca trực">
-              <span>Ca trực</span>
+              <span className="support-icon-label"><AdminIcon name="clock" /> Ca trực</span>
               {(["all", "on-duty", "break", "off-duty"] as const).map((filter) => {
                 const isActive = filter === "all"
                   ? summaryFilter === "all" && shiftFilter === "all"
                   : shiftFilter === filter || summaryFilter === filter;
                 return (
                 <button key={filter} className={isActive ? "is-active" : ""} type="button" aria-pressed={isActive} onClick={() => { setSummaryFilter("all"); setShiftFilter(filter); }}>
+                  <AdminIcon name={filter === "all" ? "filter" : filter === "on-duty" ? "shield" : "clock"} />
                   {filter === "all" ? "Tất cả" : shiftLabels[filter]}
                 </button>
               );})}
             </div>
             <label className="support-officer-connection-filter">
-              <span>Kết nối</span>
+              <span className="support-icon-label"><AdminIcon name="activity" /> Kết nối</span>
               <select value={connectionFilter} onChange={(event) => { setSummaryFilter("all"); setConnectionFilter(event.target.value as "all" | DemoConnectionStatus); }}>
                 <option value="all">Tất cả kết nối</option>
                 <option value="connected">Đang kết nối</option>
@@ -160,7 +161,7 @@ function SupportOfficerTracking() {
                   <strong><AdminIcon name="mapPin" />{officer.gpsLocation || "Không có dữ liệu GPS"}</strong>
                   <small>{officer.gpsUpdatedAt ? `Cập nhật ${officer.gpsUpdatedAt}` : "Chưa có tọa độ vị trí"}</small>
                 </span>
-                <span className="support-officer-row-arrow" aria-hidden="true">›</span>
+                <span className="support-officer-row-arrow"><AdminIcon name="chevronRight" /></span>
               </button>
             ))}
             {!filteredOfficers.length ? <p className="support-officer-empty">Không tìm thấy Công an phù hợp.</p> : null}
@@ -169,7 +170,7 @@ function SupportOfficerTracking() {
 
         <section className="support-officer-map-card panel" aria-labelledby="support-officer-map-title">
           <header className="support-officer-map-heading">
-            <div><p className="eyebrow">Bản đồ GPS</p><h3 id="support-officer-map-title">Vị trí Công an đang chia sẻ</h3><small>Sơ đồ minh họa · không hiển thị vị trí GPS thật</small></div>
+            <div><p className="eyebrow support-icon-label"><AdminIcon name="map" /> Bản đồ GPS</p><h3 id="support-officer-map-title">Vị trí Công an đang chia sẻ</h3><small>Sơ đồ minh họa · không hiển thị vị trí GPS thật</small></div>
             <span className="support-officer-map-count"><i />{supportOfficerDemoData.filter((officer) => officer.mapPosition).length} mẫu chia sẻ</span>
           </header>
           <div className="support-officer-map" role="group" aria-label="Sơ đồ vị trí minh họa, các điểm đánh dấu là dữ liệu mẫu">
@@ -200,7 +201,7 @@ function SupportOfficerTracking() {
         <div className="support-officer-drawer-layer">
           <button className="support-officer-drawer-backdrop" type="button" aria-label="Đóng chi tiết Công an" onClick={() => setSelectedOfficer(null)} />
           <aside className="support-officer-drawer" role="dialog" aria-modal="true" aria-labelledby="support-officer-drawer-title">
-            <header className="support-officer-drawer-header"><div><p className="eyebrow">Thông tin Công an</p><h2 id="support-officer-drawer-title">Chi tiết trạng thái</h2></div><button type="button" aria-label="Đóng" onClick={() => setSelectedOfficer(null)}>×</button></header>
+            <header className="support-officer-drawer-header"><div><p className="eyebrow">Thông tin Công an</p><h2 id="support-officer-drawer-title">Chi tiết trạng thái</h2></div><button type="button" aria-label="Đóng" onClick={() => setSelectedOfficer(null)}><AdminIcon name="close" /></button></header>
             <div className="support-officer-drawer-identity"><span className="support-officer-avatar">{selectedOfficer.initials}</span><span><strong>{selectedOfficer.name}</strong><small>{selectedOfficer.accountCode} · {selectedOfficer.unit}</small></span></div>
             <div className="support-officer-readonly"><AdminIcon name="shield" /><span><strong>Chế độ chỉ xem</strong><small>Hỗ trợ không thể thay đổi trạng thái ca trực.</small></span></div>
             <section className="support-officer-drawer-section"><h3>Trạng thái hiện tại</h3><div className="support-officer-status-cards"><div><small>Ca trực</small><span className={`support-officer-pill is-${selectedOfficer.shiftStatus}`}><i />{shiftLabels[selectedOfficer.shiftStatus]}</span></div><div><small>Kết nối</small><span className={`support-officer-connection is-${selectedOfficer.connectionStatus}`}><i />{connectionLabels[selectedOfficer.connectionStatus]}</span></div><div><small>GPS</small><span className={`support-officer-gps-status ${selectedOfficer.gpsLocation ? "is-sharing" : ""}`}><i />{selectedOfficer.gpsLocation ? "Đang chia sẻ vị trí" : "Không có dữ liệu vị trí"}</span></div></div></section>

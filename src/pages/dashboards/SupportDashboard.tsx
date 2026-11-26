@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import DashboardStatCards, { type DashboardStatCardItem } from "../../components/common/DashboardStatCards";
 import DashboardLayout from "../../components/layout/DashboardLayout";
 import MapView from "../../components/map/MapView";
+import AdminIcon from "../../components/admin/AdminIcons";
 import SupportNewsManager from "../news/SupportNewsManager";
 import SupportOfficerTracking from "./support/SupportOfficerTracking";
 import { SUPPORT_TAB_PATHS, type SupportTab } from "../../utils/constants";
@@ -24,6 +25,7 @@ import {
 } from "../../types/incident";
 
 const statusActions = ["Nhận xử lý", "Đang xử lý", "Hoàn thành"];
+const statusActionIcons = ["review", "activity", "check"] as const;
 
 const completedStatuses = ["completed", "done", "resolved", "Hoàn thành", "Đã hoàn thành", "Da xu ly", "Đã xử lý"];
 
@@ -221,7 +223,6 @@ function SupportDashboard() {
   return (
     <DashboardLayout
       activeSupportTab={isNewsRoute ? "news" : isTrackingRoute ? "tracking" : "duty"}
-      decorVariant={isNewsRoute ? "support-news" : "support-duty"}
       onSupportTabChange={handleSupportTabChange}
       role="support"
     >
@@ -232,7 +233,7 @@ function SupportDashboard() {
       ) : (
       <>
       <section className="page-title support-title">
-        <p className="eyebrow">Hỗ trợ hiện trường</p>
+        <p className="eyebrow support-icon-label"><AdminIcon name="support" /> Hỗ trợ hiện trường</p>
         <h2>Tiếp nhận và xử lý báo cáo</h2>
         <span>Danh sách, bản đồ, ảnh hiện trường và thao tác xử lý nằm cùng một màn hình.</span>
       </section>
@@ -254,7 +255,7 @@ function SupportDashboard() {
           <section className="panel support-list-panel">
             <div className="section-heading support-panel-heading">
               <div>
-                <span className="eyebrow">Báo cáo</span>
+                <span className="eyebrow support-icon-label"><AdminIcon name="file" /> Báo cáo</span>
                 <h2>Danh sách mới nhất</h2>
               </div>
               <span className="support-count">{incidents.length}</span>
@@ -283,21 +284,21 @@ function SupportDashboard() {
                     </span>
                   </button>
                     <button className="btn delete-button" type="button" onClick={() => handleDeleteCase(incidentId)}>
-                      Xóa
+                      <AdminIcon name="delete" /> Xóa
                     </button>
                   </div>
                 );
               })}
 
               {!incidents.length ? (
-                <div className="support-empty-state">Chưa có báo cáo cần hỗ trợ.</div>
+              <div className="support-empty-state"><AdminIcon name="file" /> Chưa có báo cáo cần hỗ trợ.</div>
               ) : null}
             </div>
           </section>
 
           <section className="panel support-detail-panel">
             <div className="section-heading">
-              <span className="eyebrow">Chi tiết</span>
+              <span className="eyebrow support-icon-label"><AdminIcon name="view" /> Chi tiết</span>
               <h2>{selectedIncident ? getIncidentTitle(selectedIncident) : "Chưa chọn báo cáo"}</h2>
             </div>
 
@@ -305,23 +306,23 @@ function SupportDashboard() {
               <>
                 <dl className="support-detail-grid">
                   <div>
-                    <dt>Họ tên</dt>
+                    <dt className="support-icon-label"><AdminIcon name="user" /> Họ tên</dt>
                     <dd>{getIncidentReporterName(selectedIncident)}</dd>
                   </div>
                   <div>
-                    <dt>SĐT</dt>
+                    <dt className="support-icon-label"><AdminIcon name="phone" /> SĐT</dt>
                     <dd>{getIncidentPhone(selectedIncident) || "Chưa có"}</dd>
                   </div>
                   <div>
-                    <dt>Loại vụ việc</dt>
+                    <dt className="support-icon-label"><AdminIcon name="review" /> Loại vụ việc</dt>
                     <dd>{getIncidentCategory(selectedIncident)}</dd>
                   </div>
                   <div>
-                    <dt>Tọa độ</dt>
+                    <dt className="support-icon-label"><AdminIcon name="mapPin" /> Tọa độ</dt>
                     <dd>{getCoordinateText(selectedIncident)}</dd>
                   </div>
                   <div>
-                    <dt>Thời gian</dt>
+                    <dt className="support-icon-label"><AdminIcon name="clock" /> Thời gian</dt>
                     <dd>{formatDateTime(getIncidentCreatedAt(selectedIncident))}</dd>
                   </div>
                 </dl>
@@ -333,7 +334,7 @@ function SupportDashboard() {
 
                 <div className="support-photos">
                   <div className="support-detail-subheading">
-                    <span>Ảnh hiện trường</span>
+                    <span className="support-icon-label"><AdminIcon name="image" /> Ảnh hiện trường</span>
                     <small>{getIncidentImageUrls(selectedIncident).length} ảnh</small>
                   </div>
 
@@ -360,7 +361,7 @@ function SupportDashboard() {
                 </div>
 
                 <div className="support-actions" aria-label="Hành động xử lý">
-                  {statusActions.map((action) => (
+                  {statusActions.map((action, index) => (
                     <button
                       className={
                         statusByIncident[getIncidentId(selectedIncident)] === getStoredStatus(action)
@@ -371,7 +372,7 @@ function SupportDashboard() {
                       type="button"
                       onClick={() => handleStatusAction(action)}
                     >
-                      {getActionLabel(action)}
+                      <AdminIcon name={statusActionIcons[index]} /> {getActionLabel(action)}
                     </button>
                   ))}
                 </div>
@@ -386,7 +387,7 @@ function SupportDashboard() {
       {previewImage ? (
         <div className="support-image-modal" role="dialog" aria-modal="true" onClick={() => setPreviewImage(null)}>
           <button className="support-modal-close" type="button" aria-label="Đóng ảnh" onClick={() => setPreviewImage(null)}>
-            Đóng
+            <AdminIcon name="close" /> Đóng
           </button>
           <img src={previewImage} alt="Ảnh hiện trường phóng to" />
         </div>

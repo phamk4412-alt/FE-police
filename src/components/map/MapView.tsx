@@ -1771,7 +1771,9 @@ function MapView({
     <section className={`map-card map-card-${variant} map-wrapper ${isCitizenMap ? "map-card-citizen" : ""} ${className}`.trim()} id="map">
       <div className="section-heading map-heading">
         <div>
-          <span className="eyebrow">Bản đồ</span>
+          <span className={isSupportMap ? "eyebrow support-icon-label" : "eyebrow"}>
+            {isSupportMap && <AdminIcon name="map" />} Bản đồ
+          </span>
           <h2>{title}</h2>
         </div>
       </div>
@@ -1789,7 +1791,7 @@ function MapView({
                 type="button"
                 onClick={() => setPerspective("2d")}
               >
-                {isCitizenMap ? <AdminIcon name="map" /> : null}
+                {isCitizenMap || isSupportMap ? <AdminIcon name="map" /> : null}
                 2D
               </button>
               <button
@@ -1797,6 +1799,7 @@ function MapView({
                 type="button"
                 onClick={() => setPerspective("3d")}
               >
+                {isSupportMap ? <AdminIcon name="layers" /> : null}
                 {isCitizenMap ? <AdminIcon name="view" /> : null}
                 3D
               </button>
