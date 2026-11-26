@@ -17,3 +17,11 @@ export const ROLE_HOME_PATHS: Record<UserRole, string> = {
 };
 
 export const ROLES_WITH_MAP: UserRole[] = ["police", "user", "support"];
+export const SUPPORT_TAB_PATHS = {
+  duty: "/support",
+  tracking: "/support/officers",
+  review: "/support/review",
+  news: "/support/news",
+} as const;
+
+export type SupportTab = keyof typeof SUPPORT_TAB_PATHS;

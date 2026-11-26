@@ -5,6 +5,7 @@ import DashboardLayout from "../../components/layout/DashboardLayout";
 import MapView from "../../components/map/MapView";
 import SupportNewsManager from "../news/SupportNewsManager";
 import SupportOfficerTracking from "./support/SupportOfficerTracking";
+import { SUPPORT_TAB_PATHS, type SupportTab } from "../../utils/constants";
 import { API_URL } from "../../services/api";
 import { deleteSupportIncident, getSupportIncidents, updateSupportIncidentStatus } from "../../services/supportIncidentService";
 import type { Incident } from "../../types/incident";
@@ -210,8 +211,8 @@ function SupportDashboard() {
     }
   }
 
-  function handleSupportTabChange(tab: "duty" | "tracking" | "news") {
-    navigate(tab === "news" ? "/support/news" : tab === "tracking" ? "/support/officers" : "/support");
+  function handleSupportTabChange(tab: SupportTab) {
+    navigate(SUPPORT_TAB_PATHS[tab]);
   }
 
   const isTrackingRoute = location.pathname.startsWith("/support/officers");

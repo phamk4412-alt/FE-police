@@ -1,14 +1,14 @@
 import { useAuth } from "../../auth/AuthContext";
 import AdminIcon from "../admin/AdminIcons";
 import type { UserRole } from "../../types/user";
-import { APP_NAME, ROLE_LABELS } from "../../utils/constants";
+import { APP_NAME, ROLE_LABELS, type SupportTab } from "../../utils/constants";
 
 interface HeaderProps {
   activeUserTab?: "home" | "map" | "news";
-  activeSupportTab?: "duty" | "tracking" | "news";
+  activeSupportTab?: SupportTab;
   isMobileNavOpen?: boolean;
   onMenuClick?: () => void;
-  onSupportTabChange?: (tab: "duty" | "tracking" | "news") => void;
+  onSupportTabChange?: (tab: SupportTab) => void;
   onUserTabChange?: (tab: "home" | "map" | "news") => void;
   role: UserRole;
 }
@@ -22,6 +22,7 @@ const userTabs = [
 const supportTabs = [
   { id: "duty", label: "Thường trực" },
   { id: "tracking", label: "Theo dõi Công an" },
+  { id: "review", label: "Duyệt vụ việc", icon: "review" },
   { id: "news", label: "Tin tức" },
 ] as const;
 
@@ -78,7 +79,9 @@ function Header({
               key={tab.id}
               type="button"
               onClick={() => onSupportTabChange(tab.id)}
+              aria-current={activeSupportTab === tab.id ? "page" : undefined}
             >
+              {"icon" in tab && <AdminIcon name={tab.icon} />}
               {tab.label}
             </button>
           ))}

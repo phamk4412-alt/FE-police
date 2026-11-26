@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
 import AdminIcon from "../admin/AdminIcons";
 import type { UserRole } from "../../types/user";
-import { ROLE_HOME_PATHS, ROLES_WITH_MAP } from "../../utils/constants";
+import { ROLE_HOME_PATHS, ROLES_WITH_MAP, SUPPORT_TAB_PATHS } from "../../utils/constants";
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -252,6 +252,16 @@ function Sidebar({ isCollapsed, onNavigate, onToggle, role }: SidebarProps) {
                       </span>
                       <span className="sidebar-nav-label">Thường trực</span>
                     </a>
+                    <Link
+                      className={location.pathname.replace(/\/+$/, "") === SUPPORT_TAB_PATHS.review ? "is-active" : ""}
+                      aria-current={location.pathname.replace(/\/+$/, "") === SUPPORT_TAB_PATHS.review ? "page" : undefined}
+                      to={SUPPORT_TAB_PATHS.review}
+                      title="Duyệt vụ việc"
+                      data-tooltip="Duyệt vụ việc"
+                    >
+                      <span className="sidebar-nav-icon"><AdminIcon name="review" /></span>
+                      <span className="sidebar-nav-label">Duyệt vụ việc</span>
+                    </Link>
                     <a
                       className={location.pathname.startsWith("/support/news") ? "is-active" : ""}
                       href="/support/news"

@@ -4,6 +4,11 @@ export type AdminIconName =
   | "alert"
   | "camera"
   | "check"
+  | "chevronRight"
+  | "filter"
+  | "review"
+  | "vehicle"
+  | "tree"
   | "ambulance"
   | "bell"
   | "chart"
@@ -41,6 +46,11 @@ const paths: Record<AdminIconName, string> = {
   alert: "M12 3l9 16H3l9-16z M12 9v4 M12 17h.01",
   camera: "M4 8h3l1.5-2h7L17 8h3v11H4z M12 10a3.5 3.5 0 100 7 3.5 3.5 0 000-7z",
   check: "M5 12l4 4L19 6",
+  chevronRight: "M9 5l7 7-7 7",
+  filter: "M4 5h16l-6 7v6l-4 2v-8z",
+  review: "M9 5H5v16h14V5h-4 M9 3h6v5H9z M8 14l3 3 5-5",
+  vehicle: "M5 17v2m14-2v2M4 12l2-6h12l2 6v5H4z M4 12h16 M7 15h1m8 0h1",
+  tree: "M12 15v6 M12 3l6 7h-3l5 6H4l5-6H6z",
   ambulance: "M4 7h10v9H4z M14 10h3l3 3v3h-6z M7 19a2 2 0 100-4 2 2 0 000 4z M17 19a2 2 0 100-4 2 2 0 000 4z M8 9v4 M6 11h4",
   bell: "M17 16H7l1.2-2.2V10a3.8 3.8 0 017.6 0v3.8L17 16z M10 18h4",
   chart: "M5 19V9 M12 19V5 M19 19v-7",

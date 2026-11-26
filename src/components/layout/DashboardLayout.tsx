@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import VietnameseDecor, { type VietnameseDecorVariant } from "../common/VietnameseDecor";
 import type { UserRole } from "../../types/user";
+import type { SupportTab } from "../../utils/constants";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 
@@ -12,11 +13,11 @@ const defaultDecorByRole: Record<UserRole, VietnameseDecorVariant> = {
 };
 
 interface DashboardLayoutProps {
-  activeSupportTab?: "duty" | "tracking" | "news";
+  activeSupportTab?: SupportTab;
   activeUserTab?: "home" | "map" | "news";
   children: ReactNode;
   decorVariant?: VietnameseDecorVariant;
-  onSupportTabChange?: (tab: "duty" | "tracking" | "news") => void;
+  onSupportTabChange?: (tab: SupportTab) => void;
   onUserTabChange?: (tab: "home" | "map" | "news") => void;
   role: UserRole;
 }

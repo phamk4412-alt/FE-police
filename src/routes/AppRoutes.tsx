@@ -6,6 +6,8 @@ import RoleSelection from "../pages/auth/RoleSelection";
 import AdminDashboard from "../pages/dashboards/AdminDashboard";
 import PoliceDashboard from "../pages/dashboards/PoliceDashboard";
 import SupportDashboard from "../pages/dashboards/SupportDashboard";
+import SupportReviewPage from "../pages/dashboards/support/SupportReviewPage";
+import { SUPPORT_TAB_PATHS } from "../utils/constants";
 import UserDashboard from "../pages/dashboards/UserDashboard";
 import EntryRedirect from "./EntryRedirect";
 
@@ -37,6 +39,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute allowedRoles={["user"]}>
               <UserDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={SUPPORT_TAB_PATHS.review}
+          element={
+            <ProtectedRoute allowedRoles={["support"]}>
+              <SupportReviewPage />
             </ProtectedRoute>
           }
         />
