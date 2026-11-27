@@ -5,6 +5,7 @@ export type AdminIconName =
   | "camera"
   | "check"
   | "chevronRight"
+  | "chevronLeft"
   | "filter"
   | "edit"
   | "refresh"
@@ -55,6 +56,7 @@ const paths: Record<AdminIconName, string> = {
   camera: "M4 8h3l1.5-2h7L17 8h3v11H4z M12 10a3.5 3.5 0 100 7 3.5 3.5 0 000-7z",
   check: "M5 12l4 4L19 6",
   chevronRight: "M9 5l7 7-7 7",
+  chevronLeft: "M15 5l-7 7 7 7",
   filter: "M4 5h16l-6 7v6l-4 2v-8z",
   edit: "M13 6l5 5M4 20l5-1L20 8l-5-5L4 14z",
   refresh: "M20 5v5h-5 M20 10a8 8 0 1 0 .7 5",

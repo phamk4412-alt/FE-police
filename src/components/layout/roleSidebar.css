@@ -1,0 +1,262 @@
+.dashboard-shell.has-role-sidebar {
+  --sidebar-width: 260px;
+  --sidebar-rail-width: 76px;
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+  transition: grid-template-columns 250ms cubic-bezier(.22, .8, .35, 1);
+}
+
+.dashboard-shell.has-role-sidebar.is-sidebar-collapsed {
+  grid-template-columns: var(--sidebar-rail-width) minmax(0, 1fr);
+}
+
+.role-sidebar {
+  --sidebar-bg: #090f16;
+  --sidebar-line: #25323f;
+  --sidebar-muted: #a4b1bf;
+  --sidebar-accent: #ff526a;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 100dvh;
+  padding: 15px 12px;
+  color: #edf2f8;
+  background:
+    radial-gradient(ellipse at 0% 85%, #54263845, transparent 62%),
+    linear-gradient(160deg, #101e2b 0%, var(--sidebar-bg) 57%, #190f19 100%);
+  border-right: 1px solid var(--sidebar-line);
+}
+
+.role-sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 57px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--sidebar-line);
+}
+
+.role-sidebar-mark {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  color: #fff;
+  background: linear-gradient(140deg, #ff536a, #d71436);
+  box-shadow: 0 7px 18px #f1324c35;
+}
+
+.role-sidebar-mark .admin-icon { width: 23px; height: 23px; }
+.role-sidebar-brand-copy { flex: 1 1 auto; min-width: 0; line-height: 1.3; }
+.role-sidebar-brand-copy strong { display: block; font-size: .87rem; }
+.role-sidebar-brand-copy small { display: block; margin-top: 3px; color: var(--sidebar-muted); font-size: .7rem; }
+.role-sidebar-toggle, .role-sidebar-close {
+  flex: none;
+  display: grid;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  place-items: center;
+  border: 1px solid var(--sidebar-line);
+  border-radius: 8px;
+  color: var(--sidebar-muted);
+  background: #131e29;
+}
+
+.role-sidebar-close { display: none; }
+.role-sidebar :is(.role-sidebar-toggle, .role-sidebar-close):hover { color: #fff; border-color: #6f3d4b; }
+.role-sidebar :is(a, button, [tabindex]):focus-visible { outline: 2px solid #ff8a9a; outline-offset: 2px; }
+
+.role-sidebar-nav { display: flex; flex-direction: column; gap: 22px; min-width: 0; padding-block: 17px; }
+.role-sidebar-group { display: grid; min-width: 0; gap: 4px; }
+.role-sidebar-group h2 {
+  margin: 0 0 3px;
+  padding-inline: 8px;
+  color: #93a2b1;
+  font-size: .66rem;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: .11em;
+}
+
+.role-sidebar-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  min-height: 49px;
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  color: var(--sidebar-muted);
+  background: transparent;
+  font-size: .86rem;
+  font-weight: 600;
+  text-align: left;
+}
+
+.role-sidebar-link::before {
+  content: "";
+  position: absolute;
+  inset: 8px auto 8px 0;
+  width: 3px;
+  border-radius: 0 4px 4px 0;
+  background: var(--sidebar-accent);
+  opacity: 0;
+  transform: translateX(-3px);
+}
+
+.role-sidebar-link:hover { color: #fff; background: #14202b; }
+.role-sidebar-link[aria-current] { color: #fff; background: #172431; border-color: #2d4052; }
+.role-sidebar-link[aria-current]::before { opacity: 1; transform: none; }
+.role-sidebar-icon {
+  display: grid;
+  width: 33px;
+  height: 33px;
+  flex: none;
+  place-items: center;
+  border: 1px solid #273746;
+  border-radius: 9px;
+  color: #a9b6c3;
+  background: #17232e;
+}
+.role-sidebar-icon .admin-icon { width: 20px; height: 20px; }
+.role-sidebar-link:hover .role-sidebar-icon { color: #fff; }
+.role-sidebar-link[aria-current] .role-sidebar-icon {
+  color: var(--sidebar-accent);
+  border-color: #633040;
+  background: #2b1d2a;
+}
+.role-sidebar-link-label { min-width: 0; overflow-wrap: anywhere; }
+
+.role-sidebar-motif {
+  position: relative;
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.role-sidebar-motif svg {
+  position: absolute;
+  inset: auto 0 4px;
+  width: 100%;
+  height: 100%;
+  max-height: 166px;
+  color: #d9a47d;
+}
+.role-sidebar-motif-rings { opacity: .22; }
+.role-sidebar-motif-bird { opacity: .77; stroke-width: 1.55px; }
+
+.role-sidebar-footer {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid var(--sidebar-line);
+}
+.role-sidebar-status, .role-sidebar-account {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid var(--sidebar-line);
+  border-radius: 10px;
+  padding: 7px 8px;
+  background: #111a24;
+}
+.role-sidebar-status-copy, .role-sidebar-account-copy { min-width: 0; }
+.role-sidebar-status-copy > div { display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 7px; }
+.role-sidebar-status time { color: var(--sidebar-accent); font-size: .95rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.role-sidebar-status-copy span, .role-sidebar-status-copy small, .role-sidebar-account-copy small { color: var(--sidebar-muted); font-size: .69rem; }
+.role-sidebar-status-copy small > i { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #53d8a4; vertical-align: 1px; }
+.role-sidebar-account { background: transparent; border-color: transparent; }
+.role-sidebar-account-copy { display: grid; gap: 2px; }
+.role-sidebar-account-copy strong { font-size: .8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.role-sidebar-account img { width: 100%; height: 100%; border-radius: inherit; object-fit: cover; }
+.role-sidebar-signout:hover { color: #ff8798; }
+.role-sidebar-signout .role-sidebar-icon { color: inherit; }
+
+@media (min-width: 981px) {
+  .has-role-sidebar.is-sidebar-collapsed .role-sidebar { padding-inline: 10px; }
+  .has-role-sidebar.is-sidebar-collapsed .role-sidebar-brand { flex-direction: column; gap: 7px; padding-bottom: 10px; }
+  .has-role-sidebar.is-sidebar-collapsed .role-sidebar :is(.role-sidebar-brand-copy, .role-sidebar-group h2,
+    .role-sidebar-link-label, .role-sidebar-status-copy, .role-sidebar-account-copy) { display: none; }
+  .has-role-sidebar.is-sidebar-collapsed .role-sidebar-motif { visibility: hidden; }
+  .has-role-sidebar.is-sidebar-collapsed .role-sidebar-link { justify-content: center; gap: 0; padding-inline: 0; }
+  .has-role-sidebar.is-sidebar-collapsed .role-sidebar-nav { gap: 11px; padding-block: 12px; }
+  .has-role-sidebar.is-sidebar-collapsed .role-sidebar :is(.role-sidebar-status, .role-sidebar-account) { justify-content: center; padding: 5px 0; }
+
+  .has-role-sidebar.is-sidebar-collapsed .role-sidebar [data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    z-index: 2;
+    inset: 50% auto auto calc(100% + 10px);
+    width: max-content;
+    max-width: min(250px, 60vw);
+    padding: 6px 10px;
+    border: 1px solid #3b4e61;
+    border-radius: 8px;
+    background: #172331;
+    box-shadow: 0 8px 22px #0006;
+    color: #fff;
+    font-size: .75rem;
+    font-weight: 600;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translate(-4px, -50%);
+  }
+  .has-role-sidebar.is-sidebar-collapsed .role-sidebar [data-tooltip]:is(:hover, :focus-visible)::after {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(0, -50%);
+  }
+}
+
+@media (max-height: 690px) and (min-width: 981px) {
+  .role-sidebar { overflow-y: auto; overscroll-behavior: contain; }
+}
+
+@media (max-width: 980px) {
+  .dashboard-shell.has-role-sidebar,
+  .dashboard-shell.has-role-sidebar.is-sidebar-collapsed { grid-template-columns: minmax(0, 1fr); }
+  .role-sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: min(278px, calc(100vw - 42px));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-bottom: max(15px, env(safe-area-inset-bottom));
+    transform: translateX(-100%);
+    visibility: hidden;
+  }
+  .has-role-sidebar.is-mobile-nav-open .role-sidebar { transform: translateX(0); visibility: visible; }
+  .role-sidebar-toggle { display: none; }
+  .role-sidebar-close { display: grid; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .role-sidebar-link { transition: color 150ms, background-color 150ms, border-color 150ms; }
+  .role-sidebar-link::before { transition: opacity 170ms, transform 170ms; }
+  .role-sidebar-icon { transition: color 150ms, background-color 150ms, border-color 150ms, transform 150ms; }
+  .role-sidebar-link:hover .role-sidebar-icon { transform: translateY(-1px); }
+  .role-sidebar-mark { transition: box-shadow 220ms; }
+  .role-sidebar-mark:hover { box-shadow: 0 8px 23px #ff48675e; }
+  .has-role-sidebar.is-sidebar-collapsed .role-sidebar [data-tooltip]::after { transition: opacity 150ms, transform 150ms, visibility 150ms; }
+  @media (max-width: 980px) {
+    .role-sidebar { transition: transform 240ms ease, visibility 240ms; }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-shell.has-role-sidebar { transition: none !important; }
+}

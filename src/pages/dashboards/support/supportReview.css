@@ -163,8 +163,8 @@ body:has(.review-dialog[open]) { overflow: hidden; }
 .review-drawer::backdrop { backdrop-filter: blur(4px); }
 @media (min-width: 1101px) {
   .review-drawer { top: var(--support-header-height); height: calc(100dvh - var(--support-header-height)); }
-  .review-drawer::backdrop { clip-path: inset(var(--support-header-height) 0 0 272px); }
-  .is-sidebar-collapsed .review-drawer::backdrop { clip-path: inset(var(--support-header-height) 0 0 84px); }
+  .review-drawer::backdrop { clip-path: inset(var(--support-header-height) 0 0 var(--sidebar-width)); }
+  .is-sidebar-collapsed .review-drawer::backdrop { clip-path: inset(var(--support-header-height) 0 0 var(--sidebar-rail-width)); }
 }
 .review-modal { width: min(560px, calc(100% - 24px)); max-height: calc(100dvh - 28px); border-radius: 14px; transform: translateY(10px) scale(.98); }
 @starting-style {

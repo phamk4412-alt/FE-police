@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
 import AdminIcon from "../../components/admin/AdminIcons";
 import DashboardLayout from "../../components/layout/DashboardLayout";
@@ -17,12 +18,13 @@ const filters = ["all", "new", "processing", "completed"] as const;
 
 function PoliceDashboard() {
   const { user } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | StatusGroup>("all");
-  const [view, setView] = useState<"dashboard" | "history">("dashboard");
   const [period, setPeriod] = useState<PolicePeriod>("all");
   const [detail, setDetail] = useState<Incident | null>(null);
   const [showReport, setShowReport] = useState(false);
@@ -30,6 +32,15 @@ function PoliceDashboard() {
   const [mapTarget, setMapTarget] = useState<Incident | null>(null);
   const requestRef = useRef<AbortController | null>(null);
   const mapArea = useRef<HTMLElement | null>(null);
+  const view = !location.hash && location.state?.policeView === "history" ? "history" : "dashboard";
+
+  function setView(nextView: "dashboard" | "history") {
+    if (view === nextView && !location.hash) return;
+    navigate({ pathname: location.pathname, search: location.search }, {
+      replace: true,
+      state: nextView === "history" ? { policeView: nextView } : null,
+    });
+  }
 
   const loadIncidents = useCallback(async (background = false) => {
     if (background && requestRef.current) return;
