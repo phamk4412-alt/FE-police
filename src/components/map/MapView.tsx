@@ -977,6 +977,7 @@ function MapView({
   const [showPoliceReportsLayer, setShowPoliceReportsLayer] = useState(true);
 
   const isSupportMap = role === "support";
+  const isPoliceMap = role === "police";
   const isCitizenMap = role === "user";
   const showUserToolbarActions = role === "user" && showModeControls && mode === "normal";
   const showPoliceToolbarActions = role === "police" && mode === "normal";
@@ -1771,8 +1772,8 @@ function MapView({
     <section className={`map-card map-card-${variant} map-wrapper ${isCitizenMap ? "map-card-citizen" : ""} ${className}`.trim()} id="map">
       <div className="section-heading map-heading">
         <div>
-          <span className={isSupportMap ? "eyebrow support-icon-label" : "eyebrow"}>
-            {isSupportMap && <AdminIcon name="map" />} Bản đồ
+          <span className={isSupportMap ? "eyebrow support-icon-label" : isPoliceMap ? "eyebrow police-icon-label" : "eyebrow"}>
+            {(isSupportMap || isPoliceMap) && <AdminIcon name="map" />} Bản đồ
           </span>
           <h2>{title}</h2>
         </div>
@@ -1791,7 +1792,7 @@ function MapView({
                 type="button"
                 onClick={() => setPerspective("2d")}
               >
-                {isCitizenMap || isSupportMap ? <AdminIcon name="map" /> : null}
+                <AdminIcon name="map" />
                 2D
               </button>
               <button
@@ -1799,8 +1800,7 @@ function MapView({
                 type="button"
                 onClick={() => setPerspective("3d")}
               >
-                {isSupportMap ? <AdminIcon name="layers" /> : null}
-                {isCitizenMap ? <AdminIcon name="view" /> : null}
+                <AdminIcon name={isCitizenMap ? "view" : "layers"} />
                 3D
               </button>
             </div>
@@ -1825,14 +1825,14 @@ function MapView({
                 type="button"
                 onClick={() => setShowPoliceFacilitiesLayer((current) => !current)}
               >
-                Công An / Bệnh Viện
+                <AdminIcon name="shield" /> Công An / Bệnh Viện
               </button>
               <button
                 className={showPoliceReportsLayer ? "is-active" : ""}
                 type="button"
                 onClick={() => setShowPoliceReportsLayer((current) => !current)}
               >
-                Vụ án / báo cáo
+                <AdminIcon name="file" /> Vụ án / báo cáo
               </button>
             </div>
           ) : null}
@@ -1844,7 +1844,7 @@ function MapView({
             <div className="directions-mini-map" aria-label="Bản đồ chỉ đường thu nhỏ">
               <div className="directions-mini-map-canvas" ref={miniMapContainerRef} />
               <button className="directions-clear-button" type="button" onClick={clearDirections}>
-                Đóng
+                {isPoliceMap && <AdminIcon name="close" />} Đóng
               </button>
             </div>
           ) : null}

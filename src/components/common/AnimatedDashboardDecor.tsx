@@ -1,9 +1,9 @@
-import "./supportDecor.css";
+import "./dashboardDecor.css";
 
-export default function SupportDecor() {
+export default function AnimatedDashboardDecor() {
   return (
-    <div className="vietnam-decor support-decor" aria-hidden="true">
-      <svg className="support-drum" viewBox="0 0 480 480" fill="none" stroke="currentColor">
+    <div className="vietnam-decor animated-dashboard-decor" aria-hidden="true">
+      <svg className="dashboard-decor-drum" viewBox="0 0 480 480" fill="none" stroke="currentColor">
         {[225, 214, 203, 179, 168, 155, 114, 104, 94, 57, 12].map((radius) => <circle key={radius} cx="240" cy="240" r={radius} />)}
         {Array.from({ length: 36 }, (_, index) => (
           <path key={index} d="M221 36l19 23 19-23" transform={`rotate(${index * 10} 240 240)`} />
@@ -15,8 +15,8 @@ export default function SupportDecor() {
           </g>
         ))}
       </svg>
-      <div className="support-orbits" />
-      <svg className="support-lotus" viewBox="0 0 320 150" fill="none" stroke="currentColor">
+      <div className="dashboard-decor-orbits" />
+      <svg className="dashboard-decor-lotus" viewBox="0 0 320 150" fill="none" stroke="currentColor">
         <path d="M160 144q-33-58 0-132 33 74 0 132ZM160 144Q82 120 70 48q72 18 90 96Zm0 0q78-24 90-96-72 18-90 96ZM160 144Q79 147 37 91q73-1 123 53Zm0 0q81 3 123-53-73-1-123 53ZM4 145h68m176 0h68" />
       </svg>
     </div>

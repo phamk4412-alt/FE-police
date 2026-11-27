@@ -8,7 +8,21 @@
 .police-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
 .police-tabs button, .police-filters button { color: var(--muted); background: #0c151e; border: 1px solid var(--line); border-radius: 9px; padding: 10px 14px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 12px; font-weight: 600; }
 .police-tabs button[aria-pressed="true"], .police-filters button[aria-pressed="true"] { color: var(--text); background: rgba(255, 70, 85, .12); border-color: rgba(255, 70, 85, .55); }
+.police-page :is(.police-tabs button, .police-filters button):hover { border-color: var(--primary); }
 .police-tabs .admin-icon { width: 18px; height: 18px; }
+.police-icon-label, .police-page .police-detail-link, .police-operation-map .map-toolbar button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.police-operation-map .map-toolbar button { justify-content: center; }
+.police-page :is(.police-icon-label, .police-button, .police-detail-link, .police-filters button, .map-toolbar button, .directions-clear-button) > .admin-icon,
+.police-dialog :is(.police-icon-label, .police-button) > .admin-icon {
+  width: 1em;
+  height: 1em;
+  flex: none;
+  vertical-align: -.12em;
+}
 .police-page-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; padding: 8px 0; }
 .police-eyebrow { color: var(--primary); font-size: 11px; letter-spacing: .12em; font-weight: 800; text-transform: uppercase; margin: 0 0 12px; }
 .police-page-heading h2 { font-size: clamp(28px, 2.8vw, 42px); line-height: 1.25; letter-spacing: -.04em; }
@@ -69,7 +83,7 @@
 .police-history-stats article { display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 1px solid var(--line); border-radius: 12px; padding: 20px; background: #0d161f; }
 .police-history-stats span { font-size: 12px; color: var(--muted); }
 .police-history-stats strong { font-size: 28px; }
-.police-table-scroll { width: 100%; overflow-x: auto; }
+.police-table-scroll { position: relative; width: 100%; overflow-x: auto; }
 .police-history table { width: 100%; border-collapse: collapse; min-width: 640px; text-align: left; }
 .police-history th, .police-history td { padding: 18px 20px; border-bottom: 1px solid var(--line); font-size: 11px; }
 .police-history th { color: var(--muted); font-size: 10px; }
@@ -147,6 +161,27 @@
 .police-shift-actions .police-button-pause { border-color: #d69b3e70; color: #f4bf69; background: #f59e0b12; }
 .police-shift-actions .police-button-end { border-color: #ff405d88; color: #ff8093; background: #ff405d13; }
 .police-shift-actions .police-button-resume { border-color: #37bb856e; color: #7ce4b0; background: #34d39916; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .police-page :is(.police-shift-panel, .police-stat, .police-history-stats article),
+  .police-dialog[open] {
+    animation: police-content-in 260ms ease-out both;
+  }
+  .police-stats > :nth-child(2), .police-history-stats > :nth-child(2) { animation-delay: 45ms; }
+  .police-stats > :nth-child(3), .police-history-stats > :nth-child(3) { animation-delay: 90ms; }
+  .police-page :is(.police-tabs button, .police-filters button, .police-case, .police-button),
+  .police-dialog .police-button {
+    transition: background-color 160ms, border-color 160ms, color 160ms, transform 160ms;
+  }
+  .police-page .police-button:active:not(:disabled), .police-dialog .police-button:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+}
+
+@keyframes police-content-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
 @media (max-width: 700px) {
   .police-shift-panel { flex-direction: column; align-items: stretch; padding: 18px; gap: 18px; }
   .police-shift-content { gap: 12px; }

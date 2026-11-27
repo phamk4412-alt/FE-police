@@ -65,14 +65,14 @@ export default function PoliceShiftPanel() {
       </div>
       <div className="police-shift-actions">
         {shift.status === "off-duty" ? (
-          <button className="police-button police-button-primary" type="button" onClick={startShift}>Bắt đầu ca trực</button>
+          <button className="police-button police-button-primary" type="button" onClick={startShift}><AdminIcon name="play" />Bắt đầu ca trực</button>
         ) : shift.status === "on-duty" ? (
           <>
-            <button className="police-button police-button-pause" type="button" onClick={pauseShift}>Tạm nghỉ</button>
-            <button className="police-button police-button-end" type="button" onClick={() => setConfirmEnd(true)}>Kết thúc ca trực</button>
+            <button className="police-button police-button-pause" type="button" onClick={pauseShift}><AdminIcon name="pause" />Tạm nghỉ</button>
+            <button className="police-button police-button-end" type="button" onClick={() => setConfirmEnd(true)}><AdminIcon name="stop" />Kết thúc ca trực</button>
           </>
         ) : (
-          <button className="police-button police-button-resume" type="button" onClick={resumeShift}>Tiếp tục ca trực</button>
+          <button className="police-button police-button-resume" type="button" onClick={resumeShift}><AdminIcon name="play" />Tiếp tục ca trực</button>
         )}
       </div>
       {confirmEnd ? (
@@ -81,8 +81,8 @@ export default function PoliceShiftPanel() {
             <p className="police-detail-description">Bạn muốn kết thúc ca trực mô phỏng và chuyển về trạng thái “Chưa vào ca”?</p>
           </div>
           <footer className="police-dialog-footer">
-            <button className="police-button" type="button" autoFocus onClick={() => setConfirmEnd(false)}>Hủy</button>
-            <button className="police-button police-button-primary" type="button" onClick={endShift}>Xác nhận kết thúc</button>
+            <button className="police-button" type="button" autoFocus onClick={() => setConfirmEnd(false)}><AdminIcon name="close" />Hủy</button>
+            <button className="police-button police-button-primary" type="button" onClick={endShift}><AdminIcon name="check" />Xác nhận kết thúc</button>
           </footer>
         </PoliceDialog>
       ) : null}

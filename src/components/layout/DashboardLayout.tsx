@@ -1,14 +1,13 @@
 import { useEffect, useState, type ReactNode } from "react";
 import VietnameseDecor, { type VietnameseDecorVariant } from "../common/VietnameseDecor";
-import SupportDecor from "../common/SupportDecor";
+import AnimatedDashboardDecor from "../common/AnimatedDashboardDecor";
 import type { UserRole } from "../../types/user";
 import type { SupportTab } from "../../utils/constants";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 
-const defaultDecorByRole: Record<Exclude<UserRole, "support">, VietnameseDecorVariant> = {
+const defaultDecorByRole: Record<Exclude<UserRole, "support" | "police">, VietnameseDecorVariant> = {
   admin: "admin",
-  police: "police",
   user: "user-home",
 };
 
@@ -56,7 +55,7 @@ function DashboardLayout({
 
   return (
     <div
-      className={`dashboard-shell ${role === "support" ? "is-support" : ""} ${isSidebarCollapsed ? "is-sidebar-collapsed" : ""} ${
+      className={`dashboard-shell ${role === "support" || role === "police" ? `is-${role}` : ""} ${isSidebarCollapsed ? "is-sidebar-collapsed" : ""} ${
         isMobileNavOpen ? "is-mobile-nav-open" : ""
       }`}
     >
@@ -75,7 +74,9 @@ function DashboardLayout({
         onClick={() => setIsMobileNavOpen(false)}
       />
       <div className="dashboard-main">
-        {role === "support" ? <SupportDecor /> : <VietnameseDecor variant={decorVariant || defaultDecorByRole[role]} />}
+        {role === "support" || role === "police"
+          ? <AnimatedDashboardDecor />
+          : <VietnameseDecor variant={decorVariant || defaultDecorByRole[role]} />}
         <Header
           activeSupportTab={activeSupportTab}
           activeUserTab={activeUserTab}

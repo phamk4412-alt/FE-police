@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import AdminIcon from "../../../components/admin/AdminIcons";
 import { createPoliceReport } from "../../../services/policeService";
 import type { Incident } from "../../../types/incident";
 import PoliceDialog from "./PoliceDialog";
@@ -58,14 +59,14 @@ export default function PoliceReportDialog({ onClose, onCreated }: { onClose: ()
       <label>Tiêu đề<input name="Title" required maxLength={160} placeholder="Nhập mô tả ngắn vụ việc" disabled={busy} /></label>
       <label>Mô tả hiện trường<textarea name="Detail" required maxLength={3500} rows={4} placeholder="Mô tả diễn biến và tình trạng hiện tại..." disabled={busy} /></label>
       <label>Địa chỉ hiện trường<input name="Address" maxLength={300} placeholder="Số nhà, đường, phường, khu vực" disabled={busy} /></label>
-      <div className="police-location-heading"><span>Vị trí GPS</span><button type="button" className="police-button" disabled={busy || locating} onClick={locate}>{locating ? "Đang lấy vị trí..." : "Lấy vị trí hiện tại"}</button></div>
+      <div className="police-location-heading"><span>Vị trí GPS</span><button type="button" className="police-button" disabled={busy || locating} onClick={locate}><AdminIcon name="mapPin" />{locating ? "Đang lấy vị trí..." : "Lấy vị trí hiện tại"}</button></div>
       <div className="police-form-grid"><label>Vĩ độ<input aria-label="Vĩ độ" type="number" step="any" required min="10.3" max="11.1" value={latitude} onChange={(event) => setLatitude(event.target.value)} disabled={busy} placeholder="10.7769" /></label><label>Kinh độ<input aria-label="Kinh độ" type="number" step="any" required min="106.4" max="107.1" value={longitude} onChange={(event) => setLongitude(event.target.value)} disabled={busy} placeholder="106.7009" /></label></div>
-      <label className="police-upload">Thêm hình ảnh hiện trường <small>Tối đa 3 ảnh JPG, PNG hoặc WebP, mỗi ảnh tối đa 5 MB.</small><input aria-label="Hình ảnh hiện trường" type="file" accept="image/jpeg,image/png,image/webp" multiple disabled={busy} onChange={(event) => {
+      <label className="police-upload"><span className="police-icon-label"><AdminIcon name="image" />Thêm hình ảnh hiện trường</span> <small>Tối đa 3 ảnh JPG, PNG hoặc WebP, mỗi ảnh tối đa 5 MB.</small><input aria-label="Hình ảnh hiện trường" type="file" accept="image/jpeg,image/png,image/webp" multiple disabled={busy} onChange={(event) => {
         const files = Array.from(event.target.files || []);
         if (files.length > 3 || files.some((file) => file.size === 0 || file.size > 5 * 1024 * 1024 || !["image/jpeg", "image/png", "image/webp"].includes(file.type))) { setError("Chọn tối đa 3 ảnh JPG, PNG hoặc WebP hợp lệ, mỗi ảnh không quá 5 MB."); event.target.value = ""; setImages([]); return; }
         setError(""); setImages(files);
       }} />{images.length ? <span>{images.map((image) => image.name).join(", ")}</span> : null}</label>
       {error ? <p className="police-form-error" role="alert">{error}</p> : null}
-    </div><footer className="police-dialog-footer"><button className="police-button" disabled={busy} type="button" onClick={close}>Hủy</button><button className="police-button police-button-primary" disabled={busy || locating} type="submit">{busy ? "Đang gửi báo cáo..." : "Tạo báo cáo"}</button></footer></form>
+    </div><footer className="police-dialog-footer"><button className="police-button" disabled={busy} type="button" onClick={close}><AdminIcon name="close" />Hủy</button><button className="police-button police-button-primary" disabled={busy || locating} type="submit"><AdminIcon name={busy ? "activity" : "send"} />{busy ? "Đang gửi báo cáo..." : "Tạo báo cáo"}</button></footer></form>
   </PoliceDialog>;
 }
