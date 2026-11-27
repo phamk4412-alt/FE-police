@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
 import AdminIcon from "../admin/AdminIcons";
 import type { UserRole } from "../../types/user";
-import { ROLE_LABELS } from "../../utils/constants";
+import { APP_LOCATION, APP_MARK_URL, APP_NAME, ROLE_LABELS } from "../../utils/constants";
 import { getActiveSidebarItem, sidebarGroups } from "./sidebarNavigation";
 import "./roleSidebar.css";
 
@@ -66,13 +66,14 @@ function Sidebar({ drawerRef, isCollapsed, onNavigate, onToggle, role }: Sidebar
     return (
       <aside className="role-sidebar" ref={drawerRef} aria-label="Thanh điều hướng">
         <div className="role-sidebar-brand">
-          <span className="role-sidebar-mark" role="img" aria-label="Trung tâm Cảnh sát · TP. Hồ Chí Minh"
-            data-tooltip="Trung tâm Cảnh sát · TP. Hồ Chí Minh" tabIndex={isCollapsed ? 0 : undefined}>
-            <AdminIcon name="shield" />
+          <span className="role-sidebar-mark" role={isCollapsed ? "img" : undefined}
+            aria-label={isCollapsed ? `${APP_NAME} · ${APP_LOCATION}` : undefined}
+            data-tooltip={`${APP_NAME} · ${APP_LOCATION}`} tabIndex={isCollapsed ? 0 : undefined}>
+            <img src={APP_MARK_URL} alt="" width="40" height="40" />
           </span>
           <div className="role-sidebar-brand-copy">
-            <strong>Trung tâm Cảnh sát</strong>
-            <small>TP. Hồ Chí Minh</small>
+            <strong>{APP_NAME}</strong>
+            <small>{APP_LOCATION}</small>
           </div>
           <button className="role-sidebar-toggle" type="button" onClick={onToggle} aria-expanded={!isCollapsed}
             aria-label={isCollapsed ? "Mở rộng thanh điều hướng" : "Thu gọn thanh điều hướng"}>
@@ -155,11 +156,11 @@ function Sidebar({ drawerRef, isCollapsed, onNavigate, onToggle, role }: Sidebar
     <aside className="sidebar">
       <div className="sidebar-brand">
         <span className="sidebar-brand-mark" aria-hidden="true">
-          <AdminIcon name="police" />
+          <img src={APP_MARK_URL} alt="" width="42" height="42" />
         </span>
         <span className="sidebar-brand-text">
-          <strong>Trung tâm Cảnh sát</strong>
-          <small>TP. Hồ Chí Minh</small>
+          <strong>{APP_NAME}</strong>
+          <small>{APP_LOCATION}</small>
         </span>
         <button
           className="sidebar-toggle"

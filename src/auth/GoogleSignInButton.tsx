@@ -27,6 +27,7 @@ function loadGoogleScript() {
 }
 
 interface GoogleSignInButtonProps {
+  fitContainer?: boolean;
   onCredential: (credential: string) => void;
   text?: "signin_with" | "signup_with" | "continue_with";
 }
@@ -77,7 +78,7 @@ function NativeGoogleSignInButton({ onCredential, text = "continue_with" }: Goog
   );
 }
 
-function WebGoogleSignInButton({ onCredential, text = "continue_with" }: GoogleSignInButtonProps) {
+function WebGoogleSignInButton({ fitContainer = false, onCredential, text = "continue_with" }: GoogleSignInButtonProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const onCredentialRef = useRef(onCredential);
   const [loadError, setLoadError] = useState("");
@@ -93,6 +94,7 @@ function WebGoogleSignInButton({ onCredential, text = "continue_with" }: GoogleS
     }
 
     let isActive = true;
+    let observer: ResizeObserver | undefined;
     loadGoogleScript()
       .then(() => {
         const container = containerRef.current;
@@ -100,7 +102,8 @@ function WebGoogleSignInButton({ onCredential, text = "continue_with" }: GoogleS
           return;
         }
 
-        window.google.accounts.id.initialize({
+        const googleId = window.google.accounts.id;
+        googleId.initialize({
           client_id: clientId,
           callback: (response) => {
             if (response.credential) {
@@ -109,14 +112,26 @@ function WebGoogleSignInButton({ onCredential, text = "continue_with" }: GoogleS
           },
           ux_mode: "popup",
         });
-        window.google.accounts.id.renderButton(container, {
-          locale: "vi",
-          shape: "rectangular",
-          size: "large",
-          text,
-          theme: "filled_black",
-          width: Math.min(container.clientWidth || 360, 400),
-        });
+        let renderedWidth = 0;
+        const renderButton = () => {
+          const width = Math.min(container.clientWidth || 360, 400);
+          if (width === renderedWidth) return;
+          renderedWidth = width;
+          container.replaceChildren();
+          googleId.renderButton(container, {
+            locale: "vi",
+            shape: "rectangular",
+            size: "large",
+            text,
+            theme: "filled_black",
+            width,
+          });
+        };
+        renderButton();
+        if (fitContainer && typeof ResizeObserver !== "undefined") {
+          observer = new ResizeObserver(renderButton);
+          observer.observe(container);
+        }
       })
       .catch((error: unknown) => {
         if (isActive) {
@@ -126,8 +141,9 @@ function WebGoogleSignInButton({ onCredential, text = "continue_with" }: GoogleS
 
     return () => {
       isActive = false;
+      observer?.disconnect();
     };
-  }, [clientId, text]);
+  }, [clientId, fitContainer, text]);
 
   if (!clientId) {
     return <p className="auth-error">Thiếu cấu hình VITE_GOOGLE_CLIENT_ID.</p>;

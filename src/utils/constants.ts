@@ -1,6 +1,8 @@
 import type { UserRole } from "../types/user";
 
 export const APP_NAME = "Trung tâm Cảnh sát thông minh";
+export const APP_LOCATION = "TP. Hồ Chí Minh";
+export const APP_MARK_URL = `${import.meta.env.BASE_URL}favicon.svg`;
 
 export const ROLE_LABELS: Record<UserRole, string> = {
   admin: "Quản trị viên",

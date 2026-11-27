@@ -26,6 +26,7 @@ export type AdminIconName =
   | "file"
   | "flame"
   | "lock"
+  | "mail"
   | "logout"
   | "map"
   | "menu"
@@ -42,7 +43,8 @@ export type AdminIconName =
   | "unlock"
   | "user"
   | "users"
-  | "view";
+  | "view"
+  | "viewOff";
 
 interface AdminIconProps {
   name:
@@ -77,6 +79,7 @@ const paths: Record<AdminIconName, string> = {
   file: "M7 3h7l4 4v14H7z M14 3v5h5 M9 13h6 M9 17h6",
   flame: "M12 21c-4 0-7-3-7-7 0-3 2-5 4-7 0 2 1 3 2 4 1-3 2-5 5-8 1 4 4 6 4 11 0 4-3 7-8 7z",
   lock: "M7 10h10v9H7z M9 10V8a3 3 0 116 0v2",
+  mail: "M4 5h16v14H4z M4 7l8 6 8-6",
   logout: "M14 4h4a2 2 0 012 2v12a2 2 0 01-2 2h-4 M10 16l-4-4 4-4 M6 12h10",
   map: "M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2z M9 4v14 M15 6v14",
   menu: "M4 7h16 M4 12h16 M4 17h16",
@@ -94,6 +97,7 @@ const paths: Record<AdminIconName, string> = {
   user: "M12 11a4 4 0 100-8 4 4 0 000 8z M5 20a7 7 0 0114 0",
   users: "M9 11a4 4 0 100-8 4 4 0 000 8z M3 20a6 6 0 0112 0 M16 11a3 3 0 100-6 M17 20a5 5 0 00-4-4.8",
   view: "M3 12s3.2-6 9-6 9 6 9 6-3.2 6-9 6-9-6-9-6z M12 9a3 3 0 100 6 3 3 0 000-6z",
+  viewOff: "M3 3l18 18 M9 6.5a9.5 9.5 0 013-.5c5.8 0 9 6 9 6a16 16 0 01-2.5 3 M6 8.1A16 16 0 003 12s3.2 6 9 6a9 9 0 004-.9",
 };
 
 function AdminIcon({ name }: AdminIconProps) {
