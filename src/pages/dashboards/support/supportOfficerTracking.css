@@ -64,6 +64,25 @@
 .support-officer-list.panel { min-width: 0; padding: 0; overflow: hidden; }
 .support-officer-list-heading { padding: 15px clamp(12px, 2vw, 22px); border-bottom: 1px solid #283544; }
 
+.support-officer-list-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+}
+
+.support-officer-refresh.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  min-width: 135px;
+  padding: 8px 11px;
+  font-size: .8rem;
+}
+
 .support-officer-search {
   display: flex;
   align-items: center;

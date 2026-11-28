@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import AdminIcon from "../../../components/admin/AdminIcons";
 import { apiFetch } from "../../../services/api";
 import "./supportOfficerTracking.css";
@@ -22,32 +22,44 @@ const onlineSinceFormatter = new Intl.DateTimeFormat("vi-VN", {
 function SupportOfficerTracking() {
   const [list, setList] = useState<OnlineList>({ status: "loading" });
   const [search, setSearch] = useState("");
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const pending = useRef<Promise<OnlinePoliceAccount[]> | null>(null);
+
+  const refresh = useCallback(() => {
+    if (pending.current) return pending.current;
+    const request = apiFetch<OnlinePoliceAccount[]>("/api/support/police/online", { cache: "no-store" });
+    pending.current = request;
+    void request.then((accounts) => {
+      if (pending.current === request) setList(Array.isArray(accounts) ? { status: "ready", accounts } : { status: "unavailable" });
+    }).catch(() => {
+      if (pending.current === request) setList({ status: "unavailable" });
+    }).finally(() => {
+      if (pending.current === request) pending.current = null;
+    });
+    return request;
+  }, []);
+
+  async function refreshManually() {
+    setIsRefreshing(true);
+    try {
+      await refresh();
+    } catch {
+      // The shared refresh already reports the error in the list.
+    } finally {
+      setIsRefreshing(false);
+    }
+  }
 
   useEffect(() => {
-    let active = true;
-    let inFlight = false;
-    async function refresh() {
-      if (inFlight) return;
-      inFlight = true;
-      try {
-        const accounts = await apiFetch<OnlinePoliceAccount[]>("/api/support/police/online", { cache: "no-store" });
-        if (active) setList(Array.isArray(accounts) ? { status: "ready", accounts } : { status: "unavailable" });
-      } catch {
-        if (active) setList({ status: "unavailable" });
-      } finally {
-        inFlight = false;
-      }
-    }
-
     void refresh();
     const timer = window.setInterval(refresh, 5_000);
     window.addEventListener("online", refresh);
     return () => {
-      active = false;
+      pending.current = null;
       window.clearInterval(timer);
       window.removeEventListener("online", refresh);
     };
-  }, []);
+  }, [refresh]);
 
   const accounts = list.status === "ready" ? list.accounts : [];
   const query = search.trim().toLocaleLowerCase("vi-VN");
@@ -84,11 +96,17 @@ function SupportOfficerTracking() {
       <section className="support-officer-list panel" aria-labelledby="support-officer-list-title">
         <header className="support-officer-list-heading">
           <h3 id="support-officer-list-title">Công an trực tuyến</h3>
-          <label className="support-officer-search">
-            <AdminIcon name="search" />
-            <span className="visually-hidden">Tìm tên hoặc mã tài khoản</span>
-            <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Tìm tên hoặc mã tài khoản" />
-          </label>
+          <div className="support-officer-list-controls">
+            <label className="support-officer-search">
+              <AdminIcon name="search" />
+              <span className="visually-hidden">Tìm tên hoặc mã tài khoản</span>
+              <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Tìm tên hoặc mã tài khoản" />
+            </label>
+            <button className="support-officer-refresh btn btn-secondary" type="button" disabled={isRefreshing}
+              aria-busy={isRefreshing} onClick={() => void refreshManually()}>
+              <AdminIcon name="refresh" /> {isRefreshing ? "Đang làm mới…" : "Làm mới"}
+            </button>
+          </div>
         </header>
         {message ? <p className="support-officer-empty" role="status">{message}</p> : (
           <ul className="support-officer-rows">

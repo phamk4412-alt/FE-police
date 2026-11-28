@@ -71,7 +71,9 @@ test("online police presence against a disposable in-memory backend", { skip: !b
       method: "POST", token: citizen.token, body: { Role: "police" },
     });
     assert.equal(citizenPoliceView.status, 200, "The existing demo role selection remains available.");
-    assert.equal((await heartbeat(citizenPoliceView.data.Token)).status, 401);
+    await expectOnline(citizen);
+    assert.equal((await heartbeat(citizenPoliceView.data.Token)).status, 204);
+    await logout(citizenPoliceView.data.Token);
     await expectOnline();
   });
 
