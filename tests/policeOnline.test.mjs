@@ -58,13 +58,18 @@ test("online police presence against a disposable in-memory backend", { skip: !b
   }
   const heartbeat = (token) => request("/api/police/online/heartbeat", { method: "POST", token });
   const logout = (token) => request("/api/auth/logout", { method: "POST", token });
+  const shiftEndpoint = "/api/police/online/shift";
+  const getShift = (token) => request(shiftEndpoint, { token });
+  const updateShift = (token, status) => request(shiftEndpoint, { method: "PUT", token, body: { Status: status } });
 
   await t.test("no live Police, access is restricted to the matching roles", async () => {
     await expectOnline();
     assert.equal((await request(endpoint)).status, 401);
     assert.equal((await heartbeat()).status, 401);
+    assert.equal((await getShift()).status, 401);
     for (const token of [await login(citizen), supportToken, await login(admin)]) {
       assert.equal((await heartbeat(token)).status, 403);
+      assert.equal((await updateShift(token, "on-duty")).status, 403);
       if (token !== supportToken) assert.equal((await request(endpoint, { token })).status, 403);
     }
     const citizenPoliceView = await request("/api/auth/select-role", {
@@ -106,13 +111,37 @@ test("online police presence against a disposable in-memory backend", { skip: !b
     await expectOnline(first);
   });
 
+  await t.test("shift status follows the online account across its sessions", async () => {
+    const peerToken = await login(first);
+    assert.equal((await getShift(firstToken)).data.Status, "off-duty");
+    assert.equal((await updateShift(firstToken, "invalid")).status, 400);
+
+    const started = await updateShift(firstToken, "on-duty");
+    assert.equal(started.status, 200);
+    assert.ok(Number.isFinite(Date.parse(started.data.StartedAt)));
+    for (const [token, status] of [[peerToken, "break"], [firstToken, "on-duty"]]) {
+      assert.deepEqual((await updateShift(token, status)).data, { Status: status, StartedAt: started.data.StartedAt });
+      assert.equal((await getShift(firstToken)).data.Status, status);
+      assert.equal((await expectOnline(first))[0].ShiftStatus, status);
+    }
+
+    await logout(peerToken);
+    assert.equal((await updateShift(peerToken, "off-duty")).status, 401);
+    assert.equal((await expectOnline(first))[0].ShiftStatus, "on-duty");
+    assert.equal((await updateShift(firstToken, "off-duty")).data.StartedAt, null);
+    assert.equal((await expectOnline(first))[0].ShiftStatus, "off-duty");
+  });
+
   await t.test("silent disconnect expires, reconnect creates a fresh online period", async () => {
     assert.equal((await heartbeat(firstToken)).status, 204);
+    assert.equal((await updateShift(firstToken, "on-duty")).status, 200);
     const before = await expectOnline(first);
     await wait(76_000);
     await expectOnline();
     assert.equal((await heartbeat(firstToken)).status, 204);
-    assert.ok(Date.parse((await expectOnline(first))[0].OnlineSince) > Date.parse(before[0].OnlineSince));
+    const reconnected = (await expectOnline(first))[0];
+    assert.ok(Date.parse(reconnected.OnlineSince) > Date.parse(before[0].OnlineSince));
+    assert.equal(reconnected.ShiftStatus, "off-duty");
     await logout(firstToken);
     await expectOnline();
   });

@@ -9,6 +9,8 @@ import { useAuth } from "../../auth/AuthContext";
 import { getAuthToken } from "../../auth/authToken";
 import { API_URL, apiFetch } from "../../services/api";
 import type { Incident } from "../../types/incident";
+import { getPoliceShiftLabel, type PoliceShiftStatus } from "../../types/policeShift";
+import "./policePositionPopup.css";
 import {
   getIncidentCategory,
   getIncidentCoordinates,
@@ -39,6 +41,7 @@ interface MapViewProps {
   initialMode?: MapMode;
   onIncidentsLoad?: (incidents: Incident[]) => void;
   onIncidentSelect?: (incident: Incident) => void;
+  policeShiftStatus?: PoliceShiftStatus;
   role?: MapRole;
   selectedIncident?: Incident | null;
   showModeControls?: boolean;
@@ -370,10 +373,12 @@ function createFacilityPopup(
   return popupContent;
 }
 
-function showPopupOnMarkerHover(marker: mapboxgl.Marker) {
+function showPopupOnMarkerHover(marker: mapboxgl.Marker, preserveTouch = false) {
   const element = marker.getElement();
 
-  function openPopup() {
+  function openPopup(event: Event) {
+    if (preserveTouch && (event.type === "focus" ? !element.matches(":focus-visible")
+      : (event as PointerEvent).pointerType === "touch")) return;
     const popup = marker.getPopup();
     if (popup && !popup.isOpen()) {
       marker.togglePopup();
@@ -387,28 +392,39 @@ function showPopupOnMarkerHover(marker: mapboxgl.Marker) {
     }
   }
 
-  element.addEventListener("mouseenter", openPopup);
+  element.addEventListener(preserveTouch ? "pointerenter" : "mouseenter", openPopup);
   element.addEventListener("focus", openPopup);
-  element.addEventListener("mouseleave", closePopup);
+  element.addEventListener(preserveTouch ? "pointerleave" : "mouseleave", (event) => {
+    if (!preserveTouch || (event as PointerEvent).pointerType !== "touch") closePopup();
+  });
   element.addEventListener("blur", closePopup);
 }
 
 function createCurrentLocationMarker(label: string, role: MapRole) {
+  if (role === "police") return createPoliceLocationMarker(label);
   const markerElement = document.createElement("div");
-  markerElement.className =
-    role === "police" ? "current-location-marker current-location-marker-police" : "current-location-marker";
+  markerElement.className = "current-location-marker";
   markerElement.setAttribute("aria-label", label);
   markerElement.setAttribute("role", "img");
-
-  if (role === "police") {
-    const markerImage = document.createElement("img");
-    markerImage.src = policeCarMarker;
-    markerImage.alt = "";
-    markerImage.draggable = false;
-    markerElement.appendChild(markerImage);
-  }
-
   return markerElement;
+}
+
+function createOwnPolicePositionPopup(name: string, coordinates: [number, number], status?: PoliceShiftStatus) {
+  const content = document.createElement("div");
+  content.className = "police-position-card";
+  const heading = document.createElement("small");
+  heading.textContent = "Vị trí của bạn";
+  const displayName = document.createElement("strong");
+  displayName.textContent = name;
+  const badge = document.createElement("span");
+  badge.className = `police-shift-indicator is-${status ?? "unknown"}`;
+  badge.textContent = getPoliceShiftLabel(status);
+  const position = document.createElement("div");
+  position.className = "police-position-coordinates";
+  const [longitude, latitude] = coordinates;
+  position.textContent = `GPS · ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+  content.append(heading, displayName, badge, position);
+  return content;
 }
 function normalizePoliceLocation(location: PoliceLocation) {
   const username = location.Username || location.username || "";
@@ -426,8 +442,8 @@ function normalizePoliceLocation(location: PoliceLocation) {
     latitude,
     longitude,
     district: location.District || location.district || "TP.HCM",
-    shiftId: location.ShiftId || location.shiftId || "Đang trực",
-    status: location.Status || location.status || "Đang trong ca",
+    shiftId: location.ShiftId || location.shiftId,
+    status: location.Status || location.status || getPoliceShiftLabel(),
     updatedAt: location.UpdatedAt || location.updatedAt || new Date().toISOString(),
   };
 }
@@ -453,7 +469,7 @@ function createPoliceLocationPopup(location: NonNullable<ReturnType<typeof norma
   popupContent.innerHTML = `<strong></strong><span></span><small></small>`;
   popupContent.querySelector("strong")!.textContent = location.displayName;
   popupContent.querySelector("span")!.textContent = location.status;
-  popupContent.querySelector("small")!.textContent = `${location.district} - ${location.shiftId}`;
+  popupContent.querySelector("small")!.textContent = [location.district, location.shiftId].filter(Boolean).join(" · ");
   return popupContent;
 }
 
@@ -894,7 +910,6 @@ function updatePoliceLocation(payload: {
   DisplayName: string;
   Latitude: number;
   Longitude: number;
-  ShiftId: string;
   Status: string;
   Username: string;
 }) {
@@ -940,6 +955,7 @@ function MapView({
   initialMode = "normal",
   onIncidentsLoad,
   onIncidentSelect,
+  policeShiftStatus,
   role = "user",
   selectedIncident = null,
   showModeControls = false,
@@ -955,6 +971,7 @@ function MapView({
   const miniMapRef = useRef<mapboxgl.Map | null>(null);
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
   const currentLocationMarkerRef = useRef<mapboxgl.Marker | null>(null);
+  const policeShiftStatusRef = useRef(policeShiftStatus);
   const routeLastLocationRef = useRef<[number, number] | null>(null);
   const hasCenteredOnCurrentLocationRef = useRef(false);
   const facilityMapMarkersRef = useRef<mapboxgl.Marker[]>([]);
@@ -982,7 +999,7 @@ function MapView({
   const showUserToolbarActions = role === "user" && showModeControls && mode === "normal";
   const showPoliceToolbarActions = role === "police" && mode === "normal";
   const currentPoliceUsername = useMemo(
-    () => user?.id || user?.email || "police-session",
+    () => user?.email || user?.id || "police-session",
     [user?.id, user?.email],
   );
   const canUseDirections = !isSupportMap && mode === "normal" && (role === "police" || (role === "user" && showModeControls));
@@ -1387,6 +1404,10 @@ function MapView({
   }, [role]);
 
   useEffect(() => {
+    policeShiftStatusRef.current = policeShiftStatus;
+  }, [policeShiftStatus]);
+
+  useEffect(() => {
     if (role !== "police" || !navigator.geolocation) {
       return;
     }
@@ -1411,8 +1432,7 @@ function MapView({
         DisplayName: displayName,
         Latitude: position.coords.latitude,
         Longitude: position.coords.longitude,
-        ShiftId: `shift-${new Date().toISOString().slice(0, 10)}`,
-        Status: "Đang trong ca",
+        Status: getPoliceShiftLabel(policeShiftStatusRef.current),
         Username: username,
       })
         .then(() => fetchPoliceLocations().then(setPoliceLocations))
@@ -1456,21 +1476,38 @@ function MapView({
       }
     };
   }, [currentPoliceUsername, role, user?.name, user?.email]);
+
   useEffect(() => {
     const map = mapRef.current;
+    if (!map || !currentLocation) return;
 
+    const name = user?.name || "Cảnh sát";
+    const content = role === "police" ? createOwnPolicePositionPopup(name, currentLocation, policeShiftStatus) : null;
+    if (!currentLocationMarkerRef.current) {
+      const popup = new mapboxgl.Popup(content
+        ? { offset: 22, className: "police-position-popup", closeButton: false }
+        : { offset: 18 });
+      const marker = new mapboxgl.Marker({ element: createCurrentLocationMarker(currentLocationLabel, role) })
+        .setLngLat(currentLocation)
+        .setPopup(popup)
+        .addTo(map);
+      if (content) showPopupOnMarkerHover(marker, true);
+      currentLocationMarkerRef.current = marker;
+    }
+    const marker = currentLocationMarkerRef.current.setLngLat(currentLocation);
+    if (content) {
+      marker.getElement().setAttribute("aria-label", `${currentLocationLabel}. ${getPoliceShiftLabel(policeShiftStatus)}`);
+      marker.getPopup()?.setDOMContent(content);
+    } else {
+      marker.getPopup()?.setText(currentLocationLabel);
+    }
+  }, [currentLocation, currentLocationLabel, policeShiftStatus, role, user?.name]);
+
+  useEffect(() => {
+    const map = mapRef.current;
     if (!map || !currentLocation) {
       return;
     }
-
-    currentLocationMarkerRef.current?.remove();
-    currentLocationMarkerRef.current = new mapboxgl.Marker({
-      element: createCurrentLocationMarker(currentLocationLabel, role),
-    })
-      .setLngLat(currentLocation)
-      .setPopup(new mapboxgl.Popup({ offset: 18 }).setText(currentLocationLabel))
-      .addTo(map);
-
     if (defaultToCurrentLocation && !hasCenteredOnCurrentLocationRef.current) {
       hasCenteredOnCurrentLocationRef.current = true;
       const camera = getCameraForPerspective(perspective);
@@ -1482,7 +1519,7 @@ function MapView({
         zoom: Math.max(zoom, 14),
       });
     }
-  }, [currentLocation, currentLocationLabel, defaultToCurrentLocation, perspective, role, zoom]);
+  }, [currentLocation, defaultToCurrentLocation, perspective, zoom]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -1501,7 +1538,8 @@ function MapView({
         return;
       }
 
-      if (location.username === currentPoliceUsername) {
+      if (location.username.toLowerCase() === currentPoliceUsername.toLowerCase()
+        || location.username === user?.id) {
         policeLocationMarkersRef.current.get(location.username)?.remove();
         policeLocationMarkersRef.current.delete(location.username);
         return;
@@ -1512,7 +1550,7 @@ function MapView({
 
       const marker = new mapboxgl.Marker({
         anchor: "center",
-        element: createPoliceLocationMarker(`${location.displayName} đang trong ca`),
+        element: createPoliceLocationMarker(`${location.displayName}. ${location.status}`),
       })
         .setLngLat([location.longitude, location.latitude])
         .setPopup(new mapboxgl.Popup({ offset: 20 }).setDOMContent(createPoliceLocationPopup(location)))
@@ -1528,7 +1566,7 @@ function MapView({
         policeLocationMarkersRef.current.delete(username);
       }
     });
-  }, [currentPoliceUsername, policeLocations, role]);
+  }, [currentPoliceUsername, policeLocations, role, user?.id]);
   useEffect(() => {
     const map = mapRef.current;
 

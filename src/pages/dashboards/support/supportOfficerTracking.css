@@ -113,6 +113,7 @@
 .support-officer-identity { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .support-officer-identity > div { display: grid; gap: 3px; min-width: 0; overflow-wrap: anywhere; }
 .support-officer-identity small, .support-officer-time { color: #a6b7c6; }
+.support-officer-statuses { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
 .support-officer-time .admin-icon { flex: none; }
 .support-officer-empty { margin: 0; padding: 30px 14px; text-align: center; color: #a9baca; }
 

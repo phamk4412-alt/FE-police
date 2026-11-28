@@ -10,6 +10,7 @@ import { getIncidentCoordinates, getIncidentCreatedAt, getIncidentId, getInciden
 import PoliceIncidentDialog from "./police/PoliceIncidentDialog";
 import PoliceReportDialog from "./police/PoliceReportDialog";
 import PoliceShiftPanel from "./police/PoliceShiftPanel";
+import { usePoliceShift } from "./police/usePoliceShift";
 import { formatPoliceTime, getStatusGroup, isInPolicePeriod, matchesPoliceSearch, statusLabels, type PolicePeriod, type StatusGroup } from "./police/policeUtils";
 import "./police/police.css";
 
@@ -18,6 +19,7 @@ const filters = ["all", "new", "processing", "completed"] as const;
 
 function PoliceDashboard() {
   const { user } = useAuth();
+  const policeShift = usePoliceShift();
   const location = useLocation();
   const navigate = useNavigate();
   const [incidents, setIncidents] = useState<Incident[]>([]);
@@ -94,7 +96,7 @@ function PoliceDashboard() {
       <button type="button" aria-pressed={view === "history"} onClick={() => setView("history")}><AdminIcon name="clock" />Lịch sử vụ việc</button>
     </nav>
     <div className="police-page-heading"><div><p className="police-eyebrow">{view === "dashboard" ? "Bảng điều khiển cảnh sát" : "Hồ sơ công tác"}</p><h2>{view === "dashboard" ? "Điều hành vụ việc" : "Lịch sử vụ việc"}</h2><p>{view === "dashboard" ? "Theo dõi vụ việc mới, hồ sơ đang xử lý và khu vực ưu tiên." : "Tra cứu các vụ việc bạn là người cập nhật gần nhất."}</p></div><button className="police-button police-button-primary" type="button" onClick={() => setShowReport(true)}><AdminIcon name="plus" />Tạo báo cáo hiện trường</button></div>
-    <PoliceShiftPanel />
+    <PoliceShiftPanel {...policeShift} />
     {notice ? <div className="police-notice" role="status">{notice}<button type="button" aria-label="Đóng thông báo" onClick={() => setNotice("")}><AdminIcon name="close" /></button></div> : null}
     {error ? <div className="police-error" role="alert"><div><strong>Không thể cập nhật vụ việc</strong><p>{error}</p>{incidents.length ? <small>Đang hiển thị dữ liệu tải thành công gần nhất.</small> : null}</div><button className="police-button" disabled={isLoading} type="button" onClick={() => { setIsLoading(true); void loadIncidents(); }}><AdminIcon name="refresh" />{isLoading ? "Đang tải..." : "Thử lại"}</button></div> : null}
     {view === "dashboard" ? <>
@@ -107,7 +109,7 @@ function PoliceDashboard() {
           {!isLoading && !error && !visibleIncidents.length ? <div className="police-empty"><AdminIcon name="file" /><p>{incidents.length ? "Không có vụ việc phù hợp với bộ lọc." : "Chưa có vụ việc trong khu vực."}</p></div> : null}
           {visibleIncidents.map((incident) => { const group = getStatusGroup(getIncidentStatus(incident)); return <article className="police-case" key={getIncidentId(incident)}><span className={`police-case-icon police-tone-${group}`}><AdminIcon name={group === "new" ? "bell" : group === "completed" ? "shield" : "activity"} /></span><div className="police-case-content"><div className="police-case-meta"><span className="police-case-id">#{getIncidentId(incident).slice(0, 8).toUpperCase()}</span><span className={`police-badge police-tone-${group}`}>{statusLabels[group]}</span></div><h4>{getIncidentTitle(incident)}</h4><p><AdminIcon name="mapPin" />{getIncidentLocation(incident) || "Chưa có địa chỉ"}</p><time dateTime={getIncidentCreatedAt(incident)}><AdminIcon name="clock" />{formatPoliceTime(getIncidentCreatedAt(incident))}</time></div><button className="police-detail-link" type="button" onClick={() => setDetail(incident)} aria-label={`Chi tiết ${getIncidentTitle(incident)}`}>Chi tiết <AdminIcon name="chevronRight" /></button></article>; })}
         </section>
-        <section className="police-map-area" ref={mapArea} aria-label="Bản đồ điều hành">{mapTarget ? <div className="police-map-selection" role="status"><AdminIcon name="mapPin" /><span>{getIncidentTitle(mapTarget)}</span><button type="button" aria-label="Bỏ chọn vị trí" onClick={() => setMapTarget(null)}><AdminIcon name="close" /></button></div> : null}<MapView className="police-operation-map" center={mapCenter} zoom={mapTarget ? 15 : 12} currentLocationLabel="Vị trí hiện tại của cảnh sát" defaultToCurrentLocation={!mapTarget} incidents={incidents} selectedIncident={mapTarget} role="police" showModeControls={false} title="Vị trí đơn vị và vụ việc TP.HCM" />{mapTarget ? <p className="police-map-note">{getIncidentCoordinates(mapTarget)?.slice().reverse().join(", ")} · Chọn điểm vụ việc trên bản đồ để xem thông tin và chỉ đường.</p> : null}</section>
+        <section className="police-map-area" ref={mapArea} aria-label="Bản đồ điều hành">{mapTarget ? <div className="police-map-selection" role="status"><AdminIcon name="mapPin" /><span>{getIncidentTitle(mapTarget)}</span><button type="button" aria-label="Bỏ chọn vị trí" onClick={() => setMapTarget(null)}><AdminIcon name="close" /></button></div> : null}<MapView className="police-operation-map" center={mapCenter} zoom={mapTarget ? 15 : 12} currentLocationLabel="Vị trí hiện tại của cảnh sát" defaultToCurrentLocation={!mapTarget} incidents={incidents} selectedIncident={mapTarget} role="police" policeShiftStatus={policeShift.shift?.Status} showModeControls={false} title="Vị trí đơn vị và vụ việc TP.HCM" />{mapTarget ? <p className="police-map-note">{getIncidentCoordinates(mapTarget)?.slice().reverse().join(", ")} · Chọn điểm vụ việc trên bản đồ để xem thông tin và chỉ đường.</p> : null}</section>
       </div>
     </> : <>
       <section className="police-history-stats" aria-label="Thống kê lịch sử"><article><span className="police-icon-label"><AdminIcon name="file" />Cập nhật gần nhất bởi bạn</span><strong>{history.length}</strong></article><article><span className="police-icon-label"><AdminIcon name="check" />Hoàn thành</span><strong>{history.filter((item) => getStatusGroup(getIncidentStatus(item)) === "completed").length}</strong></article><article><span className="police-icon-label"><AdminIcon name="clock" />Chưa hoàn thành</span><strong>{history.filter((item) => getStatusGroup(getIncidentStatus(item)) !== "completed").length}</strong></article></section>

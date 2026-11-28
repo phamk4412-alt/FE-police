@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import AdminIcon from "../../../components/admin/AdminIcons";
 import { apiFetch } from "../../../services/api";
+import { getPoliceShiftLabel, type PoliceShiftStatus } from "../../../types/policeShift";
 import "./supportOfficerTracking.css";
 
 interface OnlinePoliceAccount {
   AccountId: string;
   DisplayName: string;
   OnlineSince: string;
+  ShiftStatus?: PoliceShiftStatus;
 }
 
 type OnlineList =
@@ -116,7 +118,12 @@ function SupportOfficerTracking() {
                   <span className="support-officer-avatar"><AdminIcon name="police" /></span>
                   <div><strong>{account.DisplayName || "Công an"}</strong><small>{account.AccountId}</small></div>
                 </div>
-                <span className="support-officer-connection"><i aria-hidden="true" /> Đang trực tuyến</span>
+                <div className="support-officer-statuses">
+                  <span className="support-officer-connection"><i aria-hidden="true" /> Đang trực tuyến</span>
+                  <span className={`police-shift-indicator is-${account.ShiftStatus ?? "unknown"}`}>
+                    {getPoliceShiftLabel(account.ShiftStatus)}
+                  </span>
+                </div>
                 <time dateTime={account.OnlineSince} className="support-officer-time">
                   <AdminIcon name="clock" /> Từ {onlineSinceFormatter.format(new Date(account.OnlineSince))}
                 </time>

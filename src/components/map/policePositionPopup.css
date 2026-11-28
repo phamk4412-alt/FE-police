@@ -1,0 +1,74 @@
+.police-position-popup .mapboxgl-popup-content {
+  padding: 0;
+  border: 1px solid #304455;
+  border-radius: 12px;
+  color: #edf4fb;
+  background: #111c28;
+  box-shadow: 0 8px 26px rgb(5 12 22 / 32%);
+}
+
+.police-position-popup.mapboxgl-popup-anchor-top .mapboxgl-popup-tip,
+.police-position-popup.mapboxgl-popup-anchor-top-left .mapboxgl-popup-tip,
+.police-position-popup.mapboxgl-popup-anchor-top-right .mapboxgl-popup-tip {
+  border-bottom-color: #111c28;
+}
+
+.police-position-popup.mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip,
+.police-position-popup.mapboxgl-popup-anchor-bottom-left .mapboxgl-popup-tip,
+.police-position-popup.mapboxgl-popup-anchor-bottom-right .mapboxgl-popup-tip {
+  border-top-color: #111c28;
+}
+
+.police-position-popup.mapboxgl-popup-anchor-left .mapboxgl-popup-tip { border-right-color: #111c28; }
+.police-position-popup.mapboxgl-popup-anchor-right .mapboxgl-popup-tip { border-left-color: #111c28; }
+
+.police-position-card {
+  display: grid;
+  justify-items: start;
+  gap: 5px;
+  padding: 13px 15px;
+  font: inherit;
+  overflow-wrap: anywhere;
+}
+
+.police-position-card > small {
+  color: #adc1d2;
+  font-size: 11px;
+  letter-spacing: .055em;
+  text-transform: uppercase;
+}
+
+.police-position-card > strong { font-size: 15px; }
+
+.police-position-coordinates {
+  margin-top: 4px;
+  color: #adc1d2;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.police-shift-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  padding: 4px 8px;
+  border-radius: 999px;
+  color: #becbd7;
+  background: rgb(163 183 201 / 12%);
+  font-size: .76rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.police-shift-indicator::before {
+  content: "";
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.police-shift-indicator.is-on-duty { color: #7ce4b8; background: rgb(68 202 145 / 13%); }
+.police-shift-indicator.is-break { color: #ffd08a; background: rgb(232 164 66 / 14%); }
