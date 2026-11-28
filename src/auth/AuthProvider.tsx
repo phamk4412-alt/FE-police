@@ -84,6 +84,33 @@ function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  useEffect(() => {
+    if (user?.role !== "police") return;
+    const token = getAuthToken();
+    if (!token) return;
+    let inFlight = false;
+
+    async function heartbeat() {
+      if (inFlight || getAuthToken() !== token) return;
+      inFlight = true;
+      try {
+        await apiFetch("/api/police/online/heartbeat", { method: "POST" });
+      } catch {
+        // A disconnected session expires on the server, while a later heartbeat can restore presence.
+      } finally {
+        inFlight = false;
+      }
+    }
+
+    void heartbeat();
+    const timer = window.setInterval(heartbeat, 20_000);
+    window.addEventListener("online", heartbeat);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("online", heartbeat);
+    };
+  }, [user]);
+
   const completeLogin = useCallback(async (endpoint: string, body: Record<string, string>) => {
     const response = await apiFetch<LoginResponse>(endpoint, {
       body: JSON.stringify(body),
