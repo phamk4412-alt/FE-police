@@ -6,6 +6,8 @@ import AdminIcon, { type AdminIconName } from "../../components/admin/AdminIcons
 import DashboardLayout from "../../components/layout/DashboardLayout";
 import MapView from "../../components/map/MapView";
 import UserNewsPage from "../news/UserNewsPage";
+import ReportPhotoDialog from "./ReportPhotoDialog";
+import ReportCameraDialog from "./ReportCameraDialog";
 import { canStoreMapboxAddress, createIncidentWithImages, readIncidentPhotoMetadata, reverseIncidentAddress } from "../../services/userService";
 import { getIncidentCreatedAt, getIncidentId, getIncidentStatus } from "../../types/incident";
 import "../../assets/styles/citizen.css";
@@ -84,6 +86,7 @@ function UserDashboard() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const cameraRequestId = useRef(0);
   const locationRequestIdRef = useRef(0);
   const [category, setCategory] = useState("");
   const [customCategory, setCustomCategory] = useState("");
@@ -93,6 +96,7 @@ function UserDashboard() {
   const [locationStatus, setLocationStatus] = useState<"loading" | "success" | "error">("loading");
   const [locationError, setLocationError] = useState("");
   const [images, setImages] = useState<File[]>([]);
+  const [viewedImage, setViewedImage] = useState<File | null>(null);
   const imagesRef = useRef<File[]>([]);
   const captureInProgress = useRef(false);
   const submitInProgress = useRef(false);
@@ -104,7 +108,9 @@ function UserDashboard() {
   const [receivedAt, setReceivedAt] = useState("");
   const [formMessage, setFormMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [cameraState, setCameraState] = useState<"closed" | "opening" | "ready" | "error">("closed");
+  const [cameraError, setCameraError] = useState("");
+  const [isCapturing, setIsCapturing] = useState(false);
   const [canUseLiveCamera] = useState(canUseLiveCameraDevice);
 
   const imagePreviews = useMemo(
@@ -118,6 +124,10 @@ function UserDashboard() {
   const hasValidLocation = locationStatus === "success" && coordinatesText !== "";
   const addressKey = `${lat},${lng}`;
   const suggestedAddress = hasValidLocation && addressLookup?.key === addressKey ? addressLookup.value : null;
+  const viewedIndex = viewedImage ? images.indexOf(viewedImage) : -1;
+  const viewedPhoto = viewedIndex >= 0 ? photoDetails.get(images[viewedIndex]) : undefined;
+  const viewedCoordinates = getLocationText(viewedPhoto?.latitude ?? "", viewedPhoto?.longitude ?? "");
+  const viewedPhotoSharesReportGps = hasValidLocation && viewedPhoto?.latitude === lat && viewedPhoto?.longitude === lng;
   const reportAddress = address.trim() || (canStoreMapboxAddress ? suggestedAddress : null);
   const locationText = locationStatus === "loading"
     ? "Đang lấy vị trí..."
@@ -179,16 +189,31 @@ function UserDashboard() {
     [imagePreviews],
   );
 
-  useEffect(() => stopCameraStream, []);
+  useEffect(() => () => {
+    cameraRequestId.current += 1;
+    stopCameraStream();
+  }, []);
+
+  const closeCameraOnNavigation = useEffectEvent(() => {
+    if (tab !== "home" && cameraState !== "closed") closeLiveCamera();
+  });
+  useEffect(() => {
+    closeCameraOnNavigation();
+  }, [tab]);
 
   useEffect(() => {
-    if (!isCameraOpen || !videoRef.current || !streamRef.current) {
+    if (cameraState !== "ready" || !videoRef.current || !streamRef.current) {
       return;
     }
 
+    const request = cameraRequestId.current;
     videoRef.current.srcObject = streamRef.current;
-    void videoRef.current.play().catch(() => undefined);
-  }, [isCameraOpen]);
+    void videoRef.current.play().catch(() => {
+      if (request !== cameraRequestId.current) return;
+      stopCameraStream();
+      setCameraState("error");
+    });
+  }, [cameraState]);
 
   function updateCurrentLocation(photos: Promise<File[]> | null = null) {
     const requestId = ++locationRequestIdRef.current;
@@ -318,13 +343,21 @@ function UserDashboard() {
   }
 
   async function openLiveCamera() {
+    if (cameraState !== "closed") return;
+    if (imagesRef.current.length >= MAX_IMAGES) {
+      setFormMessage({ text: `Tối đa ${MAX_IMAGES} ảnh cho mỗi báo cáo.`, type: "error" });
+      return;
+    }
     if (!canUseLiveCamera) {
       cameraInputRef.current?.click();
       return;
     }
 
+    const request = ++cameraRequestId.current;
+    setCameraError("");
+    setCameraState("opening");
+    setFormMessage(null);
     try {
-      stopCameraStream();
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: false,
         video: {
@@ -332,18 +365,23 @@ function UserDashboard() {
         },
       });
 
+      if (request !== cameraRequestId.current) {
+        stream.getTracks().forEach((track) => track.stop());
+        return;
+      }
       streamRef.current = stream;
-      setIsCameraOpen(true);
-      setFormMessage(null);
+      setCameraState("ready");
     } catch {
-      cameraInputRef.current?.click();
-      setFormMessage({ text: "Không mở được camera trực tiếp. Đã chuyển sang trình chọn ảnh/camera của thiết bị.", type: "error" });
+      if (request === cameraRequestId.current) setCameraState("error");
     }
   }
 
   function closeLiveCamera() {
+    cameraRequestId.current += 1;
     stopCameraStream();
-    setIsCameraOpen(false);
+    captureInProgress.current = false;
+    setIsCapturing(false);
+    setCameraState("closed");
   }
 
   function captureFromLiveCamera() {
@@ -358,7 +396,7 @@ function UserDashboard() {
     const height = video.videoHeight;
 
     if (!width || !height) {
-      setFormMessage({ text: "Camera chưa sẵn sàng để chụp.", type: "error" });
+      setCameraError("Camera chưa sẵn sàng để chụp.");
       return;
     }
 
@@ -368,11 +406,14 @@ function UserDashboard() {
     const context = canvas.getContext("2d");
 
     if (!context) {
-      setFormMessage({ text: "Không thể đọc dữ liệu từ camera.", type: "error" });
+      setCameraError("Không thể đọc dữ liệu từ camera.");
       return;
     }
 
     captureInProgress.current = true;
+    setIsCapturing(true);
+    setCameraError("");
+    const request = cameraRequestId.current;
     const capturedAt = new Date().toISOString();
     // Start GPS when the shutter fires, before image encoding finishes.
     let resolvePhotos: (files: File[]) => void = () => undefined;
@@ -381,10 +422,15 @@ function UserDashboard() {
     context.drawImage(video, 0, 0, width, height);
     canvas.toBlob(
       (blob) => {
+        if (request !== cameraRequestId.current) {
+          resolvePhotos([]);
+          return;
+        }
         captureInProgress.current = false;
+        setIsCapturing(false);
         if (!blob) {
           resolvePhotos([]);
-          setFormMessage({ text: "Không thể tạo ảnh từ camera.", type: "error" });
+          setCameraError("Không thể tạo ảnh từ camera.");
           return;
         }
 
@@ -544,21 +590,6 @@ function UserDashboard() {
                 <small>Tối đa {MAX_IMAGES} ảnh JPG, PNG hoặc WEBP để hỗ trợ xác minh hiện trường.</small>
               </div>
 
-              {isCameraOpen ? (
-                <div className="camera-capture-panel">
-                  <video ref={videoRef} autoPlay muted playsInline />
-                  <canvas ref={canvasRef} className="visually-hidden" />
-                  <div className="camera-capture-actions">
-                    <button className="btn btn-secondary" type="button" onClick={captureFromLiveCamera}>
-                      Chụp khung hình
-                    </button>
-                    <button className="btn btn-ghost" type="button" onClick={closeLiveCamera}>
-                      Đóng camera
-                    </button>
-                  </div>
-                </div>
-              ) : null}
-
               {imagePreviews.length ? (
                 <div className="image-preview-grid" aria-label="Ảnh đã chọn">
                   {imagePreviews.map((preview, index) => {
@@ -566,7 +597,11 @@ function UserDashboard() {
                     const photoLocation = getLocationText(photo?.latitude ?? "", photo?.longitude ?? "");
                     return (
                     <figure key={`${preview.name}-${preview.url}`}>
-                      <img src={preview.url} alt={`Ảnh báo cáo ${index + 1}`} />
+                      <button className="report-photo-open" type="button" aria-label={`Xem ảnh báo cáo ${index + 1}`}
+                        onClick={() => setViewedImage(images[index])}>
+                        <img src={preview.url} alt="" />
+                        <span><AdminIcon name="view" /> Xem ảnh</span>
+                      </button>
                       <figcaption>
                         {photoTimeLabel(photo)}
                         <br />
@@ -574,7 +609,7 @@ function UserDashboard() {
                           ? `${photo?.capturedAt ? "GPS khi bấm chụp" : "GPS khi chọn ảnh"}: ${photoLocation}`
                           : "Chưa ghi nhận GPS cho ảnh"}
                       </figcaption>
-                      <button type="button" onClick={() => removeImage(index)}>
+                      <button type="button" aria-label={`Xóa ảnh báo cáo ${index + 1}`} onClick={() => removeImage(index)}>
                         Xóa
                       </button>
                     </figure>
@@ -707,6 +742,35 @@ function UserDashboard() {
               ) : null}
               </fieldset>
             </form>
+
+            {cameraState !== "closed" ? (
+              <ReportCameraDialog
+                videoRef={videoRef} canvasRef={canvasRef} cameraState={cameraState}
+                cameraError={cameraError} isCapturing={isCapturing}
+                reporter={user?.name || "Người dân"}
+                coordinates={hasValidLocation ? coordinatesText : locationStatus === "loading" ? "Đang lấy vị trí…" : "Chưa ghi nhận"}
+                address={hasValidLocation && addressLookup?.key !== addressKey ? "Đang tra vị trí…" : suggestedAddress || "Chưa xác định"}
+                onClose={closeLiveCamera} onCapture={captureFromLiveCamera}
+                onUseDeviceCamera={() => cameraInputRef.current?.click()}
+              />
+            ) : null}
+
+            {viewedIndex >= 0 ? (
+              <ReportPhotoDialog
+                key={viewedIndex}
+                src={imagePreviews[viewedIndex].url}
+                number={viewedIndex + 1}
+                reporter={user?.name || "Người dân"}
+                time={photoTimeLabel(viewedPhoto)}
+                coordinates={viewedCoordinates}
+                latitude={viewedPhoto?.latitude}
+                longitude={viewedPhoto?.longitude}
+                takenInApp={Boolean(viewedPhoto?.capturedAt)}
+                reportLookup={addressLookup?.key === addressKey ? suggestedAddress : undefined}
+                sharesReportGps={viewedPhotoSharesReportGps}
+                onClose={() => setViewedImage(null)}
+              />
+            ) : null}
 
             <aside className="citizen-support-panel">
               <div className="citizen-support-heading"><span className="eyebrow">Thông tin tự động</span><h2>Hệ thống đang hỗ trợ bạn</h2></div>
