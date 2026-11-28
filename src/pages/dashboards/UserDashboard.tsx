@@ -667,20 +667,36 @@ function UserDashboard() {
                 {locationError ? <small id="location-error">{locationError}</small> : null}
               </label>
 
-              <dl className="capture-preview">
-                <div><dt>Người gửi</dt><dd>{user?.name || user?.email || "Người dân"}</dd></div>
-                <div><dt>Loại sự cố do AI đề xuất</dt><dd>Chưa có kết quả nhận diện</dd></div>
-                <div><dt>Độ tin cậy</dt><dd>Chưa có dữ liệu độ tin cậy</dd></div>
-                {!images.length && <div><dt>Thời gian chụp</dt><dd>Chưa có ảnh</dd></div>}
-              </dl>
-              <label className="capture-confirm">
-                <input type="checkbox" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} />
-                Tôi đã kiểm tra thông tin và xác nhận gửi báo cáo.
-              </label>
-              <Button disabled={isSubmitting || !confirmed || !hasValidLocation} type="submit">
-                <AdminIcon name={isSubmitting ? "activity" : "send"} />
-                {isSubmitting ? "Đang gửi..." : "Gửi báo cáo"}
-              </Button>
+              <section className="capture-review" aria-labelledby="capture-review-heading">
+                <h3 id="capture-review-heading"><AdminIcon name="review" /> Tóm tắt báo cáo</h3>
+                <dl className="capture-preview">
+                  <div><dt><AdminIcon name="user" /> Người gửi</dt><dd>{user?.name || user?.email || "Người dân"}</dd></div>
+                  <div><dt><AdminIcon name="activity" /> Loại sự cố do AI đề xuất</dt><dd className="capture-unavailable">Chưa có kết quả nhận diện</dd></div>
+                  <div><dt><AdminIcon name="chart" /> Độ tin cậy</dt><dd className="capture-unavailable">Chưa có dữ liệu độ tin cậy</dd></div>
+                  <div>
+                    <dt><AdminIcon name="clock" /> Thời gian chụp</dt>
+                    {images.length ? (
+                      <dd>
+                        <ul>
+                          {images.map((image, index) => (
+                            <li key={`${image.name}-${index}`}>Ảnh {index + 1} · {photoTimeLabel(photoDetails.get(image))}</li>
+                          ))}
+                        </ul>
+                      </dd>
+                    ) : <dd className="capture-unavailable">Chưa có ảnh</dd>}
+                  </div>
+                </dl>
+                <div className="capture-review-actions">
+                  <label className="capture-confirm">
+                    <input type="checkbox" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} />
+                    <span>Tôi đã kiểm tra thông tin và xác nhận gửi báo cáo.</span>
+                  </label>
+                  <Button disabled={isSubmitting || !confirmed || !hasValidLocation} type="submit">
+                    <AdminIcon name={isSubmitting ? "activity" : "send"} />
+                    {isSubmitting ? "Đang gửi..." : "Gửi báo cáo"}
+                  </Button>
+                </div>
+              </section>
               {formMessage ? (
                 <span
                   className={`form-message is-${formMessage.type}`}

@@ -1,8 +1,3 @@
-@media (max-width: 760px) {
-  .dashboard-header:has(.header-tabs[aria-label="Chuyển trang người dân"]) {
-    gap: 10px;
-    padding: 10px 12px;
-  }
 .quick-report-form .capture-fields {
   margin: 0;
   border: 0;
@@ -10,15 +5,94 @@
 }
 
 .capture-fields .section-heading p,
-.capture-fields figcaption,
-.capture-preview dt { color: var(--muted); font-size: 0.8rem; }
+.capture-fields figcaption { color: var(--muted); font-size: 0.8rem; }
 
 .capture-fields figcaption { padding: 8px; overflow-wrap: anywhere; }
 .capture-fields .image-preview-grid button { top: 8px; bottom: auto; }
-.capture-confirm { display: flex; align-items: center; gap: 10px; }
-.capture-preview { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); margin: 0; }
-.capture-preview > div { min-width: 0; padding: 12px; border: 1px solid var(--line); border-radius: 10px; }
-.capture-preview dd { margin: 4px 0 0; overflow-wrap: anywhere; }
+
+.capture-review {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+  padding: clamp(12px, 1.4vw, 20px);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #121c28;
+}
+
+.capture-review h3, .capture-preview dt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.capture-review h3 { font-size: .95rem; }
+.capture-review h3 .admin-icon { color: #ff7389; }
+
+.capture-preview {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.capture-preview > div {
+  min-width: 0;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #0d151f;
+}
+
+.capture-preview dt { color: #aebdcb; font-size: .76rem; }
+.capture-preview dt .admin-icon { flex: none; width: 16px; height: 16px; color: #8fc4e6; }
+.capture-preview dd { margin: 5px 0 0 24px; font-size: .85rem; font-weight: 600; overflow-wrap: anywhere; }
+.capture-preview dd.capture-unavailable { color: #a5b2c1; font-weight: 400; }
+.capture-preview dd ul { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+
+.capture-review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.capture-confirm {
+  display: flex;
+  flex: 1 1 270px;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 9px 0;
+  color: #d5e0eb;
+  font-size: .83rem;
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+.capture-confirm input[type="checkbox"] {
+  flex: 0 0 auto;
+  inline-size: 17px;
+  block-size: 17px;
+  margin: 1px 0 0;
+  accent-color: #ff415f;
+}
+
+.capture-confirm input[type="checkbox"]:focus-visible { outline: 2px solid #ff8da1; outline-offset: 3px; }
+.capture-review-actions > .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+
+@media (max-width: 540px) {
+  .capture-preview { grid-template-columns: minmax(0, 1fr); }
+  .capture-review-actions > .btn { width: 100%; }
+}
+
+@media (max-width: 760px) {
+  .dashboard-header:has(.header-tabs[aria-label="Chuyển trang người dân"]) {
+    gap: 10px;
+    padding: 10px 12px;
+  }
 
   .dashboard-header:has(.header-tabs[aria-label="Chuyển trang người dân"]) h1 {
     font-size: 0.9375rem;
@@ -99,7 +173,7 @@
     gap: 6px;
   }
 
-  .quick-report-form :is(input:not([type="file"]), select, textarea) {
+  .quick-report-form :is(input:not([type="file"], [type="checkbox"]), select, textarea) {
     min-width: 0;
     width: 100%;
     max-width: 100%;
@@ -532,7 +606,7 @@
 
 .citizen-report-body .field { gap: 7px; }
 .citizen-report-body .field > span { color: #9ca9b7; font-size: 0.8rem; }
-.citizen-report-body :is(input:not([type="file"]), select, textarea) {
+.citizen-report-body :is(input:not([type="file"], [type="checkbox"]), select, textarea) {
   border-color: #263443;
   border-radius: 10px;
   background: #0b121a;
