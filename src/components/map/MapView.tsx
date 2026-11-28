@@ -45,6 +45,7 @@ interface MapViewProps {
   role?: MapRole;
   selectedIncident?: Incident | null;
   showModeControls?: boolean;
+  showPoliceLocations?: boolean;
   showPoiInNormal?: boolean;
   title?: string;
   variant?: "compact" | "full";
@@ -432,7 +433,8 @@ function normalizePoliceLocation(location: PoliceLocation) {
   const latitude = Number(location.Latitude ?? location.latitude);
   const longitude = Number(location.Longitude ?? location.longitude);
 
-  if (!username || !Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+  if (!username || !Number.isFinite(latitude) || !Number.isFinite(longitude)
+    || Math.abs(latitude) > 90 || Math.abs(longitude) > 180) {
     return null;
   }
 
@@ -959,6 +961,7 @@ function MapView({
   role = "user",
   selectedIncident = null,
   showModeControls = false,
+  showPoliceLocations = role === "police",
   showPoiInNormal = true,
   title = "Bản đồ tác nghiệp",
   variant = "full",
@@ -982,6 +985,7 @@ function MapView({
   const [facilities, setFacilities] = useState<FacilityMarker[]>(fallbackFacilityMarkers);
   const [crimeDataIncidents, setCrimeDataIncidents] = useState<Incident[]>([]);
   const [policeLocations, setPoliceLocations] = useState<PoliceLocation[]>([]);
+  const [locationFeedState, setLocationFeedState] = useState<"loading" | "ready" | "unavailable">("loading");
   const [mode, setMode] = useState<MapMode>(initialMode);
   const [crimePeriod, setCrimePeriod] = useState<CrimePeriod>("month");
   const [crimeType, setCrimeType] = useState("all");
@@ -995,6 +999,17 @@ function MapView({
 
   const isSupportMap = role === "support";
   const isPoliceMap = role === "police";
+  const isOfficerTrackingMap = isSupportMap && showPoliceLocations;
+  const visiblePoliceLocations = useMemo(() => policeLocations.map(normalizePoliceLocation).filter((location) => location !== null), [policeLocations]);
+
+  function fitPoliceLocations() {
+    const map = mapRef.current;
+    if (!map || visiblePoliceLocations.length === 0) return;
+
+    const bounds = new mapboxgl.LngLatBounds();
+    visiblePoliceLocations.forEach(({ longitude, latitude }) => bounds.extend([longitude, latitude]));
+    map.fitBounds(bounds, { maxZoom: 15, padding: 48 });
+  }
   const isCitizenMap = role === "user";
   const showUserToolbarActions = role === "user" && showModeControls && mode === "normal";
   const showPoliceToolbarActions = role === "police" && mode === "normal";
@@ -1377,21 +1392,29 @@ function MapView({
   }, [canUseDirections, currentLocation, displayedFacilities, showFacilityLayer, startFacilityDirections]);
 
   useEffect(() => {
-    if (role !== "police") {
-      const timeoutId = window.setTimeout(() => setPoliceLocations([]), 0);
-      return () => window.clearTimeout(timeoutId);
-    }
+    if (!showPoliceLocations) return;
 
     let isMounted = true;
+    let pending = false;
 
-    function loadPoliceLocations() {
-      fetchPoliceLocations()
-        .then((locations) => {
-          if (isMounted) {
-            setPoliceLocations(locations);
-          }
-        })
-        .catch(() => undefined);
+    async function loadPoliceLocations() {
+      if (pending) return;
+      pending = true;
+      try {
+        const locations = await fetchPoliceLocations();
+        if (!Array.isArray(locations)) throw new Error("Invalid police location response");
+        if (isMounted) {
+          setPoliceLocations(locations);
+          setLocationFeedState("ready");
+        }
+      } catch {
+        if (isMounted && isOfficerTrackingMap) {
+          setPoliceLocations([]);
+          setLocationFeedState("unavailable");
+        }
+      } finally {
+        pending = false;
+      }
     }
 
     loadPoliceLocations();
@@ -1401,7 +1424,7 @@ function MapView({
       isMounted = false;
       window.clearInterval(intervalId);
     };
-  }, [role]);
+  }, [isOfficerTrackingMap, showPoliceLocations]);
 
   useEffect(() => {
     policeShiftStatusRef.current = policeShiftStatus;
@@ -1524,7 +1547,7 @@ function MapView({
   useEffect(() => {
     const map = mapRef.current;
 
-    if (!map || role !== "police") {
+    if (!map || !showPoliceLocations) {
       policeLocationMarkersRef.current.forEach((marker) => marker.remove());
       policeLocationMarkersRef.current.clear();
       return;
@@ -1532,27 +1555,27 @@ function MapView({
 
     const nextUsernames = new Set<string>();
 
-    policeLocations.forEach((rawLocation) => {
-      const location = normalizePoliceLocation(rawLocation);
-      if (!location) {
-        return;
-      }
-
-      if (location.username.toLowerCase() === currentPoliceUsername.toLowerCase()
-        || location.username === user?.id) {
-        policeLocationMarkersRef.current.get(location.username)?.remove();
-        policeLocationMarkersRef.current.delete(location.username);
+    visiblePoliceLocations.forEach((location) => {
+      if (isPoliceMap && (location.username.toLowerCase() === currentPoliceUsername.toLowerCase()
+        || location.username === user?.id)) {
         return;
       }
 
       nextUsernames.add(location.username);
-      policeLocationMarkersRef.current.get(location.username)?.remove();
-
+      const coordinates: [number, number] = [location.longitude, location.latitude];
+      const label = `${location.displayName}. ${location.status}`;
+      const existingMarker = policeLocationMarkersRef.current.get(location.username);
+      if (existingMarker) {
+        existingMarker.setLngLat(coordinates);
+        existingMarker.getElement().setAttribute("aria-label", label);
+        existingMarker.getPopup()?.setDOMContent(createPoliceLocationPopup(location));
+        return;
+      }
       const marker = new mapboxgl.Marker({
         anchor: "center",
-        element: createPoliceLocationMarker(`${location.displayName}. ${location.status}`),
+        element: createPoliceLocationMarker(label),
       })
-        .setLngLat([location.longitude, location.latitude])
+        .setLngLat(coordinates)
         .setPopup(new mapboxgl.Popup({ offset: 20 }).setDOMContent(createPoliceLocationPopup(location)))
         .addTo(map);
 
@@ -1566,7 +1589,7 @@ function MapView({
         policeLocationMarkersRef.current.delete(username);
       }
     });
-  }, [currentPoliceUsername, policeLocations, role, user?.id]);
+  }, [currentPoliceUsername, isPoliceMap, showPoliceLocations, user?.id, visiblePoliceLocations]);
   useEffect(() => {
     const map = mapRef.current;
 
@@ -1814,6 +1837,14 @@ function MapView({
             {(isSupportMap || isPoliceMap) && <AdminIcon name="map" />} Bản đồ
           </span>
           <h2>{title}</h2>
+          {isOfficerTrackingMap ? (
+            <p className="support-officer-map-status" role="status">
+              {locationFeedState === "loading" ? "Đang tải vị trí Công an…"
+                : locationFeedState === "unavailable" ? "Chưa thể cập nhật vị trí. Hệ thống sẽ thử lại."
+                : visiblePoliceLocations.length === 0 ? "Chưa có Công an nào đang chia sẻ vị trí."
+                : `${visiblePoliceLocations.length} Công an đang chia sẻ vị trí`}
+            </p>
+          ) : null}
         </div>
       </div>
 
@@ -1852,6 +1883,14 @@ function MapView({
               <button type="button" onClick={() => void focusNearestFacility("hospital")}>
                 <AdminIcon name="ambulance" />
                 Tìm B/V
+              </button>
+            </div>
+          ) : null}
+
+          {isOfficerTrackingMap ? (
+            <div className="map-quick-search-controls">
+              <button type="button" disabled={visiblePoliceLocations.length === 0} onClick={fitPoliceLocations}>
+                <AdminIcon name="mapPin" /> Xem tất cả vị trí
               </button>
             </div>
           ) : null}

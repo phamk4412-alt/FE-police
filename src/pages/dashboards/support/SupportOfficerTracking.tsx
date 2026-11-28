@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import AdminIcon from "../../../components/admin/AdminIcons";
+import MapView from "../../../components/map/MapView";
 import { apiFetch } from "../../../services/api";
 import { getPoliceShiftLabel, type PoliceShiftStatus } from "../../../types/policeShift";
 import "./supportOfficerTracking.css";
@@ -132,6 +133,12 @@ function SupportOfficerTracking() {
           </ul>
         )}
       </section>
+      <MapView
+        className="support-officer-map"
+        role="support"
+        showPoliceLocations
+        title="Vị trí Công an đang chia sẻ"
+      />
     </section>
   );
 }

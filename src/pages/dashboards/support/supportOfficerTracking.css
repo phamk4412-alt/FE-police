@@ -116,6 +116,10 @@
 .support-officer-statuses { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
 .support-officer-time .admin-icon { flex: none; }
 .support-officer-empty { margin: 0; padding: 30px 14px; text-align: center; color: #a9baca; }
+.support-officer-map { min-width: 0; }
+.support-officer-map-status { margin: 5px 0 0; color: #a9baca; font-size: .85rem; }
+.support-officer-map .mapbox-container,
+.support-officer-map .map-token-warning { height: clamp(300px, 52vh, 580px); }
 
 @media (max-width: 620px) {
   .support-officer-row { grid-template-columns: minmax(0, 1fr) auto; }
