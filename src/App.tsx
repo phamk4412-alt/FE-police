@@ -4,10 +4,11 @@ import AppRoutes from "./routes/AppRoutes";
 
 function App() {
   const isLogin = useMatch("/login/*");
+  const isRoleSelection = useMatch("/select-role");
   return (
     <>
       <AppRoutes />
-      {isLogin ? null : <PoliceMascot />}
+      {isLogin || isRoleSelection ? null : <PoliceMascot />}
     </>
   );
 }

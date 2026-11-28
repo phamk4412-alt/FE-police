@@ -1,91 +1,304 @@
-.login-page.role-selection-page {
-  grid-template-columns: minmax(0, 0.8fr) minmax(560px, 1.2fr);
+body:has(> #root > .role-selection-page) { min-width: 0; }
+
+.role-selection-page {
+  --role-ink: #f1f5fa;
+  --role-muted: #a7b6c7;
+  --login-muted: var(--role-muted);
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: minmax(0, .82fr) minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-areas: "identity identity" "intro panel" ". assistant";
+  align-items: center;
+  gap: clamp(20px, 3vh, 34px) clamp(24px, 3.5vw, 64px);
+  min-height: 100dvh;
+  padding: clamp(20px, 4vh, 44px) clamp(24px, 5vw, 100px) 20px;
+  overflow: clip;
+  color: var(--role-ink);
+  background: #090e15;
 }
 
-.role-selection-page .login-hero {
-  padding: clamp(24px, 4vw, 64px);
+.role-selection-page::before {
+  position: absolute;
+  z-index: -2;
+  inset: 0 17% 0 0;
+  background:
+    linear-gradient(90deg, #070e1970, #0a111d80 41%, #090e15 95%),
+    linear-gradient(0deg, #090e15, #08132114 62%, #08132135),
+    url("../../assets/images/saigon-login.jpg") 27% center / cover no-repeat;
+  content: "";
 }
 
-.role-selection-page .role-selection-panel {
-  margin: 24px;
-  padding: 24px;
+.role-selection-intro {
+  grid-area: intro;
+  min-width: 0;
 }
+
+.role-selection-kicker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 16px;
+  color: #c6d3e2;
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.role-selection-kicker .admin-icon { color: #ff667e; }
+
+.role-selection-intro h1 {
+  margin: 0;
+  max-width: 9ch;
+  font-size: clamp(3rem, 5.7vw, 7rem);
+  font-weight: 600;
+  line-height: .98;
+  letter-spacing: -.065em;
+}
+
+.role-selection-intro h1 span { color: #ff516e; white-space: nowrap; }
+
+.role-selection-intro > p:last-child {
+  max-width: 42ch;
+  margin: 22px 0 0;
+  color: #c3cfdb;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+
+.role-selection-intro > p strong { color: var(--role-ink); }
 
 .role-selection-panel {
+  grid-area: panel;
   display: grid;
-  gap: 24px;
+  gap: clamp(15px, 2vh, 24px);
   min-width: 0;
+  padding: clamp(18px, 2.4vw, 36px);
+  border: 1px solid #314253;
+  border-radius: 23px;
+  background: linear-gradient(155deg, #14202cf5, #0c131df5);
+  box-shadow: 0 24px 65px #02050970;
+}
+
+.role-selection-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+}
+
+.role-selection-panel-head > div { min-width: 0; }
+
+.role-selection-panel h2 {
+  margin: 0;
+  font-size: clamp(1.25rem, 2.3vw, 1.9rem);
+  letter-spacing: -.04em;
+}
+
+.role-selection-account {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 0;
+  color: var(--role-muted);
+  font-size: .82rem;
+  overflow-wrap: anywhere;
+}
+
+.role-selection-account .admin-icon { flex: none; }
+
+.role-selection-count {
+  padding: 6px 11px;
+  border: 1px solid #405265;
+  border-radius: 999px;
+  color: #c7d6e5;
+  font-size: .74rem;
 }
 
 .role-selection-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  gap: 12px;
 }
+
+.role-selection-grid:empty { display: none; }
 
 .role-selection-card {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 24px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm, 12px);
-  background: var(--surface-soft);
-  color: var(--text);
+  --role-accent: #b0d9ff;
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  align-items: start;
+  gap: 8px;
+  min-width: 0;
+  padding: clamp(13px, 1.55vw, 25px);
+  border: 1px solid #2c3b4c;
+  border-radius: 15px;
+  color: var(--role-ink);
+  background: linear-gradient(150deg, #192635, #101923);
   text-align: left;
+  cursor: pointer;
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
 }
 
-.role-selection-card:hover,
-.role-selection-card:focus-visible {
-  border-color: var(--primary);
-  outline: 2px solid var(--primary);
+.role-selection-card[data-role="admin"] { --role-accent: #ff96a8; }
+.role-selection-card[data-role="police"] { --role-accent: #9eb9ff; }
+.role-selection-card[data-role="support"] { --role-accent: #ffd294; }
+.role-selection-card[data-role="user"] { --role-accent: #80e2ca; }
+
+.role-selection-card[data-current="true"] { border-color: color-mix(in srgb, var(--role-accent) 63%, #273747); }
+
+.role-selection-card:hover:not(:disabled) {
+  border-color: var(--role-accent);
+  box-shadow: 0 8px 22px #05090f88;
+  transform: translateY(-3px);
+}
+
+.role-selection-card:active:not(:disabled) { transform: translateY(0); }
+
+.role-selection-panel :is(button, a):focus-visible {
+  outline: 2px solid #ff8399;
   outline-offset: 3px;
 }
 
-.role-selection-card > .admin-icon {
-  width: 36px;
-  height: 36px;
-  color: var(--primary);
+.role-selection-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
 }
 
-.role-selection-card strong {
-  font-size: 1.2rem;
+.role-selection-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 43px;
+  aspect-ratio: 1;
+  border: 1px solid color-mix(in srgb, var(--role-accent) 30%, transparent);
+  border-radius: 12px;
+  color: var(--role-accent);
+  background: color-mix(in srgb, var(--role-accent) 12%, transparent);
 }
 
-.role-selection-card > span {
-  color: var(--muted);
+.role-selection-icon .admin-icon { width: 24px; height: 24px; }
+.role-selection-card strong { font-size: 1rem; }
+
+.role-selection-current {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--role-accent);
+  font-size: .66rem;
 }
 
-.role-selection-card > .role-selection-action {
-  margin-top: auto;
-  padding-top: 8px;
-  color: var(--text);
+.role-selection-current .admin-icon { width: 14px; height: 14px; }
+
+.role-selection-description {
+  color: var(--role-muted);
+  font-size: .79rem;
+  line-height: 1.55;
+}
+
+.role-selection-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 3px;
+  padding-top: 10px;
+  border-top: 1px solid #354556;
+  color: var(--role-accent);
+  font-size: .78rem;
   font-weight: 700;
 }
 
-.role-selection-card:disabled {
-  cursor: wait;
-  opacity: 0.65;
+.role-selection-action .admin-icon { transition: transform 180ms ease; }
+.role-selection-card:hover:not(:disabled) .role-selection-action .admin-icon { transform: translateX(3px); }
+
+.role-selection-card:disabled { cursor: wait; }
+.role-selection-card:disabled:not([aria-busy="true"]) { opacity: .66; }
+
+.role-selection-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 13px;
+  border-radius: 9px;
+  color: #ffc1cb;
+  background: #76263c52;
+  font-size: .85rem;
 }
 
-@media (max-width: 1000px) {
-  .login-page.role-selection-page {
-    grid-template-columns: 1fr;
-  }
+.role-selection-notice .admin-icon { flex: none; }
 
-  .role-selection-page .login-hero {
-    min-height: 180px;
-  }
+.role-selection-panel-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 12px;
+  border-top: 1px solid #293748;
 }
 
-@media (max-width: 500px) {
-  .role-selection-grid {
-    grid-template-columns: 1fr;
+.role-selection-panel-footer .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 8px 14px;
+}
+
+.role-selection-assistant {
+  grid-area: assistant;
+  width: min(100%, 410px);
+  min-height: 64px;
+  justify-self: end;
+  margin-top: -14px;
+}
+
+.role-selection-page .login-identity,
+.role-selection-intro,
+.role-selection-panel,
+.role-selection-card {
+  animation: role-selection-appear 360ms ease-out both;
+}
+
+.role-selection-card:nth-child(2) { animation-delay: 45ms; }
+.role-selection-card:nth-child(3) { animation-delay: 90ms; }
+.role-selection-card:nth-child(4) { animation-delay: 135ms; }
+
+@keyframes role-selection-appear {
+  from { translate: 0 9px; opacity: 0; }
+  to { translate: 0 0; opacity: 1; }
+}
+
+@media (max-width: 950px) {
+  .role-selection-page {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
+    grid-template-areas: "identity" "intro" "panel" "assistant";
+    align-content: start;
   }
 
-  .role-selection-page .role-selection-panel {
-    margin: 16px;
-    padding: 20px;
+  .role-selection-page::before { inset: 0 0 auto; height: min(620px, 83%); }
+  .role-selection-intro h1 { max-width: none; font-size: clamp(2.4rem, 7.3vw, 4rem); }
+  .role-selection-intro > p:last-child { margin-top: 12px; }
+}
+
+@media (max-width: 540px) {
+  .role-selection-page { padding-inline: 16px; gap: 20px; }
+  .role-selection-page .login-identity img { width: 42px; height: 42px; }
+  .role-selection-grid { grid-template-columns: minmax(0, 1fr); }
+  .role-selection-panel { border-radius: 16px; }
+  .role-selection-panel-footer .btn { justify-content: center; width: 100%; }
+  .role-selection-assistant { margin-top: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .role-selection-page *, .role-selection-page *::before, .role-selection-page *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
   }
 }

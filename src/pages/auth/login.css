@@ -46,6 +46,40 @@ body:has(> #root > .login-screen) { min-width: 0; }
   content: "";
 }
 
+.login-beacons {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+}
+
+.login-beacons::before,
+.login-beacons::after {
+  position: absolute;
+  inset-inline: 0;
+  height: clamp(90px, 20vh, 240px);
+  opacity: .2;
+  animation: login-beacon-pulse 8s ease-in-out infinite;
+  content: "";
+}
+
+.login-beacons::before {
+  top: 0;
+  background: linear-gradient(to bottom, #426fff72, #275bec37 28%, #1858ed12 64%, transparent);
+}
+
+.login-beacons::after {
+  bottom: 0;
+  background: linear-gradient(to top, #f9355466, #d5274535 28%, #b81e3e12 64%, transparent);
+  animation-delay: -4s;
+}
+
+@keyframes login-beacon-pulse {
+  0%, 23%, 44%, 100% { opacity: .19; }
+  14% { opacity: .75; }
+  34% { opacity: .58; }
+}
+
 .login-identity {
   grid-area: identity;
   display: flex;
@@ -478,6 +512,8 @@ body:has(> #root > .login-screen) { min-width: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .login-beacons::before, .login-beacons::after { animation: none; opacity: .28; }
+
   .login-screen *, .login-screen *::before, .login-screen *::after {
     animation-duration: .01ms !important;
     animation-iteration-count: 1 !important;

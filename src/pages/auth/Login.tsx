@@ -44,6 +44,7 @@ function Login() {
 
   return (
     <main className="login-screen">
+      <div className="login-beacons" aria-hidden="true" />
       <header className="login-identity">
         <img src={APP_MARK_URL} alt="" width="54" height="54" />
         <div>
